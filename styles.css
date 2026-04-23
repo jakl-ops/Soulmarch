@@ -942,6 +942,12 @@ label {
   font-weight: 800;
 }
 
+.log-crit {
+  color: #ffd36e;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
 .actions-panel {
   text-align: center;
 }

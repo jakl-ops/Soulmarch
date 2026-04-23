@@ -2321,6 +2321,7 @@ function decorateLog(message) {
   if (enemyName) {
     html = html.replaceAll(enemyName, `<span class="log-enemy">${enemyName}</span>`);
   }
+  html = html.replace(/CRITICAL HIT!/g, '<span class="log-crit">CRITICAL HIT!</span>');
   html = html.replace(/(Damage [^=]*= )(\d+)/g, '$1<span class="log-damage">$2</span>');
   html = html.replace(/(recovers )(\d+)( HP)/g, '$1<span class="log-heal">$2</span>$3');
   html = html.replace(/(suffers )(\d+)/g, '$1<span class="log-damage">$2</span>');
@@ -3190,22 +3191,26 @@ function resolveAttack(attacker, attack = attacker.weapon, options = {}) {
   const parts = options.skill ? getSkillParts(attacker, options.skill, options.extraHitBonus ?? 0) : getAttackParts(attacker, attack, options.extraHitBonus ?? 0);
   const attackTotal = attackDie + sumParts(parts);
   const defenderAc = getAc(defender);
-  const isCrit = attackDie >= (attack.critMin ?? 20);
+  const isNaturalTwenty = attackDie === 20;
+  const isCrit = isNaturalTwenty || attackDie >= (attack.critMin ?? 20);
   const hit = isCrit || (attackDie !== 1 && attackTotal >= defenderAc);
   attacker.hasAttacked = true;
 
   if (hit) {
-    const damageRoll = rollDamageDice(attack.damageDice);
+    const damageDice = isCrit
+      ? { ...attack.damageDice, count: attack.damageDice.count * 2 }
+      : attack.damageDice;
+    const damageRoll = rollDamageDice(damageDice);
     const damageBonusParts = getDamageBonusParts(attacker, defender, attack);
-    const baseDamage = damageRoll.total + sumParts(damageBonusParts);
-    const critDamage = isCrit ? baseDamage + damageRoll.total : baseDamage;
-    const traitResult = applyDamageTraits(defender, Math.max(0, critDamage), attack.damageType);
+    const totalDamage = damageRoll.total + sumParts(damageBonusParts);
+    const traitResult = applyDamageTraits(defender, Math.max(0, totalDamage), attack.damageType);
     defender.hp = Math.max(0, defender.hp - traitResult.finalDamage);
     const bonusText = damageBonusParts.length ? ` + ${damageBonusParts.map((part) => `${part.label} ${part.value}`).join(" + ")}` : "";
     const traitText = traitResult.notes.length ? ` ${traitResult.notes.join("; ")}.` : "";
     const sourceName = options.skill?.name ?? attack.name;
+    const critText = isCrit ? " CRITICAL HIT!" : "";
 
-    addLog(`${attacker.name} uses ${sourceName}: ${formatRollMath(attackDie, parts)} vs ${defender.name} AC ${defenderAc} -> HIT. Damage ${formatDice(attack.damageDice)} (${damageRoll.rolls.join(", ")})${bonusText}${isCrit ? " + crit dice" : ""} = ${traitResult.finalDamage} ${attack.damageType}.${traitText}`);
+    addLog(`${attacker.name} uses ${sourceName}: ${formatRollMath(attackDie, parts)} vs ${defender.name} AC ${defenderAc} -> HIT.${critText} Damage ${formatDice(damageDice)} (${damageRoll.rolls.join(", ")})${bonusText} = ${traitResult.finalDamage} ${attack.damageType}.${traitText}`);
     maybeApplyStatus(attacker, defender, attack.status, sourceName);
     checkWinner();
     return;
