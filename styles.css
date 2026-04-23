@@ -1005,10 +1005,130 @@ label {
   margin-top: 8px;
 }
 
-.enemy-panel summary,
-.utility-panel summary {
+.enemy-panel summary {
   cursor: pointer;
   color: #c6ceca;
+}
+
+.utility-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.utility-panel h2 {
+  margin-bottom: 0;
+}
+
+.inventory-section {
+  display: grid;
+  gap: 8px;
+}
+
+.inventory-section h3 {
+  margin-bottom: 0;
+}
+
+.item-list {
+  display: grid;
+  gap: 8px;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #30383d;
+  border-radius: 6px;
+  background: #121619;
+  padding: 10px;
+}
+
+.item-row strong {
+  display: block;
+}
+
+.item-meta {
+  display: block;
+  color: #aeb8b2;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.status-empty {
+  color: #aeb8b2;
+}
+
+.status-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 6px 6px 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #4a5450;
+  color: #eff4f1;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-pill:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 5;
+  width: min(280px, 70vw);
+  padding: 8px;
+  border: 1px solid #64706a;
+  border-radius: 5px;
+  background: #101315;
+  color: #e8ece9;
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: normal;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.status-bleed {
+  background: #4b2227;
+  border-color: #a84854;
+}
+
+.status-burn {
+  background: #50311c;
+  border-color: #d9843d;
+}
+
+.status-poison {
+  background: #203926;
+  border-color: #4ea265;
+}
+
+.status-freeze {
+  background: #213849;
+  border-color: #5aa9d7;
+}
+
+.status-stun {
+  background: #4f481d;
+  border-color: #d7be57;
+}
+
+.status-guarded {
+  background: #21453f;
+  border-color: #58b8a4;
+}
+
+.status-shielded {
+  background: #3d2d53;
+  border-color: #a78ae8;
+}
+
+.status-default {
+  background: #34393d;
+  border-color: #697177;
 }
 
 .modal-backdrop {

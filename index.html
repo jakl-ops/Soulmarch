@@ -305,19 +305,22 @@
             </section>
 
             <section class="panel utility-panel">
-              <details id="inventorySummaryDetails">
-                <summary id="inventorySummary">Inventory</summary>
-                <div id="sideInventoryList" class="plain-list"></div>
-              </details>
-              <details id="shopDetails">
-                <summary>Shop</summary>
-                <div class="plain-list">
-                  <p id="shopCurrency"></p>
-                  <p>Health Potion: 1 silver</p>
-                  <button id="buyPotionButton" type="button">Buy Health Potion</button>
-                  <button id="innButton" type="button">Stay at the Inn (3s)</button>
-                </div>
-              </details>
+              <h2 id="inventorySummary">Inventory</h2>
+              <div id="sideInventoryList" class="plain-list"></div>
+            </section>
+
+            <section class="panel utility-panel">
+              <h2>Shop</h2>
+              <p id="shopCurrency" class="muted"></p>
+              <div id="shopList" class="plain-list"></div>
+            </section>
+
+            <section class="panel utility-panel">
+              <h2>Stay at the Inn</h2>
+              <p class="muted">
+                Cost: 3 silver. Restores HP, Mana, and Stamina, clears cooldowns, and removes temporary negative effects.
+              </p>
+              <button id="innButton" type="button">Stay at the Inn (3s)</button>
             </section>
           </aside>
         </div>

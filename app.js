@@ -5,6 +5,11 @@ const BASE_AC = 10;
 const POTION_HEALING = 8;
 const POTION_HEALING_MAX = 15;
 const POTION_PRICE = { copper: 0, silver: 1, gold: 0 };
+const BANDAGE_PRICE = { copper: 5, silver: 0, gold: 0 };
+const WARMING_SALVE_PRICE = { copper: 8, silver: 0, gold: 0 };
+const ANTITOXIN_PRICE = { copper: 0, silver: 1, gold: 0 };
+const SOOTHING_BALM_PRICE = { copper: 8, silver: 0, gold: 0 };
+const SMELLING_SALTS_PRICE = { copper: 0, silver: 1, gold: 0 };
 const INN_PRICE = { copper: 0, silver: 3, gold: 0 };
 const XP_THRESHOLDS = [0, 150, 400, 900, 1800, 3200, 5000, 7500, 10500, 14000];
 // The run now moves through explicit phases so combat, rewards, item use, and defeat do not fight each other.
@@ -17,13 +22,126 @@ const GAME_STATES = {
 };
 
 const statusDefinitions = {
-  burn: { name: "Burn", duration: 3, tick: "end", damage: 2, damageType: "fire" },
-  freeze: { name: "Freeze", duration: 2, hitPenalty: -2 },
-  poison: { name: "Poison", duration: 3, tick: "start", damage: 1, damageType: "physical" },
-  stun: { name: "Stun", duration: 1, skipAction: true },
-  bleed: { name: "Bleed", duration: 3, tick: "afterAct", damage: 2, damageType: "physical" },
-  guarded: { name: "Guarded", duration: 2, damageReduction: 3 },
-  shielded: { name: "Shielded", duration: 2, damageReduction: 2 },
+  burn: {
+    name: "Burn",
+    duration: 3,
+    tick: "end",
+    damage: 2,
+    damageType: "fire",
+    color: "burn",
+    negative: true,
+    tooltip: "Takes fire damage at the end of turn.",
+    removableBy: ["Soothing Balm", "Cleansing Light"],
+  },
+  freeze: {
+    name: "Frozen",
+    duration: 2,
+    hitPenalty: -2,
+    color: "freeze",
+    negative: true,
+    tooltip: "Suffers a penalty to hit and physical accuracy.",
+    removableBy: ["Warming Salve", "Mental Ward", "Cleansing Light"],
+  },
+  poison: {
+    name: "Poison",
+    duration: 3,
+    tick: "start",
+    damage: 1,
+    damageType: "physical",
+    color: "poison",
+    negative: true,
+    tooltip: "Takes damage at the start of turn.",
+    removableBy: ["Antitoxin", "Centered Breath", "Cleansing Light"],
+  },
+  stun: {
+    name: "Stun",
+    duration: 1,
+    skipAction: true,
+    color: "stun",
+    negative: true,
+    tooltip: "Loses the next action. Usually fades naturally.",
+    removableBy: ["Mental Ward", "Cleansing Light"],
+  },
+  bleed: {
+    name: "Bleed",
+    duration: 3,
+    tick: "afterAct",
+    damage: 2,
+    damageType: "physical",
+    color: "bleed",
+    negative: true,
+    tooltip: "Takes damage after acting.",
+    removableBy: ["Bandage", "Centered Breath", "Cleansing Light"],
+  },
+  guarded: {
+    name: "Guarded",
+    duration: 2,
+    damageReduction: 3,
+    color: "guarded",
+    negative: false,
+    tooltip: "Reduces incoming damage for a short time.",
+    removableBy: [],
+  },
+  shielded: {
+    name: "Shielded",
+    duration: 2,
+    damageReduction: 2,
+    color: "shielded",
+    negative: false,
+    tooltip: "Blunts incoming damage with a protective ward.",
+    removableBy: [],
+  },
+};
+
+const consumableItems = {
+  healthPotion: {
+    id: "healthPotion",
+    name: "Health Potion",
+    actionType: "minor",
+    cost: POTION_PRICE,
+    description: `Restore ${POTION_HEALING}-${POTION_HEALING_MAX} HP.`,
+    kind: "healing",
+  },
+  bandage: {
+    id: "bandage",
+    name: "Bandage",
+    actionType: "minor",
+    cost: BANDAGE_PRICE,
+    description: "Remove Bleed.",
+    removesStatuses: ["bleed"],
+  },
+  warmingSalve: {
+    id: "warmingSalve",
+    name: "Warming Salve",
+    actionType: "minor",
+    cost: WARMING_SALVE_PRICE,
+    description: "Remove Frozen.",
+    removesStatuses: ["freeze"],
+  },
+  antitoxin: {
+    id: "antitoxin",
+    name: "Antitoxin",
+    actionType: "minor",
+    cost: ANTITOXIN_PRICE,
+    description: "Remove Poison.",
+    removesStatuses: ["poison"],
+  },
+  soothingBalm: {
+    id: "soothingBalm",
+    name: "Soothing Balm",
+    actionType: "minor",
+    cost: SOOTHING_BALM_PRICE,
+    description: "Remove Burn.",
+    removesStatuses: ["burn"],
+  },
+  smellingSalts: {
+    id: "smellingSalts",
+    name: "Smelling Salts",
+    actionType: "minor",
+    cost: SMELLING_SALTS_PRICE,
+    description: "Stun usually fades naturally before this can help.",
+    removesStatuses: [],
+  },
 };
 
 const statTooltips = {
@@ -604,17 +722,18 @@ const skills = {
   },
   innerFocus: {
     id: "innerFocus",
-    name: "Inner Focus",
+    name: "Centered Breath",
     classId: "monk",
     stat: "soul",
     attackKind: "utility",
     mode: "standalone",
     hitBonus: 0,
-    statusSelf: { id: "shielded", chance: 1 },
+    canRemoveStatuses: ["bleed", "poison"],
+    statusRemovalLimit: 1,
     resourceType: "mana",
     resourceCost: 1,
     cooldownTurns: 1,
-    description: "Gain Shielded and steady your spirit.",
+    description: "Minor action that clears Bleed or Poison from yourself.",
   },
   brace: {
     id: "brace",
@@ -768,17 +887,19 @@ const skills = {
   },
   thoughtLock: {
     id: "thoughtLock",
-    name: "Thought Lock",
+    name: "Mental Ward",
     classId: "mystic",
     stat: "mind",
     attackKind: "utility",
     mode: "standalone",
     hitBonus: 0,
+    canRemoveStatuses: ["stun", "freeze"],
+    statusRemovalLimit: 1,
     statusSelf: { id: "shielded", chance: 1 },
     resourceType: null,
     resourceCost: 0,
     cooldownTurns: 2,
-    description: "Focus your will into a protective mental ward.",
+    description: "Minor action that clears a control effect and grants Shielded.",
   },
   hamstring: {
     id: "hamstring",
@@ -983,17 +1104,18 @@ const skills = {
   },
   radiantWard: {
     id: "radiantWard",
-    name: "Radiant Ward",
+    name: "Cleansing Light",
     classId: "paladin",
     stat: "soul",
     attackKind: "utility",
     mode: "standalone",
     hitBonus: 0,
-    statusSelf: { id: "shielded", chance: 1 },
+    canRemoveStatuses: "negative",
+    statusRemovalLimit: 1,
     resourceType: "mana",
     resourceCost: 1,
     cooldownTurns: 1,
-    description: "Wrap yourself in holy light and gain Shielded.",
+    description: "Minor action that removes one negative status from yourself.",
   },
   sanctifiedBlade: {
     id: "sanctifiedBlade",
@@ -1340,7 +1462,7 @@ const elements = {
   sideInventoryList: document.querySelector("#sideInventoryList"),
   inventorySummary: document.querySelector("#inventorySummary"),
   shopCurrency: document.querySelector("#shopCurrency"),
-  buyPotionButton: document.querySelector("#buyPotionButton"),
+  shopList: document.querySelector("#shopList"),
   innButton: document.querySelector("#innButton"),
   resultsList: document.querySelector("#resultsList"),
   rewardModal: document.querySelector("#rewardModal"),
@@ -1551,7 +1673,9 @@ function loadSnapshot(snapshot) {
   state.builderSelectedClassId = snapshot.builderSelectedClassId ?? snapshot.player?.classDef?.id ?? "warrior";
   state.player = snapshot.player;
   normalizePlayerProgression(state.player);
-  state.player.inventory.consumables.bandage ??= 0;
+  Object.keys(consumableItems).forEach((itemId) => {
+    state.player.inventory.consumables[itemId] ??= itemId === "healthPotion" ? 1 : 0;
+  });
   state.enemy = snapshot.enemy;
   state.turnIndex = snapshot.turnIndex ?? 0;
   state.actionUsed = snapshot.actionUsed ?? false;
@@ -1828,8 +1952,7 @@ function recalculateResources(combatant, previousMaxMana = combatant.maxMana ?? 
 }
 
 function clearNegativeStatuses(player) {
-  const negativeStatuses = new Set(["burn", "freeze", "poison", "stun", "bleed"]);
-  player.statuses = player.statuses.filter((status) => !negativeStatuses.has(status.id));
+  player.statuses = player.statuses.filter((status) => !statusDefinitions[status.id]?.negative);
 }
 
 function restorePlayerAtInn() {
@@ -2028,7 +2151,7 @@ function rollDamageDice(dice) {
 function createInventory(startingWeaponId, startingArmorId) {
   return {
     currency: { copper: 0, silver: 0, gold: 0 },
-    consumables: { healthPotion: 1, bandage: 0 },
+    consumables: { healthPotion: 1, bandage: 0, warmingSalve: 0, antitoxin: 0, soothingBalm: 0, smellingSalts: 0 },
     weapons: [startingWeaponId],
     armor: [startingArmorId],
   };
@@ -2532,11 +2655,27 @@ function formatTraits(combatant) {
   return `Resist ${resist}; Weak ${weak}`;
 }
 
+function formatStatusRemoval(statusId) {
+  const statusDef = statusDefinitions[statusId];
+  return statusDef?.removableBy?.length ? statusDef.removableBy.join(", ") : "Usually fades naturally or needs special recovery";
+}
+
+function getStatusTooltip(statusId) {
+  const statusDef = statusDefinitions[statusId];
+  return `${statusDef.tooltip} Removal: ${formatStatusRemoval(statusId)}.`;
+}
+
 function formatStatuses(combatant) {
   if (!combatant.statuses.length) {
-    return "none";
+    return '<span class="status-empty">No active effects</span>';
   }
-  return combatant.statuses.map((status) => `${statusDefinitions[status.id].name} ${status.duration}`).join(", ");
+  return combatant.statuses
+    .map((status) => {
+      const def = statusDefinitions[status.id];
+      const durationText = status.duration > 0 ? ` ${status.duration}` : "";
+      return `<span class="status-pill status-${def.color ?? "default"}" data-tooltip="${getStatusTooltip(status.id)}">${def.name}${durationText}</span>`;
+    })
+    .join("");
 }
 
 function renderCombatant(prefix, combatant) {
@@ -2545,7 +2684,7 @@ function renderCombatant(prefix, combatant) {
   elements[`${prefix}Stats`].innerHTML = formatStatsMarkup(combatant.stats);
   elements[`${prefix}Weapon`].textContent = `${combatant.weapon.name}: ${combatant.weapon.special}`;
   elements[`${prefix}Traits`].textContent = formatTraits(combatant);
-  elements[`${prefix}Statuses`].textContent = formatStatuses(combatant);
+  elements[`${prefix}Statuses`].innerHTML = formatStatuses(combatant);
   elements[`${prefix}Ac`].textContent = getAcFormula(combatant);
   elements[`${prefix}Attack`].textContent = `d20 + ${attackParts.map((part) => `${part.label} ${part.value}`).join(" + ")}`;
   elements[`${prefix}Damage`].textContent = `${formatDice(combatant.weapon.damageDice)} ${combatant.weapon.damageType}`;
@@ -2577,31 +2716,55 @@ function renderCombatant(prefix, combatant) {
 
 function renderInventory() {
   const inventory = state.player.inventory;
-  elements.inventoryList.innerHTML = "";
-  elements.sideInventoryList.innerHTML = "";
   applyNormalizedCurrency(inventory.currency, inventory.currency);
-  inventory.consumables.bandage ??= 0;
-  elements.inventorySummary.textContent = `Inventory: ${inventory.consumables.healthPotion ?? 0} potion, ${inventory.consumables.bandage ?? 0} bandage, ${formatCurrencyCompact(inventory.currency)}`;
-  const lines = [
-    `Currency: ${formatCurrencyDetailed(inventory.currency)}`,
-    `Health Potions: ${inventory.consumables.healthPotion ?? 0}`,
-    `Bandages: ${inventory.consumables.bandage ?? 0}`,
-    `Owned weapons: ${inventory.weapons.map((id) => weapons[id].name).join(", ")}`,
-    `Owned armor: ${inventory.armor.map((id) => armors[id].name).join(", ")}`,
-    `Equipped: ${state.player.weapon.name}, ${state.player.armor.name}`,
-  ];
-  lines.forEach((line) => {
-    const p = document.createElement("p");
-    p.textContent = line;
-    elements.inventoryList.append(p);
-    const sideP = document.createElement("p");
-    sideP.textContent = line;
-    elements.sideInventoryList.append(sideP);
+  Object.keys(consumableItems).forEach((itemId) => {
+    inventory.consumables[itemId] ??= itemId === "healthPotion" ? 1 : 0;
   });
+  elements.inventorySummary.textContent = "Inventory";
+  const consumableMarkup = Object.values(consumableItems)
+    .map((item) => {
+      const useState = getConsumableUseState(state.player, item);
+      const usingInCombat = state.gameState === GAME_STATES.inCombat;
+      const actionBlocked = usingInCombat && !canUseMinorAction();
+      const disabled = (!useState.usable && useState.reason !== "Out of stock") || actionBlocked || (state.player.inventory.consumables[item.id] ?? 0) <= 0;
+      const reason = actionBlocked ? "No Minor Action available" : useState.reason;
+      return `
+        <div class="item-row">
+          <div>
+            <strong>${item.name}</strong>
+            <span class="item-meta">x${state.player.inventory.consumables[item.id] ?? 0} · ${item.description}</span>
+          </div>
+          <button type="button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}">Use</button>
+        </div>
+      `;
+    })
+    .join("");
+  const equipmentMarkup = `
+    <p>Currency: ${formatCurrencyDetailed(inventory.currency)}</p>
+    <p>Owned weapons: ${inventory.weapons.map((id) => weapons[id].name).join(", ")}</p>
+    <p>Owned armor: ${inventory.armor.map((id) => armors[id].name).join(", ")}</p>
+    <p>Equipped: ${state.player.weapon.name}, ${state.player.armor.name}</p>
+    <div class="inventory-section">
+      <h3>Consumables</h3>
+      <div class="item-list">${consumableMarkup}</div>
+    </div>
+  `;
+  elements.inventoryList.innerHTML = equipmentMarkup;
+  elements.sideInventoryList.innerHTML = equipmentMarkup;
   elements.shopCurrency.textContent = `Funds: ${formatCurrencyDetailed(inventory.currency)}.`;
-  elements.buyPotionButton.disabled =
-    state.gameState !== GAME_STATES.betweenBattles ||
-    !canAffordCurrency(inventory.currency, POTION_PRICE);
+  elements.shopList.innerHTML = Object.values(consumableItems)
+    .map((item) => `
+      <div class="item-row">
+        <div>
+          <strong>${item.name}</strong>
+          <span class="item-meta">${item.description} · ${formatCurrencyCompact(item.cost)}</span>
+        </div>
+        <button type="button" data-buy-item="${item.id}" ${
+          state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, item.cost) ? "disabled" : ""
+        }>Buy</button>
+      </div>
+    `)
+    .join("");
   elements.innButton.disabled =
     state.gameState !== GAME_STATES.betweenBattles ||
     !canAffordCurrency(inventory.currency, INN_PRICE);
@@ -2800,11 +2963,6 @@ function renderSkills() {
     : "Tap a skill to prepare it and read its details here.";
 }
 
-function formatStatusRemoval(statusId) {
-  if (statusId === "bleed") return "Removed by Bandage";
-  return "Ends through duration or explicit recovery";
-}
-
 function renderCodexCards(entries, renderCard) {
   const grid = document.createElement("div");
   grid.className = "codex-grid";
@@ -2890,8 +3048,12 @@ function renderCodex() {
   } else if (state.activeCodexSection === "items") {
     content = renderCodexCards(
       [
-        { name: "Health Potion", use: `Restore ${POTION_HEALING}-${POTION_HEALING_MAX} HP.`, cost: formatCurrencyCompact(POTION_PRICE) },
-        { name: "Inn Stay", use: "Restore HP, Mana, and Stamina; clear cooldowns.", cost: formatCurrencyCompact(INN_PRICE) },
+        ...Object.values(consumableItems).map((item) => ({
+          name: item.name,
+          use: item.description,
+          cost: formatCurrencyCompact(item.cost),
+        })),
+        { name: "Inn Stay", use: "Restore HP, Mana, and Stamina, clear cooldowns, and remove temporary negative effects.", cost: formatCurrencyCompact(INN_PRICE) },
       ],
       (item) => createCodexCard(item.name, `Cost: ${item.cost}`, item.use)
     );
@@ -2904,19 +3066,20 @@ function renderCodex() {
 }
 
 function describeStatus(status) {
+  const parts = [status.tooltip];
   if (status.damage && status.tick) {
-    return `${status.damage} damage on ${status.tick} turn timing`;
+    parts.push(`${status.damage} damage on ${status.tick} turn timing`);
   }
   if (status.hitPenalty) {
-    return `${status.hitPenalty} to hit`;
+    parts.push(`${status.hitPenalty} to hit`);
   }
   if (status.skipAction) {
-    return "lose next action";
+    parts.push("Lose next action");
   }
   if (status.damageReduction) {
-    return `reduce incoming damage by ${status.damageReduction}`;
+    parts.push(`Reduce incoming damage by ${status.damageReduction}`);
   }
-  return "special condition";
+  return parts.join(". ");
 }
 
 function formatSkillEffect(skill) {
@@ -2927,7 +3090,12 @@ function formatSkillEffect(skill) {
   if (skill.damageDice) effects.push(`${formatDice(skill.damageDice)} ${skill.damageType}`);
   if (skill.damageBonus) effects.push(`${signed(skill.damageBonus)} damage`);
   if (skill.statusEffect) effects.push(`${statusDefinitions[skill.statusEffect.id].name} ${Math.round(skill.statusEffect.chance * 100)}%`);
+  if (skill.status) effects.push(`${statusDefinitions[skill.status.id].name} ${Math.round(skill.status.chance * 100)}%`);
   if (skill.statusSelf) effects.push(`Self: ${statusDefinitions[skill.statusSelf.id].name}`);
+  if (skill.canRemoveStatuses === "negative") effects.push("Removes 1 negative status");
+  if (Array.isArray(skill.canRemoveStatuses) && skill.canRemoveStatuses.length) {
+    effects.push(`Removes ${skill.canRemoveStatuses.map((statusId) => statusDefinitions[statusId].name).join(" or ")}`);
+  }
   return effects.length ? `(${effects.join("; ")})` : "";
 }
 
@@ -3039,6 +3207,17 @@ function useSelectedSkill() {
   startSkillCooldown(state.player, skill);
 
   if (skill.attackKind === "utility") {
+    if (skill.canRemoveStatuses) {
+      const removed = removeStatusesBySource(
+        state.player,
+        skill.canRemoveStatuses,
+        skill.name,
+        skill.statusRemovalLimit ?? Infinity
+      );
+      if (!removed.length) {
+        addLog(`${skill.name} finds no matching effect to remove.`);
+      }
+    }
     if (skill.statusSelf) {
       maybeApplyStatus(state.player, state.player, skill.statusSelf, skill.name);
     }
@@ -3111,7 +3290,6 @@ function renderCombat() {
     setActionButtons(true);
     elements.potionButton.disabled = (state.player.inventory.consumables.healthPotion ?? 0) <= 0 || state.player.hp >= state.player.maxHp;
     elements.bandageButton.disabled = (state.player.inventory.consumables.bandage ?? 0) <= 0 || !hasStatus(state.player, "bleed");
-    elements.buyPotionButton.disabled = !canAffordCurrency(state.player.inventory.currency, POTION_PRICE);
     elements.innButton.disabled = !canAffordCurrency(state.player.inventory.currency, INN_PRICE);
     elements.nextEncounterButton.hidden = false;
     elements.nextEncounterButton.disabled = state.pendingLevelUps > 0;
@@ -3143,7 +3321,6 @@ function renderCombat() {
   elements.bandageButton.disabled = !playerTurnActive || !canUseMinorAction() || (state.player.inventory.consumables.bandage ?? 0) <= 0 || !hasStatus(state.player, "bleed");
   elements.endTurnButton.disabled = !playerTurnActive;
   elements.clearSkillButton.hidden = !selectedSkill || !playerTurnActive;
-  elements.buyPotionButton.disabled = true;
   elements.innButton.disabled = true;
   elements.nextEncounterButton.hidden = true;
 }
@@ -3339,33 +3516,7 @@ function resolveAttack(attacker, attack = attacker.weapon, options = {}) {
 }
 
 function usePotion() {
-  if (!state.player || state.gameState === GAME_STATES.defeat || state.gameState === GAME_STATES.characterCreation) return;
-  const usingInCombat = state.gameState === GAME_STATES.inCombat;
-  if (usingInCombat && (currentCombatant()?.id !== "player" || !canUseMinorAction())) return;
-  if (usingInCombat && !startTurn(state.player)) {
-    renderCombat();
-    window.setTimeout(advanceTurn, 450);
-    return;
-  }
-  const quantity = state.player.inventory.consumables.healthPotion ?? 0;
-  if (quantity <= 0 || state.player.hp >= state.player.maxHp) return;
-  if (usingInCombat) markMinorActionUsed("Health Potion");
-  state.player.inventory.consumables.healthPotion -= 1;
-  const healRoll = rollRange([POTION_HEALING, POTION_HEALING_MAX]);
-  const oldHp = state.player.hp;
-  state.player.hp = Math.min(state.player.maxHp, state.player.hp + healRoll);
-  addLog(`${state.player.name} uses Health Potion and recovers ${state.player.hp - oldHp} HP.`);
-  if (usingInCombat && !state.winner) {
-    tickStatuses(state.player, "afterAct");
-  }
-  renderCombat();
-  void saveAdventure("inventory");
-  if (usingInCombat) {
-    if (isPlayerTurnComplete()) {
-      addLog(`${state.player.name} ends turn.`);
-      window.setTimeout(advanceTurn, 450);
-    }
-  }
+  useConsumableItem("healthPotion");
 }
 
 function removeStatus(combatant, statusId) {
@@ -3374,8 +3525,43 @@ function removeStatus(combatant, statusId) {
   return combatant.statuses.length !== before;
 }
 
-function useBandage() {
+function removeStatusesBySource(combatant, statusIds, sourceName, limit = Infinity) {
+  const removed = [];
+  const allowed = statusIds === "negative"
+    ? new Set(Object.entries(statusDefinitions).filter(([, def]) => def.negative).map(([statusId]) => statusId))
+    : new Set(statusIds);
+  combatant.statuses = combatant.statuses.filter((status) => {
+    if (removed.length >= limit || !allowed.has(status.id)) return true;
+    removed.push(statusDefinitions[status.id].name);
+    return false;
+  });
+  if (removed.length) {
+    addLog(`${sourceName} removes ${removed.join(", ")} from ${combatant.name}.`);
+  }
+  return removed;
+}
+
+function getConsumableUseState(player, itemDef) {
+  const quantity = player.inventory.consumables[itemDef.id] ?? 0;
+  if (quantity <= 0) return { usable: false, reason: "Out of stock" };
+  if (itemDef.kind === "healing") {
+    if (player.hp >= player.maxHp) return { usable: false, reason: "Already at full HP" };
+    return { usable: true, reason: "" };
+  }
+  if (!itemDef.removesStatuses?.length) {
+    return { usable: false, reason: itemDef.description };
+  }
+  const matching = player.statuses.filter((status) => itemDef.removesStatuses.includes(status.id));
+  if (!matching.length) {
+    return { usable: false, reason: `Needs ${itemDef.removesStatuses.map((statusId) => statusDefinitions[statusId].name).join(" or ")}` };
+  }
+  return { usable: true, reason: "" };
+}
+
+function useConsumableItem(itemId) {
   if (!state.player || state.gameState === GAME_STATES.defeat || state.gameState === GAME_STATES.characterCreation) return;
+  const itemDef = consumableItems[itemId];
+  if (!itemDef) return;
   const usingInCombat = state.gameState === GAME_STATES.inCombat;
   if (usingInCombat && (currentCombatant()?.id !== "player" || !canUseMinorAction())) return;
   if (usingInCombat && !startTurn(state.player)) {
@@ -3383,17 +3569,26 @@ function useBandage() {
     window.setTimeout(advanceTurn, 450);
     return;
   }
-  const quantity = state.player.inventory.consumables.bandage ?? 0;
-  if (quantity <= 0) return;
-  if (!hasStatus(state.player, "bleed")) {
-    addLog(`${state.player.name} has no Bleed to remove.`);
+  const useState = getConsumableUseState(state.player, itemDef);
+  if (!useState.usable) {
+    addLog(`${itemDef.name} cannot be used: ${useState.reason}.`);
     renderCombat();
     return;
   }
-  if (usingInCombat) markMinorActionUsed("Bandage");
-  state.player.inventory.consumables.bandage -= 1;
-  removeStatus(state.player, "bleed");
-  addLog(`${state.player.name} uses Bandage. Bleed removed.`);
+  if (usingInCombat) markMinorActionUsed(itemDef.name);
+  state.player.inventory.consumables[itemId] -= 1;
+  if (itemDef.kind === "healing") {
+    const healRoll = rollRange([POTION_HEALING, POTION_HEALING_MAX]);
+    const oldHp = state.player.hp;
+    state.player.hp = Math.min(state.player.maxHp, state.player.hp + healRoll);
+    addLog(`${state.player.name} uses ${itemDef.name} and recovers ${state.player.hp - oldHp} HP.`);
+  } else {
+    addLog(`${state.player.name} uses ${itemDef.name}.`);
+    removeStatusesBySource(state.player, itemDef.removesStatuses, itemDef.name);
+  }
+  if (usingInCombat && !state.winner) {
+    tickStatuses(state.player, "afterAct");
+  }
   renderCombat();
   void saveAdventure("inventory");
   if (usingInCombat && isPlayerTurnComplete()) {
@@ -3402,15 +3597,21 @@ function useBandage() {
   }
 }
 
-function buyPotion() {
+function useBandage() {
+  useConsumableItem("bandage");
+}
+
+function buyConsumable(itemId) {
   if (!state.player || state.gameState !== GAME_STATES.betweenBattles) return;
-  if (!spendCurrency(state.player.inventory, POTION_PRICE)) {
-    addLog(`${state.player.name} cannot afford a Health Potion.`);
+  const itemDef = consumableItems[itemId];
+  if (!itemDef) return;
+  if (!spendCurrency(state.player.inventory, itemDef.cost)) {
+    addLog(`${state.player.name} cannot afford ${itemDef.name}.`);
     renderCombat();
     return;
   }
-  addInventoryItem(state.player.inventory, "consumables", "healthPotion", 1);
-  addLog(`${state.player.name} buys a Health Potion for ${formatCurrencyCompact(POTION_PRICE)}.`);
+  addInventoryItem(state.player.inventory, "consumables", itemId, 1);
+  addLog(`${state.player.name} buys ${itemDef.name} for ${formatCurrencyCompact(itemDef.cost)}.`);
   renderCombat();
   void saveAdventure("shop purchase");
 }
@@ -3471,7 +3672,7 @@ function stayAtInn() {
   }
   restorePlayerAtInn();
   addLog(
-    `${state.player.name} stays at the inn for ${formatCurrencyCompact(INN_PRICE)} and restores to ${state.player.hp} / ${state.player.maxHp} HP, ${state.player.mana} / ${state.player.maxMana} Mana, and ${state.player.stamina} / ${state.player.maxStamina} Stamina.`
+    `${state.player.name} stays at the inn for ${formatCurrencyCompact(INN_PRICE)} and restores to ${state.player.hp} / ${state.player.maxHp} HP, ${state.player.mana} / ${state.player.maxMana} Mana, and ${state.player.stamina} / ${state.player.maxStamina} Stamina. Negative effects and cooldowns are cleared.`
   );
   renderCombat();
   void saveAdventure("rest");
@@ -3916,8 +4117,22 @@ elements.nextEncounterButton.addEventListener("click", startNextEncounter);
 elements.rewardContinueButton.addEventListener("click", hideRewardModal);
 elements.progressionContinueButton.addEventListener("click", hideProgressionModal);
 elements.infoCloseButton.addEventListener("click", hideInfoModal);
-elements.buyPotionButton.addEventListener("click", buyPotion);
 elements.innButton.addEventListener("click", stayAtInn);
+elements.inventoryList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-use-item]");
+  if (!button) return;
+  useConsumableItem(button.dataset.useItem);
+});
+elements.sideInventoryList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-use-item]");
+  if (!button) return;
+  useConsumableItem(button.dataset.useItem);
+});
+elements.shopList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-buy-item]");
+  if (!button) return;
+  buyConsumable(button.dataset.buyItem);
+});
 elements.resetButton.addEventListener("click", resetToBuilder);
 elements.applyLevelButton.addEventListener("click", applyLevelUp);
 elements.loginButton.addEventListener("click", () => loginOrSignup("login"));
