@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soulmarch</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <h1>Soulmarch</h1>
+        <button id="resetButton" type="button" hidden>New Character</button>
+      </header>
+
+      <section id="authScreen" aria-label="Account access">
+        <h2>Account</h2>
+        <div class="auth-hero" aria-hidden="true">
+          <img class="auth-wordmark" src="title-soulmarch.png" alt="Soulmarch" />
+          <p class="auth-tagline">
+            Face the endless road.
+            <span>Fight, endure, and carve your legend one battle at a time.</span>
+          </p>
+        </div>
+        <section class="panel auth-panel">
+          <div class="auth-grid">
+            <label for="authUsername">Username / Email</label>
+            <input id="authUsername" type="text" maxlength="64" autocomplete="username" />
+            <label for="authPassword">Password</label>
+            <input id="authPassword" type="password" minlength="8" autocomplete="current-password" />
+          </div>
+          <p id="authText" class="validation"></p>
+          <div class="action-buttons auth-buttons">
+            <button id="loginButton" type="button">Log In</button>
+            <button id="signupButton" type="button">Sign Up</button>
+          </div>
+        </section>
+      </section>
+
+      <section id="hubScreen" hidden aria-label="Adventure hub">
+        <div class="panel panel-heading hub-header">
+          <div>
+            <h2>Adventure Hub</h2>
+            <p class="muted" id="hubUserText"></p>
+          </div>
+          <div class="hub-actions">
+            <button id="graveyardButton" type="button">Graveyard</button>
+            <button id="logoutButton" type="button">Log Out</button>
+          </div>
+        </div>
+        <div id="hubValidationText" class="validation"></div>
+        <div id="adventureSlots" class="hub-grid"></div>
+      </section>
+
+      <section id="graveyardScreen" hidden aria-label="Graveyard">
+        <div class="panel panel-heading graveyard-header">
+          <div>
+            <h2>Graveyard</h2>
+            <p class="muted">Legends remembered.</p>
+          </div>
+          <button id="backToHubButton" type="button">Back to Hub</button>
+        </div>
+        <div id="graveyardList" class="hub-grid graveyard-grid"></div>
+      </section>
+
+      <section id="builderScreen" aria-label="Character creation">
+        <h2>Character Creation</h2>
+
+        <section class="builder-identity" aria-label="Identity">
+          <label for="nameInput">Character Name</label>
+          <input id="nameInput" type="text" maxlength="32" value="Adventurer" />
+          <label for="descriptionInput">Description</label>
+          <input id="descriptionInput" type="text" maxlength="80" placeholder="Optional character note" />
+        </section>
+
+        <div class="builder-grid compact-builder">
+          <section class="panel builder-panel" aria-label="Stats">
+            <h3>Stats</h3>
+            <p class="help">Each stat must be 1 to 10. Total cannot exceed 10.</p>
+
+            <label class="stat-control" for="mindInput">
+              <span>Mind</span>
+              <input id="mindInput" type="number" min="1" max="10" value="4" />
+            </label>
+            <p class="help">Thinking, awareness, social reasoning, puzzles, deception.</p>
+
+            <label class="stat-control" for="bodyInput">
+              <span>Body</span>
+              <input id="bodyInput" type="number" min="1" max="10" value="4" />
+            </label>
+            <p class="help">Weapon attacks, climbing, jumping, brute force.</p>
+
+            <label class="stat-control" for="soulInput">
+              <span>Soul</span>
+              <input id="soulInput" type="number" min="1" max="10" value="2" />
+            </label>
+            <p class="help">Spellcasting, magical checks, mystical effects.</p>
+
+            <p class="stat">Total spent: <strong id="totalSpent">10</strong></p>
+            <p class="stat">Remaining: <strong id="totalRemaining">0</strong></p>
+          </section>
+
+          <section class="panel builder-panel" aria-label="Class selection">
+            <h3>Class</h3>
+            <div id="classPills" class="class-pill-grid"></div>
+          </section>
+
+          <section class="panel builder-panel" aria-label="Equipment selection">
+            <h3>Equipment</h3>
+            <label for="weaponSelect">Weapon</label>
+            <select id="weaponSelect">
+              <option value="sword">Sword</option>
+              <option value="axe">Axe</option>
+              <option value="bow">Bow</option>
+              <option value="staff">Staff</option>
+              <option value="dagger">Dagger</option>
+              <option value="unarmed">Unarmed</option>
+            </select>
+
+            <label for="armorSelect">Armor</label>
+            <select id="armorSelect">
+              <option value="none">No Armor</option>
+              <option value="light">Light</option>
+              <option value="medium">Medium</option>
+              <option value="heavy">Heavy</option>
+            </select>
+          </section>
+        </div>
+
+        <section class="panel builder-summary" aria-label="Character summary">
+          <h3>Summary</h3>
+          <div class="builder-summary-grid">
+            <p class="stat">Name: <span id="builderSummaryName"></span></p>
+            <p class="stat">Description: <span id="builderSummaryDescription"></span></p>
+            <p class="stat">Class: <span id="builderSummaryClass"></span></p>
+            <p class="stat">Stats: <span id="builderSummaryStats"></span></p>
+            <p class="stat">Weapon: <span id="builderSummaryWeapon"></span></p>
+            <p class="stat">Armor: <span id="builderSummaryArmor"></span></p>
+            <p class="stat">AC: <span id="builderAc"></span></p>
+            <p class="stat">Attack: <span id="builderWeaponAttack"></span></p>
+            <p class="stat">Damage: <span id="builderWeaponDamage"></span></p>
+            <p class="stat">Special: <span id="builderWeaponSpecial"></span></p>
+            <p class="stat">Starting HP: <span id="builderHp"></span></p>
+            <p class="stat">Skills: <span id="builderSummarySkills"></span></p>
+          </div>
+          <p id="validationText" class="validation"></p>
+          <button id="startButton" type="button">Start Adventure!</button>
+        </section>
+      </section>
+
+      <div id="levelUpScreen" class="modal-backdrop" hidden aria-label="Level up">
+        <section class="modal panel levelup-modal" role="dialog" aria-modal="true" aria-labelledby="levelUpTitle">
+          <h2 id="levelUpTitle">Level Up!</h2>
+          <p id="levelUpText"></p>
+
+          <section class="levelup-section" aria-label="Stat increase">
+            <h3>Choose a stat increase</h3>
+            <div id="levelStatPills" class="choice-pill-grid"></div>
+          </section>
+
+          <section id="subclassSection" class="levelup-section" hidden aria-label="Subclass selection">
+            <h3>Choose a subclass</h3>
+            <div id="subclassPills" class="choice-pill-grid"></div>
+          </section>
+
+          <p id="levelValidationText" class="validation"></p>
+          <button id="applyLevelButton" type="button">Confirm Level Up</button>
+        </section>
+      </div>
+
+      <section id="combatScreen" hidden aria-label="Combat">
+        <div class="game-layout">
+          <article class="panel player-panel" id="playerCard">
+            <div class="panel-heading">
+              <h2 id="playerNameHeading">Player</h2>
+              <span id="playerLevelXp" class="muted"></span>
+            </div>
+            <div id="playerHpBar"></div>
+            <div class="resource-bars">
+              <div id="playerManaBar"></div>
+              <div id="playerStaminaBar"></div>
+            </div>
+
+            <nav class="tabs" aria-label="Player panel tabs">
+              <button class="tab-button active" type="button" data-tab="overview">Overview</button>
+              <button class="tab-button" type="button" data-tab="details">Details</button>
+              <button class="tab-button" type="button" data-tab="inventory">Inventory</button>
+              <button class="tab-button" type="button" data-tab="codex">Codex</button>
+            </nav>
+
+            <section id="overviewTab" class="tab-panel">
+              <div class="compact-grid">
+                <p class="stat">Class: <span id="playerClass"></span></p>
+                <p class="stat">Subclass: <span id="playerSubclass"></span></p>
+                <p class="stat">Stats: <span id="playerStats"></span></p>
+                <p class="stat">Wealth: <span id="playerWealth"></span></p>
+                <p class="stat">AC: <span id="playerAc"></span></p>
+                <p class="stat">Weapon: <span id="playerWeapon"></span></p>
+                <p class="stat">Armor: <span id="playerArmor"></span></p>
+                <p class="stat">Status: <span id="playerStatuses"></span></p>
+                <p class="stat">Attack: <span id="playerAttack"></span></p>
+              </div>
+              <div id="skillsList" class="skill-pills"></div>
+              <p class="stat selected-skill">
+                Selected skill: <span id="selectedSkillText">None</span>
+                <button id="clearSkillButton" type="button" hidden>X</button>
+              </p>
+            </section>
+
+            <section id="detailsTab" class="tab-panel" hidden>
+              <p class="stat">Attack formula: <span id="playerAttackFormula"></span></p>
+              <p class="stat">Magic: <span id="playerSpell"></span></p>
+              <p class="stat">Damage: <span id="playerDamage"></span></p>
+              <p class="stat">Resist / Weak: <span id="playerTraits"></span></p>
+              <p class="stat">Cooldowns: <span id="playerCooldowns"></span></p>
+              <p class="stat">Derived: <span id="playerDerived"></span></p>
+            </section>
+
+            <section id="inventoryTab" class="tab-panel" hidden>
+              <div id="inventoryList" class="plain-list"></div>
+            </section>
+
+            <section id="codexTab" class="tab-panel" hidden>
+              <div id="codexList" class="plain-list"></div>
+            </section>
+          </article>
+
+          <section class="center-column">
+            <article class="panel enemy-panel" id="enemyCard">
+              <h2 id="enemyNameHeading">Enemy</h2>
+              <div id="enemyHpBar"></div>
+              <details>
+                <summary>Enemy details</summary>
+                <p class="stat">Type / Level: <span id="enemyTypeLevel"></span></p>
+                <p class="stat">Stats: <span id="enemyStats"></span></p>
+                <p class="stat">Weapon: <span id="enemyWeapon"></span></p>
+                <p class="stat">Resist / Weak: <span id="enemyTraits"></span></p>
+                <p class="stat">Status: <span id="enemyStatuses"></span></p>
+                <p class="stat">AC: <span id="enemyAc"></span></p>
+                <p class="stat">Attack: <span id="enemyAttack"></span></p>
+                <p class="stat">Damage: <span id="enemyDamage"></span></p>
+              </details>
+            </article>
+
+            <section class="panel actions-panel">
+              <h2>Actions</h2>
+              <p id="turnText"></p>
+              <p id="actionText"></p>
+              <div class="action-buttons">
+                <button id="attackButton" type="button">Attack</button>
+                <button id="potionButton" type="button">Use Potion</button>
+                <button id="nextEncounterButton" type="button" hidden>Next Battle</button>
+              </div>
+            </section>
+
+            <section class="panel" aria-label="Dice log">
+              <h2>Dice Log</h2>
+              <ol id="diceLog" class="dice-log"></ol>
+            </section>
+          </section>
+
+          <aside class="right-column">
+            <section class="panel initiative-panel">
+              <h2>Initiative</h2>
+              <ol id="initiativeList"></ol>
+            </section>
+
+            <section class="panel utility-panel">
+              <details id="inventorySummaryDetails">
+                <summary id="inventorySummary">Inventory</summary>
+                <div id="sideInventoryList" class="plain-list"></div>
+              </details>
+              <details id="shopDetails">
+                <summary>Shop</summary>
+                <div class="plain-list">
+                  <p id="shopCurrency"></p>
+                  <p>Health Potion: 1 silver</p>
+                  <button id="buyPotionButton" type="button">Buy Health Potion</button>
+                  <button id="innButton" type="button">Stay at the Inn (3s)</button>
+                </div>
+              </details>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <div id="rewardModal" class="modal-backdrop" hidden>
+        <section class="modal panel" role="dialog" aria-modal="true" aria-labelledby="rewardTitle">
+          <h2 id="rewardTitle">Rewards</h2>
+          <div id="resultsList" class="plain-list"></div>
+          <button id="rewardContinueButton" type="button">Continue</button>
+        </section>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
