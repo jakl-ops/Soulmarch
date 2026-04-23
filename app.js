@@ -1587,7 +1587,6 @@ const elements = {
   endTurnButton: document.querySelector("#endTurnButton"),
   nextEncounterButton: document.querySelector("#nextEncounterButton"),
   inventoryList: document.querySelector("#inventoryList"),
-  inventorySummary: document.querySelector("#inventorySummary"),
   shopCurrency: document.querySelector("#shopCurrency"),
   shopList: document.querySelector("#shopList"),
   innButton: document.querySelector("#innButton"),
@@ -1606,6 +1605,7 @@ const elements = {
   skillInfoPanel: document.querySelector("#skillInfoPanel"),
   selectedSkillText: document.querySelector("#selectedSkillText"),
   codexList: document.querySelector("#codexList"),
+  codexButton: document.querySelector("#codexButton"),
   resetButton: document.querySelector("#resetButton"),
   diceLog: document.querySelector("#diceLog"),
 };
@@ -1784,6 +1784,9 @@ function activeScreen(screenName) {
     element.hidden = name !== screenName;
   });
   document.body.classList.toggle("auth-mode", screenName === "auth");
+  if (elements.codexButton) {
+    elements.codexButton.hidden = screenName !== "combat";
+  }
 }
 
 function getInitiativeSnapshot() {
@@ -1836,14 +1839,12 @@ function loadSnapshot(snapshot) {
   state.builderSelectedClassId = snapshot.builderSelectedClassId ?? snapshot.player?.classDef?.id ?? "warrior";
   state.player = snapshot.player;
   normalizePlayerProgression(state.player);
+  normalizePlayerInventory(state.player);
   if (state.player.inventory?.consumables?.healthPotion) {
     state.player.inventory.consumables.minorHealthPotion =
       (state.player.inventory.consumables.minorHealthPotion ?? 0) + state.player.inventory.consumables.healthPotion;
     delete state.player.inventory.consumables.healthPotion;
   }
-  Object.keys(consumableItems).forEach((itemId) => {
-    state.player.inventory.consumables[itemId] ??= itemId === "minorHealthPotion" ? 1 : 0;
-  });
   state.enemy = snapshot.enemy;
   state.turnIndex = snapshot.turnIndex ?? 0;
   state.actionUsed = snapshot.actionUsed ?? false;
@@ -2057,6 +2058,24 @@ function normalizePlayerProgression(player) {
   if (!player?.classDef) return;
   player.unlockedSkills = Array.from(new Set(player.unlockedSkills?.length ? player.unlockedSkills : getClassStartingSkillIds(player.classDef.id)));
   player.upgradedSkills = Array.from(new Set(player.upgradedSkills ?? []));
+}
+
+function normalizePlayerInventory(player) {
+  if (!player) return;
+  player.inventory ??= {};
+  player.inventory.currency ??= { gold: 0, silver: 0, copper: 0 };
+  applyNormalizedCurrency(player.inventory.currency, player.inventory.currency);
+  player.inventory.consumables ??= {};
+  Object.keys(consumableItems).forEach((itemId) => {
+    player.inventory.consumables[itemId] ??= itemId === "minorHealthPotion" ? 1 : 0;
+  });
+  player.inventory.weapons = Array.isArray(player.inventory.weapons) ? player.inventory.weapons.filter(Boolean) : [];
+  player.inventory.armor = Array.isArray(player.inventory.armor) ? player.inventory.armor.filter(Boolean) : [];
+}
+
+function safeEntityName(recordMap, id, fallback = "Unknown") {
+  if (!id) return fallback;
+  return recordMap[id]?.name ?? (titleCase(String(id).replace(/([A-Z])/g, " $1").trim()) || fallback);
 }
 
 function getResolvedSkill(skillId, player = state.player) {
@@ -2855,6 +2874,21 @@ function formatStatuses(combatant) {
 }
 
 function renderCombatant(prefix, combatant) {
+  if (!combatant) {
+    if (prefix === "enemy") {
+      elements.enemyNameHeading.textContent = "Enemy";
+      elements.enemyTypeLevel.textContent = "-";
+      elements.enemyStats.textContent = "-";
+      elements.enemyWeapon.textContent = "-";
+      elements.enemyTraits.textContent = "-";
+      elements.enemyStatuses.innerHTML = '<span class="status-empty">No active effects</span>';
+      elements.enemyAc.textContent = "-";
+      elements.enemyAttack.textContent = "-";
+      elements.enemyDamage.textContent = "-";
+      elements.enemyHpBar.innerHTML = "";
+    }
+    return;
+  }
   const attackParts = getAttackParts(combatant);
   const attackTotal = sumParts(attackParts);
   renderHpBar(elements[`${prefix}HpBar`], combatant);
@@ -2894,12 +2928,10 @@ function renderCombatant(prefix, combatant) {
 }
 
 function renderInventory() {
+  if (!state.player || !elements.inventoryList) return;
   const inventory = state.player.inventory;
+  normalizePlayerInventory(state.player);
   applyNormalizedCurrency(inventory.currency, inventory.currency);
-  Object.keys(consumableItems).forEach((itemId) => {
-    inventory.consumables[itemId] ??= itemId === "minorHealthPotion" ? 1 : 0;
-  });
-  elements.inventorySummary.textContent = "Inventory";
   const consumableMarkup = Object.values(consumableItems)
     .map((item) => {
       const useState = getConsumableUseState(state.player, item);
@@ -2918,13 +2950,19 @@ function renderInventory() {
       `;
     })
     .join("");
+  const ownedWeapons = inventory.weapons.length
+    ? inventory.weapons.map((id) => safeEntityName(weapons, id)).join(", ")
+    : "None";
+  const ownedArmor = inventory.armor.length
+    ? inventory.armor.map((id) => safeEntityName(armors, id)).join(", ")
+    : "None";
   const equipmentMarkup = `
     <div class="inventory-section">
       <h3>Currency</h3>
       <div>${renderCurrencyWithIcons(inventory.currency, { showZero: true })}</div>
     </div>
-    <p>Owned weapons: ${inventory.weapons.map((id) => weapons[id].name).join(", ")}</p>
-    <p>Owned armor: ${inventory.armor.map((id) => armors[id].name).join(", ")}</p>
+    <p>Owned weapons: ${ownedWeapons}</p>
+    <p>Owned armor: ${ownedArmor}</p>
     <p>Equipped: ${state.player.weapon.name}, ${state.player.armor.name}</p>
     <div class="inventory-section">
       <h3>Consumables</h3>
@@ -2932,23 +2970,31 @@ function renderInventory() {
     </div>
   `;
   elements.inventoryList.innerHTML = equipmentMarkup;
-  elements.shopCurrency.innerHTML = `Funds: ${renderCurrencyWithIcons(inventory.currency, { compact: true })}`;
-  elements.shopList.innerHTML = Object.values(consumableItems)
-    .map((item) => `
-      <div class="item-row">
-        <div>
-          <strong>${item.name}</strong>
-          <span class="item-meta">${item.description} · ${renderCurrencyWithIcons(item.cost, { compact: true })}</span>
-        </div>
-        <button type="button" data-buy-item="${item.id}" ${
-          state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, item.cost) ? "disabled" : ""
-        }>Buy</button>
+  renderShop();
+}
+
+function renderShop() {
+  if (!state.player || !elements.shopList || !elements.shopCurrency) return;
+  const inventory = state.player.inventory;
+  normalizePlayerInventory(state.player);
+  elements.shopCurrency.innerHTML = `Funds: ${renderCurrencyWithIcons(inventory.currency, { compact: true, showZero: true })}`;
+  elements.shopList.innerHTML = "";
+  Object.values(consumableItems).forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "item-row";
+    const disabled = state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, item.cost);
+    row.innerHTML = `
+      <div>
+        <strong>${item.name}</strong>
+        <span class="item-meta">${item.description}</span>
+        <span class="item-meta">Cost: ${renderCurrencyWithIcons(item.cost, { compact: true })}</span>
+        <span class="item-meta">Owned: ${inventory.consumables[item.id] ?? 0}</span>
       </div>
-    `)
-    .join("");
-  elements.innButton.disabled =
-    state.gameState !== GAME_STATES.betweenBattles ||
-    !canAffordCurrency(inventory.currency, INN_PRICE);
+      <button type="button" data-buy-item="${item.id}" ${disabled ? "disabled" : ""}>Buy</button>
+    `;
+    elements.shopList.append(row);
+  });
+  elements.innButton.disabled = state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, INN_PRICE);
 }
 
 function renderResults() {
@@ -3026,10 +3072,16 @@ function switchPlayerTab(tabName) {
     const panel = document.querySelector(`#${name}Tab`);
     panel.hidden = name !== tabName;
   });
+  if (elements.codexButton) {
+    elements.codexButton.classList.toggle("active", tabName === "codex");
+  }
 }
 
 function getPlayerSkills() {
-  return (state.player?.unlockedSkills ?? []).map((id) => getSkillById(id, state.player)).filter(Boolean);
+  if (!state.player) return [];
+  normalizePlayerProgression(state.player);
+  const unlocked = state.player.unlockedSkills?.length ? state.player.unlockedSkills : getClassStartingSkillIds(state.player.classDef?.id);
+  return unlocked.map((id) => getSkillById(id, state.player)).filter(Boolean);
 }
 
 function getSkillCooldownRemaining(player, skillId) {
@@ -3107,6 +3159,7 @@ function getSkillBadgeText(skill) {
 }
 
 function renderSkills() {
+  if (!elements.skillsList || !elements.skillInfoPanel || !state.player) return;
   const skillList = getPlayerSkills();
   const selected = getSelectedSkill();
   const selectedActionType = getSkillActionType(selected);
@@ -3169,6 +3222,7 @@ function createCodexCard(title, subtitle, description, chips = [], bullets = [])
 }
 
 function renderCodex() {
+  if (!elements.codexList) return;
   elements.codexList.innerHTML = "";
   const nav = document.createElement("div");
   nav.className = "subtabs";
@@ -3422,6 +3476,9 @@ function useSelectedSkill() {
 
 function renderInitiative() {
   elements.initiativeList.innerHTML = "";
+  if (!state.initiative?.length) {
+    return;
+  }
   state.initiative.forEach((entry, index) => {
     const item = document.createElement("li");
     item.textContent = `${entry.combatant.name}: ${entry.total}`;
@@ -3443,10 +3500,34 @@ function renderCombat() {
   renderCombatant("player", state.player);
   renderCombatant("enemy", state.enemy);
   renderInitiative();
-  renderInventory();
+  try {
+    renderInventory();
+  } catch (error) {
+    console.error("Inventory render failed", error);
+    if (elements.inventoryList) {
+      elements.inventoryList.innerHTML = `<p class="muted">Inventory could not be displayed for this save. Please refresh or continue the adventure to resync it.</p>`;
+    }
+    if (elements.shopList) {
+      elements.shopList.innerHTML = `<p class="muted">Shop could not be displayed right now.</p>`;
+    }
+  }
   renderResults();
-  renderSkills();
-  renderCodex();
+  try {
+    renderSkills();
+  } catch (error) {
+    console.error("Skill render failed", error);
+    if (elements.skillsList) {
+      elements.skillsList.innerHTML = `<p class="muted">Skills could not be displayed right now.</p>`;
+    }
+  }
+  try {
+    renderCodex();
+  } catch (error) {
+    console.error("Codex render failed", error);
+    if (elements.codexList) {
+      elements.codexList.innerHTML = `<p class="muted">Codex could not be displayed right now.</p>`;
+    }
+  }
 
   elements.playerCard.classList.toggle("active", active?.id === "player" && !state.winner);
   elements.enemyCard.classList.toggle("active", active?.id === "enemy" && !state.winner);
@@ -4291,6 +4372,7 @@ function endPlayerTurnEarly() {
 document.querySelectorAll(".tab-button").forEach((button) => {
   button.addEventListener("click", () => switchPlayerTab(button.dataset.tab));
 });
+elements.codexButton.addEventListener("click", () => switchPlayerTab("codex"));
 
 elements.weaponSelect.addEventListener("change", renderBuilder);
 elements.armorSelect.addEventListener("change", renderBuilder);

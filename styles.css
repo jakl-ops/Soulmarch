@@ -66,11 +66,35 @@ body.auth-mode .app > *:not(#authScreen) {
 }
 
 header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+.header-spacer {
+  min-width: 0;
+}
+
+.app-title {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.app-wordmark {
+  display: block;
+  width: min(560px, 62vw);
+  max-width: 100%;
+  height: auto;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: end;
 }
 
 body.auth-mode header {
@@ -775,6 +799,11 @@ label {
   background: #1f4638;
 }
 
+#codexButton.active {
+  border-color: #8fd9b6;
+  background: #1f4638;
+}
+
 .tab-panel {
   min-height: 220px;
 }
@@ -1325,8 +1354,22 @@ label {
   }
 
   header {
-    align-items: flex-start;
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .header-spacer {
+    display: none;
+  }
+
+  .header-actions {
+    justify-self: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .app-wordmark {
+    width: min(420px, 78vw);
   }
 
   #startButton,
