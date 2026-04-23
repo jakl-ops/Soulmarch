@@ -717,8 +717,6 @@ label {
 #attackButton,
 #majorSkillButton,
 #minorSkillButton,
-#potionButton,
-#bandageButton,
 #endTurnButton,
 #nextEncounterButton {
   width: 180px;
@@ -932,6 +930,17 @@ label {
   padding-top: 10px;
 }
 
+.between-controls {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.between-controls p {
+  margin-bottom: 0;
+  color: #c6ceca;
+}
+
 #clearSkillButton {
   min-height: 24px;
   width: 24px;
@@ -1035,6 +1044,11 @@ label {
   margin-bottom: 14px;
 }
 
+.inventory-hint {
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
 .action-group + .action-group {
   margin-top: 14px;
 }
@@ -1112,6 +1126,27 @@ label {
   color: #aeb8b2;
   font-size: 13px;
   line-height: 1.35;
+}
+
+.log-panel {
+  overflow: hidden;
+}
+
+.log-panel summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 32px;
+  font-weight: 600;
+  color: #f4f7f5;
+  margin-bottom: 12px;
+}
+
+.log-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.log-panel[open] summary {
+  margin-bottom: 12px;
 }
 
 .status-empty {
@@ -1298,8 +1333,6 @@ label {
   #attackButton,
   #majorSkillButton,
   #minorSkillButton,
-  #potionButton,
-  #bandageButton,
   #endTurnButton,
   #nextEncounterButton {
     width: 100%;

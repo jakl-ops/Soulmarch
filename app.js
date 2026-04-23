@@ -2,9 +2,6 @@ const STAT_LIMIT = 10;
 const MIN_STAT = 1;
 const MAX_STAT = 10;
 const BASE_AC = 10;
-const POTION_HEALING = 8;
-const POTION_HEALING_MAX = 15;
-const POTION_PRICE = { copper: 0, silver: 1, gold: 0 };
 const BANDAGE_PRICE = { copper: 5, silver: 0, gold: 0 };
 const WARMING_SALVE_PRICE = { copper: 8, silver: 0, gold: 0 };
 const ANTITOXIN_PRICE = { copper: 0, silver: 1, gold: 0 };
@@ -59,8 +56,8 @@ const statusDefinitions = {
     skipAction: true,
     color: "stun",
     negative: true,
-    tooltip: "Loses the next action. Usually fades naturally.",
-    removableBy: ["Mental Ward", "Cleansing Light"],
+    tooltip: "Loses the next action.",
+    removableBy: ["Smelling Salts", "Mental Ward", "Cleansing Light"],
   },
   bleed: {
     name: "Bleed",
@@ -94,19 +91,134 @@ const statusDefinitions = {
 };
 
 const consumableItems = {
-  healthPotion: {
-    id: "healthPotion",
-    name: "Health Potion",
+  minorHealthPotion: {
+    id: "minorHealthPotion",
+    name: "Minor Health Potion",
     actionType: "minor",
-    cost: POTION_PRICE,
-    description: `Restore ${POTION_HEALING}-${POTION_HEALING_MAX} HP.`,
-    kind: "healing",
+    type: "potion",
+    cost: { copper: 0, silver: 1, gold: 0 },
+    restoreType: "hp",
+    restoreRange: [8, 15],
+    description: "Restore 8-15 HP.",
+  },
+  majorHealthPotion: {
+    id: "majorHealthPotion",
+    name: "Major Health Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 5, gold: 0 },
+    restoreType: "hp",
+    restoreRange: [18, 30],
+    description: "Restore 18-30 HP.",
+  },
+  advancedHealthPotion: {
+    id: "advancedHealthPotion",
+    name: "Advanced Health Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 0, gold: 1 },
+    restoreType: "hp",
+    restoreRange: [35, 55],
+    description: "Restore 35-55 HP.",
+  },
+  magicalHealthPotion: {
+    id: "magicalHealthPotion",
+    name: "Magical Health Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 0, gold: 10 },
+    restoreType: "hp",
+    restoreRange: [80, 120],
+    description: "Restore 80-120 HP.",
+  },
+  minorManaPotion: {
+    id: "minorManaPotion",
+    name: "Minor Mana Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 1, gold: 0 },
+    restoreType: "mana",
+    restoreRange: [2, 4],
+    description: "Restore 2-4 Mana.",
+  },
+  majorManaPotion: {
+    id: "majorManaPotion",
+    name: "Major Mana Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 5, gold: 0 },
+    restoreType: "mana",
+    restoreRange: [5, 8],
+    description: "Restore 5-8 Mana.",
+  },
+  advancedManaPotion: {
+    id: "advancedManaPotion",
+    name: "Advanced Mana Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 0, gold: 1 },
+    restoreType: "mana",
+    restoreRange: [9, 14],
+    description: "Restore 9-14 Mana.",
+  },
+  magicalManaPotion: {
+    id: "magicalManaPotion",
+    name: "Magical Mana Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 0, gold: 10 },
+    restoreType: "mana",
+    restoreRange: [18, 25],
+    description: "Restore 18-25 Mana.",
+  },
+  minorStaminaPotion: {
+    id: "minorStaminaPotion",
+    name: "Minor Stamina Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 1, gold: 0 },
+    restoreType: "stamina",
+    restoreRange: [2, 4],
+    description: "Restore 2-4 Stamina.",
+  },
+  majorStaminaPotion: {
+    id: "majorStaminaPotion",
+    name: "Major Stamina Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 5, gold: 0 },
+    restoreType: "stamina",
+    restoreRange: [5, 8],
+    description: "Restore 5-8 Stamina.",
+  },
+  advancedStaminaPotion: {
+    id: "advancedStaminaPotion",
+    name: "Advanced Stamina Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 0, gold: 1 },
+    restoreType: "stamina",
+    restoreRange: [9, 14],
+    description: "Restore 9-14 Stamina.",
+  },
+  magicalStaminaPotion: {
+    id: "magicalStaminaPotion",
+    name: "Magical Stamina Potion",
+    actionType: "minor",
+    type: "potion",
+    cost: { copper: 0, silver: 0, gold: 10 },
+    restoreType: "stamina",
+    restoreRange: [18, 25],
+    description: "Restore 18-25 Stamina.",
   },
   bandage: {
     id: "bandage",
     name: "Bandage",
     actionType: "minor",
+    type: "remedy",
     cost: BANDAGE_PRICE,
+    restoreType: null,
+    restoreRange: null,
     description: "Remove Bleed.",
     removesStatuses: ["bleed"],
   },
@@ -114,7 +226,10 @@ const consumableItems = {
     id: "warmingSalve",
     name: "Warming Salve",
     actionType: "minor",
+    type: "remedy",
     cost: WARMING_SALVE_PRICE,
+    restoreType: null,
+    restoreRange: null,
     description: "Remove Frozen.",
     removesStatuses: ["freeze"],
   },
@@ -122,7 +237,10 @@ const consumableItems = {
     id: "antitoxin",
     name: "Antitoxin",
     actionType: "minor",
+    type: "remedy",
     cost: ANTITOXIN_PRICE,
+    restoreType: null,
+    restoreRange: null,
     description: "Remove Poison.",
     removesStatuses: ["poison"],
   },
@@ -130,7 +248,10 @@ const consumableItems = {
     id: "soothingBalm",
     name: "Soothing Balm",
     actionType: "minor",
+    type: "remedy",
     cost: SOOTHING_BALM_PRICE,
+    restoreType: null,
+    restoreRange: null,
     description: "Remove Burn.",
     removesStatuses: ["burn"],
   },
@@ -138,9 +259,12 @@ const consumableItems = {
     id: "smellingSalts",
     name: "Smelling Salts",
     actionType: "minor",
+    type: "remedy",
     cost: SMELLING_SALTS_PRICE,
-    description: "Stun usually fades naturally before this can help.",
-    removesStatuses: [],
+    restoreType: null,
+    restoreRange: null,
+    description: "Removes Stun.",
+    removesStatuses: ["stun"],
   },
 };
 
@@ -1460,16 +1584,14 @@ const elements = {
   majorSkillButton: document.querySelector("#majorSkillButton"),
   minorSkillButton: document.querySelector("#minorSkillButton"),
   clearSkillButton: document.querySelector("#clearSkillButton"),
-  potionButton: document.querySelector("#potionButton"),
-  bandageButton: document.querySelector("#bandageButton"),
   endTurnButton: document.querySelector("#endTurnButton"),
   nextEncounterButton: document.querySelector("#nextEncounterButton"),
   inventoryList: document.querySelector("#inventoryList"),
-  sideInventoryList: document.querySelector("#sideInventoryList"),
   inventorySummary: document.querySelector("#inventorySummary"),
   shopCurrency: document.querySelector("#shopCurrency"),
   shopList: document.querySelector("#shopList"),
   innButton: document.querySelector("#innButton"),
+  diceLogPanel: document.querySelector("#diceLogPanel"),
   resultsList: document.querySelector("#resultsList"),
   rewardModal: document.querySelector("#rewardModal"),
   rewardContinueButton: document.querySelector("#rewardContinueButton"),
@@ -1599,15 +1721,17 @@ function renderClassIcon(classId, label) {
 
 function renderCurrencyWithIcons(currency, options = {}) {
   const normalized = normalizeCurrency(currency);
+  const showZero = options.showZero ?? false;
   const entries = [
     { key: "gold", value: normalized.gold, short: "g", long: "gold" },
     { key: "silver", value: normalized.silver, short: "s", long: "silver" },
     { key: "copper", value: normalized.copper, short: "c", long: "copper" },
-  ];
+  ].filter((entry) => showZero || entry.value > 0);
+  const visibleEntries = entries.length ? entries : [{ key: "copper", value: 0, short: "c", long: "copper" }];
   const compact = options.compact ?? false;
   return `
     <span class="currency-display${compact ? " compact" : ""}">
-      ${entries
+      ${visibleEntries
         .map(
           (entry) => `
             <span class="currency-chip currency-${entry.key}">
@@ -1712,8 +1836,13 @@ function loadSnapshot(snapshot) {
   state.builderSelectedClassId = snapshot.builderSelectedClassId ?? snapshot.player?.classDef?.id ?? "warrior";
   state.player = snapshot.player;
   normalizePlayerProgression(state.player);
+  if (state.player.inventory?.consumables?.healthPotion) {
+    state.player.inventory.consumables.minorHealthPotion =
+      (state.player.inventory.consumables.minorHealthPotion ?? 0) + state.player.inventory.consumables.healthPotion;
+    delete state.player.inventory.consumables.healthPotion;
+  }
   Object.keys(consumableItems).forEach((itemId) => {
-    state.player.inventory.consumables[itemId] ??= itemId === "healthPotion" ? 1 : 0;
+    state.player.inventory.consumables[itemId] ??= itemId === "minorHealthPotion" ? 1 : 0;
   });
   state.enemy = snapshot.enemy;
   state.turnIndex = snapshot.turnIndex ?? 0;
@@ -2190,7 +2319,7 @@ function rollDamageDice(dice) {
 function createInventory(startingWeaponId, startingArmorId) {
   return {
     currency: { copper: 0, silver: 0, gold: 0 },
-    consumables: { healthPotion: 1, bandage: 0, warmingSalve: 0, antitoxin: 0, soothingBalm: 0, smellingSalts: 0 },
+    consumables: Object.fromEntries(Object.keys(consumableItems).map((itemId) => [itemId, itemId === "minorHealthPotion" ? 1 : 0])),
     weapons: [startingWeaponId],
     armor: [startingArmorId],
   };
@@ -2727,13 +2856,16 @@ function formatStatuses(combatant) {
 
 function renderCombatant(prefix, combatant) {
   const attackParts = getAttackParts(combatant);
+  const attackTotal = sumParts(attackParts);
   renderHpBar(elements[`${prefix}HpBar`], combatant);
   elements[`${prefix}Stats`].innerHTML = formatStatsMarkup(combatant.stats);
   elements[`${prefix}Weapon`].textContent = `${combatant.weapon.name}: ${combatant.weapon.special}`;
   elements[`${prefix}Traits`].textContent = formatTraits(combatant);
   elements[`${prefix}Statuses`].innerHTML = formatStatuses(combatant);
-  elements[`${prefix}Ac`].textContent = getAcFormula(combatant);
-  elements[`${prefix}Attack`].textContent = `d20 + ${attackParts.map((part) => `${part.label} ${part.value}`).join(" + ")}`;
+  elements[`${prefix}Ac`].innerHTML = formatInfoTooltip(`${getAc(combatant)}`, getAcFormula(combatant), { title: `AC ${getAc(combatant)}` });
+  elements[`${prefix}Attack`].innerHTML = formatInfoTooltip(`${signed(attackTotal)}`, attackParts.map((part) => `${part.label} ${signed(part.value)}`).join(" | "), {
+    title: `Attack ${signed(attackTotal)}`,
+  });
   elements[`${prefix}Damage`].textContent = `${formatDice(combatant.weapon.damageDice)} ${combatant.weapon.damageType}`;
 
   if (prefix === "player") {
@@ -2765,7 +2897,7 @@ function renderInventory() {
   const inventory = state.player.inventory;
   applyNormalizedCurrency(inventory.currency, inventory.currency);
   Object.keys(consumableItems).forEach((itemId) => {
-    inventory.consumables[itemId] ??= itemId === "healthPotion" ? 1 : 0;
+    inventory.consumables[itemId] ??= itemId === "minorHealthPotion" ? 1 : 0;
   });
   elements.inventorySummary.textContent = "Inventory";
   const consumableMarkup = Object.values(consumableItems)
@@ -2773,7 +2905,7 @@ function renderInventory() {
       const useState = getConsumableUseState(state.player, item);
       const usingInCombat = state.gameState === GAME_STATES.inCombat;
       const actionBlocked = usingInCombat && !canUseMinorAction();
-      const disabled = (!useState.usable && useState.reason !== "Out of stock") || actionBlocked || (state.player.inventory.consumables[item.id] ?? 0) <= 0;
+      const disabled = !useState.usable || actionBlocked;
       const reason = actionBlocked ? "No Minor Action available" : useState.reason;
       return `
         <div class="item-row">
@@ -2789,7 +2921,7 @@ function renderInventory() {
   const equipmentMarkup = `
     <div class="inventory-section">
       <h3>Currency</h3>
-      <div>${renderCurrencyWithIcons(inventory.currency)}</div>
+      <div>${renderCurrencyWithIcons(inventory.currency, { showZero: true })}</div>
     </div>
     <p>Owned weapons: ${inventory.weapons.map((id) => weapons[id].name).join(", ")}</p>
     <p>Owned armor: ${inventory.armor.map((id) => armors[id].name).join(", ")}</p>
@@ -2800,7 +2932,6 @@ function renderInventory() {
     </div>
   `;
   elements.inventoryList.innerHTML = equipmentMarkup;
-  elements.sideInventoryList.innerHTML = equipmentMarkup;
   elements.shopCurrency.innerHTML = `Funds: ${renderCurrencyWithIcons(inventory.currency, { compact: true })}`;
   elements.shopList.innerHTML = Object.values(consumableItems)
     .map((item) => `
@@ -3301,6 +3432,14 @@ function renderInitiative() {
 
 function renderCombat() {
   const active = currentCombatant();
+  const betweenBattlesView = state.gameState === GAME_STATES.betweenBattles;
+  document.querySelectorAll(".battle-only").forEach((section) => {
+    section.hidden = betweenBattlesView;
+  });
+  document.querySelectorAll(".between-only").forEach((section) => {
+    section.hidden = !betweenBattlesView;
+  });
+  elements.diceLogPanel.open = !betweenBattlesView;
   renderCombatant("player", state.player);
   renderCombatant("enemy", state.enemy);
   renderInitiative();
@@ -3338,8 +3477,6 @@ function renderCombat() {
     elements.majorActionStatus.textContent = "-";
     elements.minorActionStatus.textContent = "-";
     setActionButtons(true);
-    elements.potionButton.disabled = (state.player.inventory.consumables.healthPotion ?? 0) <= 0 || state.player.hp >= state.player.maxHp;
-    elements.bandageButton.disabled = (state.player.inventory.consumables.bandage ?? 0) <= 0 || !hasStatus(state.player, "bleed");
     elements.innButton.disabled = !canAffordCurrency(state.player.inventory.currency, INN_PRICE);
     elements.nextEncounterButton.hidden = false;
     elements.nextEncounterButton.disabled = state.pendingLevelUps > 0;
@@ -3367,8 +3504,6 @@ function renderCombat() {
   elements.minorSkillButton.hidden = !(selectedSkill && selectedSkill.mode === "standalone" && selectedSkillActionType === "minor");
   elements.minorSkillButton.disabled = !playerTurnActive || !canUseMinorAction() || !selectedSkillAvailability?.usable;
   elements.minorSkillButton.textContent = selectedSkill ? `Use ${selectedSkill.name}` : "Use Selected Skill";
-  elements.potionButton.disabled = !playerTurnActive || !canUseMinorAction() || (state.player.inventory.consumables.healthPotion ?? 0) <= 0 || state.player.hp >= state.player.maxHp;
-  elements.bandageButton.disabled = !playerTurnActive || !canUseMinorAction() || (state.player.inventory.consumables.bandage ?? 0) <= 0 || !hasStatus(state.player, "bleed");
   elements.endTurnButton.disabled = !playerTurnActive;
   elements.clearSkillButton.hidden = !selectedSkill || !playerTurnActive;
   elements.innButton.disabled = true;
@@ -3379,8 +3514,6 @@ function setActionButtons(disabled) {
   elements.attackButton.disabled = disabled;
   elements.majorSkillButton.disabled = disabled;
   elements.minorSkillButton.disabled = disabled;
-  elements.potionButton.disabled = disabled;
-  elements.bandageButton.disabled = disabled;
   elements.endTurnButton.disabled = disabled;
   elements.majorSkillButton.hidden = true;
   elements.minorSkillButton.hidden = true;
@@ -3566,7 +3699,7 @@ function resolveAttack(attacker, attack = attacker.weapon, options = {}) {
 }
 
 function usePotion() {
-  useConsumableItem("healthPotion");
+  useConsumableItem("minorHealthPotion");
 }
 
 function removeStatus(combatant, statusId) {
@@ -3594,8 +3727,16 @@ function removeStatusesBySource(combatant, statusIds, sourceName, limit = Infini
 function getConsumableUseState(player, itemDef) {
   const quantity = player.inventory.consumables[itemDef.id] ?? 0;
   if (quantity <= 0) return { usable: false, reason: "Out of stock" };
-  if (itemDef.kind === "healing") {
+  if (itemDef.restoreType === "hp") {
     if (player.hp >= player.maxHp) return { usable: false, reason: "Already at full HP" };
+    return { usable: true, reason: "" };
+  }
+  if (itemDef.restoreType === "mana") {
+    if (player.mana >= player.maxMana) return { usable: false, reason: "Already at full Mana" };
+    return { usable: true, reason: "" };
+  }
+  if (itemDef.restoreType === "stamina") {
+    if (player.stamina >= player.maxStamina) return { usable: false, reason: "Already at full Stamina" };
     return { usable: true, reason: "" };
   }
   if (!itemDef.removesStatuses?.length) {
@@ -3627,11 +3768,14 @@ function useConsumableItem(itemId) {
   }
   if (usingInCombat) markMinorActionUsed(itemDef.name);
   state.player.inventory.consumables[itemId] -= 1;
-  if (itemDef.kind === "healing") {
-    const healRoll = rollRange([POTION_HEALING, POTION_HEALING_MAX]);
-    const oldHp = state.player.hp;
-    state.player.hp = Math.min(state.player.maxHp, state.player.hp + healRoll);
-    addLog(`${state.player.name} uses ${itemDef.name} and recovers ${state.player.hp - oldHp} HP.`);
+  if (itemDef.restoreType) {
+    const restoreRoll = rollRange(itemDef.restoreRange);
+    const resourceKey = itemDef.restoreType === "hp" ? "hp" : itemDef.restoreType;
+    const maxKey = resourceKey === "hp" ? "maxHp" : `max${titleCase(resourceKey)}`;
+    const oldValue = state.player[resourceKey];
+    state.player[resourceKey] = Math.min(state.player[maxKey], state.player[resourceKey] + restoreRoll);
+    const restored = state.player[resourceKey] - oldValue;
+    addLog(`${state.player.name} uses ${itemDef.name} and restores ${restored} ${titleCase(resourceKey)}.`);
   } else {
     addLog(`${state.player.name} uses ${itemDef.name}.`);
     removeStatusesBySource(state.player, itemDef.removesStatuses, itemDef.name);
@@ -4160,8 +4304,6 @@ elements.clearSkillButton.addEventListener("click", () => {
   addLog(`${state.player.name} clears the prepared skill.`);
   renderCombat();
 });
-elements.potionButton.addEventListener("click", usePotion);
-elements.bandageButton.addEventListener("click", useBandage);
 elements.endTurnButton.addEventListener("click", endPlayerTurnEarly);
 elements.nextEncounterButton.addEventListener("click", startNextEncounter);
 elements.rewardContinueButton.addEventListener("click", hideRewardModal);
@@ -4169,11 +4311,6 @@ elements.progressionContinueButton.addEventListener("click", hideProgressionModa
 elements.infoCloseButton.addEventListener("click", hideInfoModal);
 elements.innButton.addEventListener("click", stayAtInn);
 elements.inventoryList.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-use-item]");
-  if (!button) return;
-  useConsumableItem(button.dataset.useItem);
-});
-elements.sideInventoryList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-use-item]");
   if (!button) return;
   useConsumableItem(button.dataset.useItem);

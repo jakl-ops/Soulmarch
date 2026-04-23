@@ -240,7 +240,7 @@
           </article>
 
           <section class="center-column">
-            <article class="panel enemy-panel" id="enemyCard">
+            <article class="panel enemy-panel battle-only" id="enemyCard">
               <h2 id="enemyNameHeading">Enemy</h2>
               <div id="enemyHpBar"></div>
               <details>
@@ -256,7 +256,7 @@
               </details>
             </article>
 
-            <section class="panel actions-panel">
+            <section class="panel actions-panel battle-only">
               <h2>Actions</h2>
               <p id="turnText"></p>
               <p id="actionText"></p>
@@ -279,43 +279,42 @@
                 <h3>Minor Actions</h3>
                 <div class="action-buttons">
                   <button id="minorSkillButton" type="button" hidden>Use Selected Skill</button>
-                  <button id="potionButton" type="button">Use Potion</button>
-                  <button id="bandageButton" type="button">Use Bandage</button>
                 </div>
+                <p class="action-help inventory-hint">Use potions and remedies from the Inventory tab.</p>
               </div>
               <div class="action-group">
                 <h3>Turn</h3>
                 <div class="action-buttons">
                   <button id="endTurnButton" type="button">End Turn</button>
-                  <button id="nextEncounterButton" type="button" hidden>Next Battle</button>
                 </div>
               </div>
             </section>
 
-            <section class="panel" aria-label="Dice log">
-              <h2>Dice Log</h2>
-              <ol id="diceLog" class="dice-log"></ol>
+            <section class="panel between-only between-controls" hidden>
+              <h2>Between Battles</h2>
+              <p>Recover, shop, and prepare before the next encounter.</p>
+              <button id="nextEncounterButton" type="button">Next Battle</button>
             </section>
+
+            <details id="diceLogPanel" class="panel log-panel" aria-label="Dice log" open>
+              <summary>Dice Log</summary>
+              <ol id="diceLog" class="dice-log"></ol>
+            </details>
           </section>
 
           <aside class="right-column">
-            <section class="panel initiative-panel">
+            <section class="panel initiative-panel battle-only">
               <h2>Initiative</h2>
               <ol id="initiativeList"></ol>
             </section>
 
-            <section class="panel utility-panel">
-              <h2 id="inventorySummary">Inventory</h2>
-              <div id="sideInventoryList" class="plain-list"></div>
-            </section>
-
-            <section class="panel utility-panel">
+            <section class="panel utility-panel between-only" hidden>
               <h2>Shop</h2>
               <p id="shopCurrency" class="muted"></p>
               <div id="shopList" class="plain-list"></div>
             </section>
 
-            <section class="panel utility-panel">
+            <section class="panel utility-panel between-only" hidden>
               <h2>Stay at the Inn</h2>
               <p class="muted">
                 Cost: 3 silver. Restores HP, Mana, and Stamina, clears cooldowns, and removes temporary negative effects.
