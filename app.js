@@ -869,6 +869,9 @@ const elements = {
   mindInput: document.querySelector("#mindInput"),
   bodyInput: document.querySelector("#bodyInput"),
   soulInput: document.querySelector("#soulInput"),
+  mindValue: document.querySelector("#mindValue"),
+  bodyValue: document.querySelector("#bodyValue"),
+  soulValue: document.querySelector("#soulValue"),
   totalSpent: document.querySelector("#totalSpent"),
   totalRemaining: document.querySelector("#totalRemaining"),
   weaponSelect: document.querySelector("#weaponSelect"),
@@ -1753,6 +1756,9 @@ function renderClassPills() {
 function renderBuilder() {
   const validation = validateCharacter();
   const previewClass = getSelectedClass();
+  elements.mindValue.textContent = validation.stats.mind;
+  elements.bodyValue.textContent = validation.stats.body;
+  elements.soulValue.textContent = validation.stats.soul;
   const preview = {
     id: "preview",
     name: elements.nameInput.value.trim() || "Adventurer",

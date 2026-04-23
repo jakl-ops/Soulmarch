@@ -22,10 +22,17 @@ const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
 };
 
 function sendJson(res, statusCode, payload, headers = {}) {
-  res.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8", ...headers });
+  res.writeHead(statusCode, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": "*",
+    ...headers,
+  });
   res.end(JSON.stringify(payload));
 }
 
@@ -267,6 +274,6 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`Soulmarch server listening on http://localhost:${PORT}`);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Soulmarch server listening on port ${PORT}`);
 });

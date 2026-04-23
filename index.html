@@ -80,20 +80,23 @@
 
             <label class="stat-control" for="mindInput">
               <span>Mind</span>
-              <input id="mindInput" type="number" min="1" max="10" value="4" />
+              <strong id="mindValue" class="stat-value">4</strong>
             </label>
+            <input id="mindInput" class="stat-slider" type="range" min="1" max="10" step="1" value="4" />
             <p class="help">Thinking, awareness, social reasoning, puzzles, deception.</p>
 
             <label class="stat-control" for="bodyInput">
               <span>Body</span>
-              <input id="bodyInput" type="number" min="1" max="10" value="4" />
+              <strong id="bodyValue" class="stat-value">4</strong>
             </label>
+            <input id="bodyInput" class="stat-slider" type="range" min="1" max="10" step="1" value="4" />
             <p class="help">Weapon attacks, climbing, jumping, brute force.</p>
 
             <label class="stat-control" for="soulInput">
               <span>Soul</span>
-              <input id="soulInput" type="number" min="1" max="10" value="2" />
+              <strong id="soulValue" class="stat-value">2</strong>
             </label>
+            <input id="soulInput" class="stat-slider" type="range" min="1" max="10" step="1" value="2" />
             <p class="help">Spellcasting, magical checks, mystical effects.</p>
 
             <p class="stat">Total spent: <strong id="totalSpent">10</strong></p>
