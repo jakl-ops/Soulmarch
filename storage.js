@@ -2,7 +2,7 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const { DatabaseSync } = require("node:sqlite");
 
-const DB_PATH = path.join(__dirname, "game.db");
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, "game.db");
 const db = new DatabaseSync(DB_PATH);
 
 db.exec(`
