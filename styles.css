@@ -316,6 +316,7 @@ label {
 .muted {
   color: #aeb8b2;
   font-size: 13px;
+  margin-bottom: 0;
 }
 
 .panel,
@@ -514,6 +515,50 @@ label {
   gap: 8px;
 }
 
+.mobile-info-panel {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #30383d;
+  border-radius: 8px;
+  background: #121619;
+  color: #cfd6d2;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.mobile-info-panel strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #f2f5f3;
+}
+
+.info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  width: auto;
+  margin: 0 4px 4px 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #202529;
+  border-color: #5d6660;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.info-chip-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2f444d;
+  color: #d8edf4;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .choice-pill-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -673,6 +718,78 @@ label {
   min-height: 220px;
 }
 
+.subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.subtab-button {
+  width: auto;
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 0 12px;
+}
+
+.subtab-button.active {
+  border-color: #8fd9b6;
+  background: #1f4638;
+}
+
+.codex-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.codex-card {
+  border: 1px solid #30383d;
+  border-radius: 8px;
+  background: #121619;
+  padding: 12px;
+}
+
+.codex-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.codex-card-header h3 {
+  margin-bottom: 0;
+}
+
+.codex-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.codex-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid #49545b;
+  border-radius: 999px;
+  background: #1b2328;
+  color: #d4ddd8;
+  font-size: 12px;
+}
+
+.codex-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #c6ceca;
+}
+
+.codex-list li + li {
+  margin-top: 4px;
+}
+
 .compact-grid {
   display: grid;
   gap: 4px;
@@ -738,6 +855,13 @@ label {
   line-height: 1.35;
   white-space: pre-line;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+@media (hover: none) {
+  .class-pill:hover::after,
+  .skill-pill:hover::after {
+    content: none;
+  }
 }
 
 .selected-skill {
@@ -893,6 +1017,10 @@ label {
   bottom: 0;
   margin-top: 18px;
   box-shadow: 0 -8px 18px rgba(24, 28, 31, 0.92);
+}
+
+.progression-choice-pill {
+  min-height: 132px;
 }
 
 @media (max-width: 760px) {

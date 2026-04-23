@@ -780,6 +780,395 @@ const skills = {
     cooldownTurns: 2,
     description: "Focus your will into a protective mental ward.",
   },
+  hamstring: {
+    id: "hamstring",
+    name: "Hamstring",
+    classId: "warrior",
+    stat: "body",
+    attackKind: "weapon",
+    mode: "standalone",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 8 },
+    damageBonus: 1,
+    damageType: "physical",
+    status: { id: "bleed", chance: 0.55 },
+    resourceType: "stamina",
+    resourceCost: 2,
+    cooldownTurns: 1,
+    description: "A brutal cut that opens the target up with Bleed.",
+  },
+  crushingBlow: {
+    id: "crushingBlow",
+    name: "Crushing Blow",
+    classId: "warrior",
+    stat: "body",
+    attackKind: "weapon",
+    mode: "standalone",
+    hitBonus: 0,
+    damageDice: { count: 1, sides: 10 },
+    damageBonus: 2,
+    damageType: "physical",
+    status: { id: "stun", chance: 0.3 },
+    resourceType: "stamina",
+    resourceCost: 3,
+    cooldownTurns: 2,
+    description: "A heavy hit that may Stun the target.",
+  },
+  iceShard: {
+    id: "iceShard",
+    name: "Ice Shard",
+    classId: "magician",
+    stat: "soul",
+    attackKind: "spell",
+    mode: "standalone",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 6 },
+    damageBonus: 2,
+    damageType: "ice",
+    status: { id: "freeze", chance: 0.6 },
+    resourceType: "mana",
+    resourceCost: 2,
+    cooldownTurns: 1,
+    description: "A focused ice spell that often Freezes.",
+  },
+  arcanePulse: {
+    id: "arcanePulse",
+    name: "Arcane Pulse",
+    classId: "magician",
+    stat: "soul",
+    attackKind: "spell",
+    mode: "standalone",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 8 },
+    damageBonus: 1,
+    damageType: "lightning",
+    status: { id: "stun", chance: 0.25 },
+    resourceType: "mana",
+    resourceCost: 2,
+    cooldownTurns: 1,
+    description: "A rippling burst of arcane force that may Stun.",
+  },
+  risingPalm: {
+    id: "risingPalm",
+    name: "Rising Palm",
+    classId: "monk",
+    stat: "body",
+    attackKind: "weapon",
+    mode: "standalone",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 6 },
+    damageBonus: 1,
+    damageType: "physical",
+    status: { id: "stun", chance: 0.35 },
+    resourceType: "stamina",
+    resourceCost: 2,
+    cooldownTurns: 1,
+    description: "A snapping palm strike that can Stun.",
+  },
+  spiritStep: {
+    id: "spiritStep",
+    name: "Spirit Step",
+    classId: "monk",
+    stat: "soul",
+    attackKind: "utility",
+    mode: "standalone",
+    hitBonus: 0,
+    statusSelf: { id: "guarded", chance: 1 },
+    resourceType: "mana",
+    resourceCost: 1,
+    cooldownTurns: 1,
+    description: "Move with inner calm and gain Guarded.",
+  },
+  ironBash: {
+    id: "ironBash",
+    name: "Iron Bash",
+    classId: "guardian",
+    stat: "body",
+    attackKind: "weapon",
+    mode: "standalone",
+    hitBonus: 0,
+    damageDice: { count: 1, sides: 8 },
+    damageBonus: 1,
+    damageType: "physical",
+    status: { id: "stun", chance: 0.4 },
+    resourceType: "stamina",
+    resourceCost: 2,
+    cooldownTurns: 2,
+    description: "A shield-heavy slam that can Stun.",
+  },
+  bulwarkRush: {
+    id: "bulwarkRush",
+    name: "Bulwark Rush",
+    classId: "guardian",
+    stat: "body",
+    attackKind: "weapon",
+    mode: "standalone",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 8 },
+    damageBonus: 1,
+    damageType: "physical",
+    statusSelf: { id: "guarded", chance: 1 },
+    resourceType: "stamina",
+    resourceCost: 2,
+    cooldownTurns: 2,
+    description: "Crash forward, strike, and gain Guarded.",
+  },
+  poisonEdge: {
+    id: "poisonEdge",
+    name: "Poison Edge",
+    classId: "rogue",
+    stat: "body",
+    attackKind: "weapon",
+    mode: "attack_modifier",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 4 },
+    damageBonus: 1,
+    damageType: "physical",
+    status: { id: "poison", chance: 0.55 },
+    resourceType: "stamina",
+    resourceCost: 1,
+    cooldownTurns: 1,
+    description: "Coat the next strike in a stronger poison.",
+  },
+  shadowThrow: {
+    id: "shadowThrow",
+    name: "Shadow Throw",
+    classId: "rogue",
+    stat: "mind",
+    attackKind: "weapon",
+    mode: "standalone",
+    hitBonus: 2,
+    damageDice: { count: 1, sides: 6 },
+    damageBonus: 1,
+    damageType: "physical",
+    status: { id: "poison", chance: 0.4 },
+    resourceType: null,
+    resourceCost: 0,
+    cooldownTurns: 1,
+    description: "A deceptive throw guided by guile and timing.",
+  },
+  arcSurge: {
+    id: "arcSurge",
+    name: "Arc Surge",
+    classId: "sorcerer",
+    stat: "soul",
+    attackKind: "spell",
+    mode: "standalone",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 10 },
+    damageBonus: 1,
+    damageType: "lightning",
+    status: { id: "stun", chance: 0.3 },
+    resourceType: "mana",
+    resourceCost: 3,
+    cooldownTurns: 2,
+    description: "An unstable lightning burst with stronger impact.",
+  },
+  cinderBurst: {
+    id: "cinderBurst",
+    name: "Cinder Burst",
+    classId: "sorcerer",
+    stat: "soul",
+    attackKind: "spell",
+    mode: "standalone",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 8 },
+    damageBonus: 2,
+    damageType: "fire",
+    status: { id: "burn", chance: 0.7 },
+    resourceType: "mana",
+    resourceCost: 2,
+    cooldownTurns: 1,
+    description: "Exploding fire that heavily pressures with Burn.",
+  },
+  radiantWard: {
+    id: "radiantWard",
+    name: "Radiant Ward",
+    classId: "paladin",
+    stat: "soul",
+    attackKind: "utility",
+    mode: "standalone",
+    hitBonus: 0,
+    statusSelf: { id: "shielded", chance: 1 },
+    resourceType: "mana",
+    resourceCost: 1,
+    cooldownTurns: 1,
+    description: "Wrap yourself in holy light and gain Shielded.",
+  },
+  sanctifiedBlade: {
+    id: "sanctifiedBlade",
+    name: "Sanctified Blade",
+    classId: "paladin",
+    stat: "body",
+    attackKind: "weapon",
+    mode: "attack_modifier",
+    hitBonus: 2,
+    damageDice: { count: 1, sides: 6 },
+    damageBonus: 2,
+    damageType: "lightning",
+    statusSelf: { id: "shielded", chance: 1 },
+    resourceType: "stamina",
+    resourceCost: 2,
+    cooldownTurns: 1,
+    description: "Bless the next strike with radiant force and protection.",
+  },
+  psychicVeil: {
+    id: "psychicVeil",
+    name: "Psychic Veil",
+    classId: "mystic",
+    stat: "mind",
+    attackKind: "utility",
+    mode: "standalone",
+    hitBonus: 0,
+    statusSelf: { id: "shielded", chance: 1 },
+    resourceType: null,
+    resourceCost: 0,
+    cooldownTurns: 1,
+    description: "Raise a psionic veil to blunt incoming harm.",
+  },
+  mindLance: {
+    id: "mindLance",
+    name: "Mind Lance",
+    classId: "mystic",
+    stat: "mind",
+    attackKind: "spell",
+    mode: "standalone",
+    hitBonus: 1,
+    damageDice: { count: 1, sides: 10 },
+    damageBonus: 1,
+    damageType: "lightning",
+    status: { id: "stun", chance: 0.2 },
+    resourceType: null,
+    resourceCost: 0,
+    cooldownTurns: 1,
+    description: "Drive a sharpened psionic spear through the enemy's guard.",
+  },
+};
+
+const skillUpgrades = {
+  powerStrikeMastery: {
+    id: "powerStrikeMastery",
+    targetSkillId: "powerStrike",
+    name: "Power Strike+",
+    summary: "Power Strike hits harder and no longer waits on a cooldown.",
+    changes: { name: "Power Strike+", damageBonus: 4, cooldownTurns: 0, description: "A mastered strike with heavier damage and no cooldown." },
+  },
+  guardStanceMastery: {
+    id: "guardStanceMastery",
+    targetSkillId: "guardStance",
+    name: "Guard Stance+",
+    summary: "Guard Stance becomes cheaper and returns faster.",
+    changes: { name: "Guard Stance+", resourceCost: 1, cooldownTurns: 1, description: "Gain Guarded with less strain and less downtime." },
+  },
+  fireBoltMastery: {
+    id: "fireBoltMastery",
+    targetSkillId: "fireBolt",
+    name: "Fire Bolt+",
+    summary: "Fire Bolt gains more damage and loses its cooldown.",
+    changes: { name: "Fire Bolt+", damageDice: { count: 1, sides: 10 }, damageBonus: 2, cooldownTurns: 0, description: "A hotter fire bolt that can be cast every turn." },
+  },
+  arcaneShieldMastery: {
+    id: "arcaneShieldMastery",
+    targetSkillId: "arcaneShield",
+    name: "Arcane Shield+",
+    summary: "Arcane Shield costs less and recovers faster.",
+    changes: { name: "Arcane Shield+", resourceCost: 1, cooldownTurns: 1, description: "A refined ward with lower mana strain." },
+  },
+  flurryMastery: {
+    id: "flurryMastery",
+    targetSkillId: "flurry",
+    name: "Flurry+",
+    summary: "Flurry lands more reliably and keeps its rhythm.",
+    changes: { name: "Flurry+", hitBonus: 2, damageBonus: 2, cooldownTurns: 0, followUpPenalty: -1, description: "A faster flurry with stronger follow-up pressure." },
+  },
+  innerFocusMastery: {
+    id: "innerFocusMastery",
+    targetSkillId: "innerFocus",
+    name: "Inner Focus+",
+    summary: "Inner Focus becomes nearly effortless.",
+    changes: { name: "Inner Focus+", resourceCost: 0, cooldownTurns: 0, description: "Center yourself without spending mana." },
+  },
+  braceMastery: {
+    id: "braceMastery",
+    targetSkillId: "brace",
+    name: "Brace+",
+    summary: "Brace costs less and comes back sooner.",
+    changes: { name: "Brace+", resourceCost: 1, cooldownTurns: 1, description: "A seasoned brace that is easier to maintain." },
+  },
+  shieldSlamMastery: {
+    id: "shieldSlamMastery",
+    targetSkillId: "shieldSlam",
+    name: "Shield Slam+",
+    summary: "Shield Slam hits harder with a better stun window.",
+    changes: { name: "Shield Slam+", damageBonus: 3, cooldownTurns: 1, status: { id: "stun", chance: 0.45 }, description: "A crushing slam with stronger stun pressure." },
+  },
+  quickStabMastery: {
+    id: "quickStabMastery",
+    targetSkillId: "quickStab",
+    name: "Quick Stab+",
+    summary: "Quick Stab draws more blood without waiting on cooldown.",
+    changes: { name: "Quick Stab+", damageBonus: 2, cooldownTurns: 0, status: { id: "poison", chance: 0.45 }, description: "A faster, nastier stab with stronger poison." },
+  },
+  feintMastery: {
+    id: "feintMastery",
+    targetSkillId: "feint",
+    name: "Feint+",
+    summary: "Feint becomes more accurate and sharper on the hit.",
+    changes: { name: "Feint+", hitBonus: 2, damageBonus: 1, cooldownTurns: 0, status: { id: "freeze", chance: 0.6 }, description: "A perfected feint that bites harder and hinders more." },
+  },
+  sparkSurgeMastery: {
+    id: "sparkSurgeMastery",
+    targetSkillId: "sparkSurge",
+    name: "Spark Surge+",
+    summary: "Spark Surge gains more damage and no cooldown.",
+    changes: { name: "Spark Surge+", damageBonus: 4, cooldownTurns: 0, status: { id: "stun", chance: 0.35 }, description: "A surging spell that crackles every turn." },
+  },
+  frostMarkMastery: {
+    id: "frostMarkMastery",
+    targetSkillId: "frostMark",
+    name: "Frost Mark+",
+    summary: "Frost Mark deepens its chill and refreshes faster.",
+    changes: { name: "Frost Mark+", damageBonus: 2, cooldownTurns: 0, status: { id: "freeze", chance: 0.75 }, description: "A stronger curse of winter with no cooldown." },
+  },
+  smiteMastery: {
+    id: "smiteMastery",
+    targetSkillId: "smite",
+    name: "Smite+",
+    summary: "Smite strikes brighter and more often.",
+    changes: { name: "Smite+", damageBonus: 3, cooldownTurns: 0, status: { id: "stun", chance: 0.3 }, description: "A radiant strike that returns every turn." },
+  },
+  blessingStrikeMastery: {
+    id: "blessingStrikeMastery",
+    targetSkillId: "blessingStrike",
+    name: "Blessing Strike+",
+    summary: "Blessing Strike gains more force and no cooldown.",
+    changes: { name: "Blessing Strike+", damageBonus: 2, cooldownTurns: 0, description: "A stronger blessed attack that also refreshes instantly." },
+  },
+  mindSpikeMastery: {
+    id: "mindSpikeMastery",
+    targetSkillId: "mindSpike",
+    name: "Mind Spike+",
+    summary: "Mind Spike pierces deeper and can be used every turn.",
+    changes: { name: "Mind Spike+", damageBonus: 3, cooldownTurns: 0, status: { id: "freeze", chance: 0.35 }, description: "A perfected psionic lash that refreshes instantly." },
+  },
+  thoughtLockMastery: {
+    id: "thoughtLockMastery",
+    targetSkillId: "thoughtLock",
+    name: "Thought Lock+",
+    summary: "Thought Lock becomes easier to sustain.",
+    changes: { name: "Thought Lock+", cooldownTurns: 1, description: "A stronger mental ward that recovers faster." },
+  },
+};
+
+const classSkillTrees = {
+  warrior: { id: "warrior", name: "Warrior", levels: { 1: { skills: ["powerStrike", "guardStance"] }, 2: { skills: ["hamstring"] }, 3: { subclass: true }, 4: { upgrades: ["powerStrikeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["crushingBlow"], upgrades: ["guardStanceMastery"] } } } },
+  magician: { id: "magician", name: "Magician", levels: { 1: { skills: ["fireBolt", "arcaneShield"] }, 2: { skills: ["iceShard"] }, 3: { subclass: true }, 4: { upgrades: ["fireBoltMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["arcanePulse"], upgrades: ["arcaneShieldMastery"] } } } },
+  monk: { id: "monk", name: "Monk", levels: { 1: { skills: ["flurry", "innerFocus"] }, 2: { skills: ["risingPalm"] }, 3: { subclass: true }, 4: { upgrades: ["flurryMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["spiritStep"], upgrades: ["innerFocusMastery"] } } } },
+  guardian: { id: "guardian", name: "Guardian", levels: { 1: { skills: ["brace", "shieldSlam"] }, 2: { skills: ["ironBash"] }, 3: { subclass: true }, 4: { upgrades: ["braceMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["bulwarkRush"], upgrades: ["shieldSlamMastery"] } } } },
+  rogue: { id: "rogue", name: "Rogue", levels: { 1: { skills: ["quickStab", "feint"] }, 2: { skills: ["poisonEdge"] }, 3: { subclass: true }, 4: { upgrades: ["quickStabMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["shadowThrow"], upgrades: ["feintMastery"] } } } },
+  sorcerer: { id: "sorcerer", name: "Sorcerer", levels: { 1: { skills: ["sparkSurge", "frostMark"] }, 2: { skills: ["arcSurge"] }, 3: { subclass: true }, 4: { upgrades: ["sparkSurgeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["cinderBurst"], upgrades: ["frostMarkMastery"] } } } },
+  paladin: { id: "paladin", name: "Paladin", levels: { 1: { skills: ["smite", "blessingStrike"] }, 2: { skills: ["radiantWard"] }, 3: { subclass: true }, 4: { upgrades: ["smiteMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["sanctifiedBlade"], upgrades: ["blessingStrikeMastery"] } } } },
+  mystic: { id: "mystic", name: "Mystic", levels: { 1: { skills: ["mindSpike", "thoughtLock"] }, 2: { skills: ["psychicVeil"] }, 3: { subclass: true }, 4: { upgrades: ["mindSpikeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["mindLance"], upgrades: ["thoughtLockMastery"] } } } },
 };
 
 const enemyTemplates = {
@@ -889,12 +1278,16 @@ const elements = {
   builderSummaryWeapon: document.querySelector("#builderSummaryWeapon"),
   builderSummaryArmor: document.querySelector("#builderSummaryArmor"),
   builderSummarySkills: document.querySelector("#builderSummarySkills"),
+  classInfoPanel: document.querySelector("#classInfoPanel"),
   validationText: document.querySelector("#validationText"),
   startButton: document.querySelector("#startButton"),
   levelUpText: document.querySelector("#levelUpText"),
+  levelProgressionInfo: document.querySelector("#levelProgressionInfo"),
   levelStatPills: document.querySelector("#levelStatPills"),
   subclassSection: document.querySelector("#subclassSection"),
   subclassPills: document.querySelector("#subclassPills"),
+  progressionChoiceSection: document.querySelector("#progressionChoiceSection"),
+  progressionChoicePills: document.querySelector("#progressionChoicePills"),
   levelValidationText: document.querySelector("#levelValidationText"),
   applyLevelButton: document.querySelector("#applyLevelButton"),
   playerNameHeading: document.querySelector("#playerNameHeading"),
@@ -902,6 +1295,7 @@ const elements = {
   playerManaBar: document.querySelector("#playerManaBar"),
   playerStaminaBar: document.querySelector("#playerStaminaBar"),
   playerLevelXp: document.querySelector("#playerLevelXp"),
+  saveStatus: document.querySelector("#saveStatus"),
   playerStats: document.querySelector("#playerStats"),
   playerClass: document.querySelector("#playerClass"),
   playerSubclass: document.querySelector("#playerSubclass"),
@@ -945,7 +1339,15 @@ const elements = {
   resultsList: document.querySelector("#resultsList"),
   rewardModal: document.querySelector("#rewardModal"),
   rewardContinueButton: document.querySelector("#rewardContinueButton"),
+  progressionModal: document.querySelector("#progressionModal"),
+  progressionResultsList: document.querySelector("#progressionResultsList"),
+  progressionContinueButton: document.querySelector("#progressionContinueButton"),
+  infoModal: document.querySelector("#infoModal"),
+  infoTitle: document.querySelector("#infoTitle"),
+  infoBody: document.querySelector("#infoBody"),
+  infoCloseButton: document.querySelector("#infoCloseButton"),
   skillsList: document.querySelector("#skillsList"),
+  skillInfoPanel: document.querySelector("#skillInfoPanel"),
   selectedSkillText: document.querySelector("#selectedSkillText"),
   codexList: document.querySelector("#codexList"),
   resetButton: document.querySelector("#resetButton"),
@@ -970,10 +1372,13 @@ const state = {
   isResolvingEnemyTurn: false,
   winner: null,
   pendingLevelUps: 0,
+  pendingLevelQueue: [],
   combatEnded: false,
   lastRewards: [],
+  lastProgressionResults: [],
   progress: null,
-  levelUpDraft: { stat: null, subclass: null },
+  levelUpDraft: { stat: null, subclass: null, progressionChoice: null },
+  activeCodexSection: "classes",
 };
 
 function roll(sides) {
@@ -990,6 +1395,14 @@ function signed(value) {
 
 function titleCase(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function escapeAttribute(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function currencyToCopper(currency) {
@@ -1102,8 +1515,10 @@ function captureSnapshot() {
       isResolvingEnemyTurn: false,
       winnerId: state.winner?.id ?? null,
       pendingLevelUps: state.pendingLevelUps,
+      pendingLevelQueue: state.pendingLevelQueue,
       combatEnded: state.combatEnded,
       lastRewards: state.lastRewards,
+      lastProgressionResults: state.lastProgressionResults,
       progress: state.progress ?? createProgress(),
     })
   );
@@ -1123,21 +1538,37 @@ function loadSnapshot(snapshot) {
   state.gameState = snapshot.gameState ?? GAME_STATES.betweenBattles;
   state.builderSelectedClassId = snapshot.builderSelectedClassId ?? snapshot.player?.classDef?.id ?? "warrior";
   state.player = snapshot.player;
+  normalizePlayerProgression(state.player);
   state.enemy = snapshot.enemy;
   state.turnIndex = snapshot.turnIndex ?? 0;
   state.actionUsed = snapshot.actionUsed ?? false;
   state.round = snapshot.round ?? 1;
   state.isResolvingEnemyTurn = false;
   state.pendingLevelUps = snapshot.pendingLevelUps ?? 0;
+  state.pendingLevelQueue = snapshot.pendingLevelQueue ?? [];
+  if (!state.pendingLevelQueue.length && state.pendingLevelUps > 0 && state.player) {
+    const startLevel = Math.max(2, state.player.level - state.pendingLevelUps + 1);
+    for (let level = startLevel; level <= state.player.level; level += 1) {
+      state.pendingLevelQueue.push(level);
+    }
+  }
   state.combatEnded = snapshot.combatEnded ?? false;
   state.lastRewards = snapshot.lastRewards ?? [];
+  state.lastProgressionResults = snapshot.lastProgressionResults ?? [];
   state.progress = snapshot.progress ?? createProgress();
   state.winner = snapshot.winnerId === "enemy" ? state.enemy : snapshot.winnerId === "player" ? state.player : null;
   state.initiative = hydrateInitiative(snapshot);
 }
 
 async function saveAdventure(reason = "autosave") {
-  if (!state.user || !state.currentAdventureId || !state.player) return;
+  if (!state.user) {
+    if (state.saveMessage !== "Not logged in — progress will not be saved.") {
+      state.saveMessage = "Not logged in — progress will not be saved.";
+      renderCombat();
+    }
+    return;
+  }
+  if (!state.currentAdventureId || !state.player) return;
   state.savePending = true;
   try {
     await apiRequest(`/api/adventures/${state.currentAdventureId}`, {
@@ -1147,7 +1578,6 @@ async function saveAdventure(reason = "autosave") {
     state.saveMessage = `Saved after ${reason}.`;
   } catch (error) {
     state.saveMessage = error.message;
-    addLog(`Save error: ${error.message}`);
   } finally {
     state.savePending = false;
     renderCombat();
@@ -1155,6 +1585,10 @@ async function saveAdventure(reason = "autosave") {
 }
 
 async function createAdventureSave() {
+  if (!state.user) {
+    state.saveMessage = "Not logged in — progress will not be saved.";
+    return;
+  }
   const result = await apiRequest("/api/adventures", {
     method: "POST",
     body: JSON.stringify({ snapshot: captureSnapshot() }),
@@ -1284,7 +1718,7 @@ async function logoutUser() {
   activeScreen("auth");
 }
 
-Object.values(skills).forEach((skill) => {
+function finalizeSkillDefinition(skill) {
   skill.statUsed = titleCase(skill.stat);
   skill.statusEffect = skill.status ?? null;
   skill.classRestriction = skill.classId;
@@ -1293,7 +1727,49 @@ Object.values(skills).forEach((skill) => {
   }; ${skill.resourceCost ?? 0} ${resourceLabel(skill.resourceType)}; cooldown ${skill.cooldownTurns ?? 0}${
     skill.status ? `; ${statusDefinitions[skill.status.id].name}` : ""
   })`;
-});
+  return skill;
+}
+
+Object.values(skills).forEach(finalizeSkillDefinition);
+
+function getClassSkillTree(classId) {
+  return classSkillTrees[classId] ?? null;
+}
+
+function getClassProgressionLevel(classId, level) {
+  return getClassSkillTree(classId)?.levels?.[level] ?? {};
+}
+
+function getClassStartingSkillIds(classId) {
+  return [...(getClassProgressionLevel(classId, 1).skills ?? classes[classId]?.skillIds ?? [])];
+}
+
+function normalizePlayerProgression(player) {
+  if (!player?.classDef) return;
+  player.unlockedSkills = Array.from(new Set(player.unlockedSkills?.length ? player.unlockedSkills : getClassStartingSkillIds(player.classDef.id)));
+  player.upgradedSkills = Array.from(new Set(player.upgradedSkills ?? []));
+}
+
+function getResolvedSkill(skillId, player = state.player) {
+  const baseSkill = skills[skillId];
+  if (!baseSkill) return null;
+  const resolved = finalizeSkillDefinition({ ...baseSkill, damageDice: baseSkill.damageDice ? { ...baseSkill.damageDice } : undefined });
+  const appliedUpgrades = (player?.upgradedSkills ?? [])
+    .map((upgradeId) => skillUpgrades[upgradeId])
+    .filter((upgrade) => upgrade?.targetSkillId === skillId);
+  appliedUpgrades.forEach((upgrade) => {
+    Object.entries(upgrade.changes ?? {}).forEach(([key, value]) => {
+      resolved[key] = value && typeof value === "object" && !Array.isArray(value) ? { ...value } : value;
+    });
+  });
+  finalizeSkillDefinition(resolved);
+  resolved.appliedUpgrades = appliedUpgrades;
+  return resolved;
+}
+
+function getSkillById(skillId, player = state.player) {
+  return getResolvedSkill(skillId, player) ?? skills[skillId] ?? null;
+}
 
 function readStat(input) {
   return Number.parseInt(input.value, 10);
@@ -1579,6 +2055,8 @@ function createPlayer() {
     stats,
     classDef,
     subclassId: null,
+    unlockedSkills: getClassStartingSkillIds(classDef.id),
+    upgradedSkills: [],
     weapon,
     spell: null,
     armor,
@@ -1600,6 +2078,8 @@ async function continueAdventure(adventureId) {
   if (state.gameState === GAME_STATES.victory && state.lastRewards.length > 0) {
     elements.levelUpScreen.hidden = true;
     showRewardModal();
+  } else if (state.lastProgressionResults.length > 0) {
+    showProgressionModal();
   } else if (state.pendingLevelUps > 0) {
     showLevelUp();
   } else {
@@ -1628,11 +2108,14 @@ function prepareNewAdventure() {
   state.isResolvingEnemyTurn = false;
   state.winner = null;
   state.pendingLevelUps = 0;
+  state.pendingLevelQueue = [];
   state.combatEnded = false;
   state.lastRewards = [];
-  state.levelUpDraft = { stat: null, subclass: null };
+  state.lastProgressionResults = [];
+  state.levelUpDraft = { stat: null, subclass: null, progressionChoice: null };
   elements.levelUpScreen.hidden = true;
   elements.rewardModal.hidden = true;
+  elements.progressionModal.hidden = true;
   elements.resetButton.hidden = false;
   elements.resetButton.textContent = "Adventure Hub";
   activeScreen("builder");
@@ -1695,6 +2178,7 @@ function validateCharacter() {
 }
 
 function formatClassTooltip(classDef) {
+  const startingSkills = getClassStartingSkillIds(classDef.id);
   const lines = [
     classDef.shortDescription,
     classDef.roleTag ? `Role ${classDef.roleTag}` : null,
@@ -1709,12 +2193,14 @@ function formatClassTooltip(classDef) {
   if (classDef.damageReduction) {
     lines.push(`Damage reduction ${classDef.damageReduction}`);
   }
-  lines.push(`Skills ${classDef.skillIds.map((id) => skills[id].name).join(", ")}`);
+  lines.push(`Skills ${startingSkills.map((id) => getSkillById(id)?.name ?? id).join(", ")}`);
   return lines.join(" | ");
 }
 
 function formatInfoTooltip(label, body) {
-  return `<span class="tooltip-term" data-tooltip="${body}">${label}</span>`;
+  return `<button type="button" class="info-chip tooltip-term" data-info-title="${escapeAttribute(label)}" data-info-body="${escapeAttribute(
+    body
+  )}" data-tooltip="${escapeAttribute(body)}">${label}<span class="info-chip-icon" aria-hidden="true">i</span></button>`;
 }
 
 function formatClassDisplay(classDef) {
@@ -1723,7 +2209,7 @@ function formatClassDisplay(classDef) {
 
 function formatSubclassDisplay(subclassDef) {
   if (!subclassDef) {
-    return "Locked until level 2";
+    return "Locked until level 3";
   }
   const summary = `AC ${signed(subclassDef.acBonus ?? 0)}, damage ${signed(subclassDef.damageBonus ?? 0)}`;
   return formatInfoTooltip(subclassDef.name, `${subclassDef.name} | ${summary}`);
@@ -1751,6 +2237,17 @@ function renderClassPills() {
     });
     elements.classPills.append(button);
   });
+}
+
+function renderClassInfoPanel(classDef) {
+  if (!classDef) {
+    elements.classInfoPanel.textContent = "Choose a class to see its role, bonuses, and starting skills.";
+    return;
+  }
+  const startingSkills = getClassStartingSkillIds(classDef.id);
+  elements.classInfoPanel.innerHTML = `<strong>${classDef.name}</strong>${classDef.shortDescription} ${classDef.roleTag ? `[${classDef.roleTag}] ` : ""}${
+    classDef.playstyle
+  } Bonuses: ${classDef.tooltipSummary}. Skills: ${startingSkills.map((id) => getSkillById(id)?.name ?? id).join(", ")}.`;
 }
 
 function renderBuilder() {
@@ -1787,8 +2284,11 @@ function renderBuilder() {
   elements.builderSummaryWeapon.textContent = preview.weapon.name;
   elements.builderSummaryArmor.textContent = preview.armor.name;
   elements.builderSummarySkills.textContent = previewClass
-    ? previewClass.skillIds.map((id) => skills[id].name).join(", ")
+    ? getClassStartingSkillIds(previewClass.id)
+        .map((id) => getSkillById(id)?.name ?? id)
+        .join(", ")
     : "None";
+  renderClassInfoPanel(previewClass);
   elements.builderAc.textContent = getAcFormula(preview);
   elements.builderWeaponAttack.textContent = `d20 + ${weaponParts.map((part) => `${part.label} ${part.value}`).join(" + ")}`;
   elements.builderWeaponDamage.textContent = `${formatDice(preview.weapon.damageDice)} ${preview.weapon.damageType}`;
@@ -1881,15 +2381,18 @@ async function startCombat() {
   state.isResolvingEnemyTurn = false;
   state.winner = null;
   state.pendingLevelUps = 0;
+  state.pendingLevelQueue = [];
   state.combatEnded = false;
   state.lastRewards = [];
-  state.levelUpDraft = { stat: null, subclass: null };
+  state.lastProgressionResults = [];
+  state.levelUpDraft = { stat: null, subclass: null, progressionChoice: null };
   elements.nextEncounterButton.hidden = true;
   elements.diceLog.innerHTML = "";
   elements.builderScreen.hidden = true;
   elements.levelUpScreen.hidden = true;
   activeScreen("combat");
   elements.rewardModal.hidden = true;
+  elements.progressionModal.hidden = true;
   elements.resetButton.hidden = false;
   elements.resetButton.textContent = "Adventure Hub";
 
@@ -1974,6 +2477,9 @@ function renderCombatant(prefix, combatant) {
   if (prefix === "player") {
     elements.playerNameHeading.textContent = combatant.name;
     elements.playerLevelXp.textContent = `Level ${combatant.level}, ${combatant.xp} XP, next ${getNextLevelText(combatant)}`;
+    elements.saveStatus.textContent = state.savePending
+      ? "Saving..."
+      : state.saveMessage || (state.user ? "" : "Not logged in — progress will not be saved.");
     renderResourceBar(elements.playerManaBar, "Mana", combatant.mana, combatant.maxMana, "mana");
     renderResourceBar(elements.playerStaminaBar, "Stamina", combatant.stamina, combatant.maxStamina, "stamina");
     elements.playerClass.innerHTML = formatClassDisplay(combatant.classDef);
@@ -2038,13 +2544,56 @@ function showRewardModal() {
   elements.rewardModal.hidden = false;
 }
 
+function showProgressionModal() {
+  elements.progressionResultsList.innerHTML = "";
+  state.lastProgressionResults.forEach((line) => {
+    const p = document.createElement("p");
+    p.textContent = line;
+    elements.progressionResultsList.append(p);
+  });
+  elements.progressionModal.hidden = false;
+}
+
+function showInfoModal(title, body) {
+  elements.infoTitle.textContent = title || "Info";
+  elements.infoBody.innerHTML = "";
+  String(body)
+    .split(/\s*\|\s*|\n/)
+    .filter(Boolean)
+    .forEach((line) => {
+      const p = document.createElement("p");
+      p.textContent = line.trim();
+      elements.infoBody.append(p);
+    });
+  elements.infoModal.hidden = false;
+}
+
+function hideInfoModal() {
+  elements.infoModal.hidden = true;
+}
+
 function hideRewardModal() {
   elements.rewardModal.hidden = true;
   if (state.pendingLevelUps > 0) {
     showLevelUp();
     return;
   }
+  if (state.lastProgressionResults.length > 0) {
+    showProgressionModal();
+    return;
+  }
   completeVictoryIfReady();
+}
+
+function hideProgressionModal() {
+  elements.progressionModal.hidden = true;
+  state.lastProgressionResults = [];
+  if (state.pendingLevelUps > 0) {
+    showLevelUp();
+  } else {
+    completeVictoryIfReady();
+  }
+  renderCombat();
 }
 
 function switchPlayerTab(tabName) {
@@ -2058,7 +2607,7 @@ function switchPlayerTab(tabName) {
 }
 
 function getPlayerSkills() {
-  return state.player.classDef.skillIds.map((id) => skills[id]);
+  return (state.player?.unlockedSkills ?? []).map((id) => getSkillById(id, state.player)).filter(Boolean);
 }
 
 function getSkillCooldownRemaining(player, skillId) {
@@ -2109,7 +2658,7 @@ function tickSkillCooldowns(player) {
     const nextValue = remaining - 1;
     if (nextValue <= 0) {
       delete player.skillCooldowns[skillId];
-      addLog(`${skills[skillId].name} is ready again.`);
+      addLog(`${getSkillById(skillId, player)?.name ?? skillId} is ready again.`);
     } else {
       player.skillCooldowns[skillId] = nextValue;
     }
@@ -2120,7 +2669,7 @@ function formatCooldownSummary(player) {
   const entries = Object.entries(player.skillCooldowns ?? {});
   if (!entries.length) return "None";
   return entries
-    .map(([skillId, turns]) => `${skills[skillId].name} ${turns}`)
+    .map(([skillId, turns]) => `${getSkillById(skillId, player)?.name ?? skillId} ${turns}`)
     .join(", ");
 }
 
@@ -2137,7 +2686,7 @@ function getSkillBadgeText(skill) {
 
 function renderSkills() {
   const skillList = getPlayerSkills();
-  const selected = skills[state.player.selectedSkillId];
+  const selected = getSelectedSkill();
   elements.selectedSkillText.textContent = selected ? selected.name : "None";
   elements.clearSkillButton.hidden = !selected || state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.actionUsed;
   elements.skillsList.innerHTML = "";
@@ -2159,35 +2708,116 @@ function renderSkills() {
     button.addEventListener("click", () => selectSkill(skill.id));
     elements.skillsList.append(button);
   });
+  elements.skillInfoPanel.innerHTML = selected
+    ? `<strong>${selected.name}</strong>${selected.description} Mode: ${
+        selected.mode === "attack_modifier" ? "Modifier Skill" : "Standalone Skill"
+      }. Stat: ${selected.statUsed}. Resource: ${
+        selected.resourceType ? `${selected.resourceCost} ${resourceLabel(selected.resourceType)}` : "None"
+      }. Cooldown: ${selected.cooldownTurns ?? 0}. Effect: ${formatSkillEffect(selected)}.`
+    : "Tap a skill to prepare it and read its details here.";
+}
+
+function formatStatusRemoval(statusId) {
+  if (statusId === "bleed") return "Removed by Bandage";
+  return "Ends through duration or explicit recovery";
+}
+
+function renderCodexCards(entries, renderCard) {
+  const grid = document.createElement("div");
+  grid.className = "codex-grid";
+  entries.forEach((entry) => grid.append(renderCard(entry)));
+  return grid;
+}
+
+function createCodexCard(title, subtitle, description, chips = [], bullets = []) {
+  const card = document.createElement("section");
+  card.className = "codex-card";
+  const chipMarkup = chips.map((chip) => `<span class="codex-chip">${chip}</span>`).join("");
+  const bulletMarkup = bullets.map((bullet) => `<li>${bullet}</li>`).join("");
+  card.innerHTML = `
+    <div class="codex-card-header">
+      <h3>${title}</h3>
+      ${subtitle ? `<span class="muted">${subtitle}</span>` : ""}
+    </div>
+    ${description ? `<p>${description}</p>` : ""}
+    ${chipMarkup ? `<div class="codex-chip-row">${chipMarkup}</div>` : ""}
+    ${bulletMarkup ? `<ul class="codex-list">${bulletMarkup}</ul>` : ""}
+  `;
+  return card;
 }
 
 function renderCodex() {
-  const sections = [
-    `Classes: ${Object.values(classes)
-      .map((classDef) => `${classDef.name} [${classDef.roleTag ?? "Class"}] - ${classDef.playstyle}; ${classDef.tooltipSummary}`)
-      .join(" | ")}`,
-    `Subclasses: ${Object.values(subclasses)
-      .flatMap((group) => Object.values(group))
-      .map((subclass) => `${subclass.name} - AC ${signed(subclass.acBonus ?? 0)}, damage ${signed(subclass.damageBonus ?? 0)}`)
-      .join(" | ")}`,
-    `Weapons: ${Object.values(weapons)
-      .filter((weapon) => !weapon.id.startsWith("crude") && weapon.id !== "bite" && weapon.id !== "boneClaw" && weapon.id !== "emberBolt" && weapon.id !== "rustySword")
-      .map((weapon) => `${weapon.name} - ${formatDice(weapon.damageDice)} ${weapon.damageType}; ${weapon.special}`)
-      .join(" | ")}`,
-    `Enemies: ${Object.values(enemyTemplates)
-      .map((enemy) => `${enemy.name} - stats ${enemy.stats.mind}/${enemy.stats.body}/${enemy.stats.soul}; resist ${enemy.resistances.join(", ") || "none"}; weak ${enemy.weaknesses.join(", ") || "none"}`)
-      .join(" | ")}`,
-    `Consumables: Health Potion - restores ${POTION_HEALING}-${POTION_HEALING_MAX} HP; costs ${formatCurrencyCompact(POTION_PRICE)}. Inn stay - restores HP, Mana, and Stamina, clears cooldowns, and removes negative statuses for ${formatCurrencyCompact(INN_PRICE)}.`,
-    `Status effects: ${Object.values(statusDefinitions)
-      .map((status) => `${status.name} - ${describeStatus(status)}`)
-      .join(" | ")}`,
-  ];
   elements.codexList.innerHTML = "";
-  sections.forEach((line) => {
-    const p = document.createElement("p");
-    p.textContent = line;
-    elements.codexList.append(p);
+  const nav = document.createElement("div");
+  nav.className = "subtabs";
+  const sections = ["classes", "subclasses", "weapons", "enemies", "items", "status"];
+  sections.forEach((section) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `subtab-button${state.activeCodexSection === section ? " active" : ""}`;
+    button.textContent = section === "status" ? "Status Effects" : titleCase(section);
+    button.addEventListener("click", () => {
+      state.activeCodexSection = section;
+      renderCodex();
+    });
+    nav.append(button);
   });
+  elements.codexList.append(nav);
+
+  let content;
+  if (state.activeCodexSection === "classes") {
+    content = renderCodexCards(Object.values(classes), (classDef) =>
+      createCodexCard(
+        classDef.name,
+        classDef.roleTag ?? "Class",
+        classDef.shortDescription,
+        [`Weapon hit ${signed(classDef.weaponHitBonus)}`, `Spell hit ${signed(classDef.spellHitBonus)}`, `AC ${signed(classDef.acBonus)}`],
+        [classDef.playstyle, classDef.tooltipSummary]
+      )
+    );
+  } else if (state.activeCodexSection === "subclasses") {
+    content = renderCodexCards(
+      Object.entries(subclasses).flatMap(([classId, group]) => Object.values(group).map((subclass) => ({ classId, subclass }))),
+      ({ classId, subclass }) => {
+        const info = getSubclassPresentation(classId, subclass.id);
+        return createCodexCard(subclass.name, `Class: ${classes[classId]?.name ?? classId}`, info.summary, [], info.features);
+      }
+    );
+  } else if (state.activeCodexSection === "weapons") {
+    content = renderCodexCards(
+      Object.values(weapons).filter((weapon) => !["crudeBlade", "bite", "boneClaw", "emberBolt", "rustySword"].includes(weapon.id)),
+      (weapon) =>
+        createCodexCard(
+          weapon.name,
+          `${formatDice(weapon.damageDice)} ${weapon.damageType}`,
+          weapon.special,
+          [`Stat: ${titleCase(weapon.stat)}`, `Type: ${weapon.attackKind}`]
+        )
+    );
+  } else if (state.activeCodexSection === "enemies") {
+    content = renderCodexCards(Object.values(enemyTemplates), (enemy) =>
+      createCodexCard(
+        enemy.name,
+        `Stats ${enemy.stats.mind}/${enemy.stats.body}/${enemy.stats.soul}`,
+        `Typical foe with ${armors[enemy.armorId].name} and ${weapons[enemy.weaponId].name}.`,
+        [`Resist: ${enemy.resistances.join(", ") || "None"}`, `Weak: ${enemy.weaknesses.join(", ") || "None"}`],
+        [`Loot: ${enemy.loot.xp} base XP`, `Weapon drop chance: ${Math.round(enemy.loot.weaponChance * 100)}%`]
+      )
+    );
+  } else if (state.activeCodexSection === "items") {
+    content = renderCodexCards(
+      [
+        { name: "Health Potion", use: `Restore ${POTION_HEALING}-${POTION_HEALING_MAX} HP.`, cost: formatCurrencyCompact(POTION_PRICE) },
+        { name: "Inn Stay", use: "Restore HP, Mana, and Stamina; clear cooldowns.", cost: formatCurrencyCompact(INN_PRICE) },
+      ],
+      (item) => createCodexCard(item.name, `Cost: ${item.cost}`, item.use)
+    );
+  } else {
+    content = renderCodexCards(Object.entries(statusDefinitions), ([statusId, status]) =>
+      createCodexCard(status.name, "", describeStatus(status), [], [`Removal: ${formatStatusRemoval(statusId)}`])
+    );
+  }
+  elements.codexList.append(content);
 }
 
 function describeStatus(status) {
@@ -2220,7 +2850,7 @@ function formatSkillEffect(skill) {
 
 function selectSkill(skillId) {
   if (state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.actionUsed) return;
-  const skill = skills[skillId];
+  const skill = getSkillById(skillId, state.player);
   const availability = canUseSkill(state.player, skill);
   if (!availability.usable) {
     addLog(availability.reason);
@@ -2228,7 +2858,7 @@ function selectSkill(skillId) {
     return;
   }
   state.player.selectedSkillId = state.player.selectedSkillId === skillId ? null : skillId;
-  const selected = skills[state.player.selectedSkillId];
+  const selected = getSelectedSkill();
   addLog(
     selected
       ? `${state.player.name} prepares ${selected.name} (${selected.mode === "attack_modifier" ? "attack modifier" : "standalone"}).`
@@ -2238,11 +2868,11 @@ function selectSkill(skillId) {
 }
 
 function getSelectedSkill() {
-  return skills[state.player.selectedSkillId] ?? null;
+  return getSkillById(state.player.selectedSkillId, state.player);
 }
 
 function takePreparedAttackModifier(baseAttack) {
-  const skill = skills[state.player.selectedSkillId];
+  const skill = getSelectedSkill();
   if (!skill || skill.mode !== "attack_modifier") {
     return { attack: baseAttack, skill: null };
   }
@@ -2639,7 +3269,8 @@ function completeVictoryIfReady() {
     state.gameState !== GAME_STATES.victory ||
     state.pendingLevelUps > 0 ||
     !elements.rewardModal.hidden ||
-    !elements.levelUpScreen.hidden
+    !elements.levelUpScreen.hidden ||
+    !elements.progressionModal.hidden
   ) {
     return;
   }
@@ -2678,6 +3309,89 @@ function stayAtInn() {
   );
   renderCombat();
   void saveAdventure("rest");
+}
+
+function getCurrentLevelUpLevel() {
+  return state.pendingLevelQueue[0] ?? state.player.level;
+}
+
+function getCurrentLevelProgression() {
+  return getClassProgressionLevel(state.player.classDef.id, getCurrentLevelUpLevel());
+}
+
+function shouldChooseSubclassForLevelUp(level = getCurrentLevelUpLevel()) {
+  return Boolean(getClassProgressionLevel(state.player.classDef.id, level).subclass) && !state.player.subclassId;
+}
+
+function getProgressionChoiceOptions(level = getCurrentLevelUpLevel()) {
+  const choice = getClassProgressionLevel(state.player.classDef.id, level).choice;
+  if (!choice) return [];
+  return [
+    ...(choice.skills ?? []).map((skillId) => ({ type: "skill", id: skillId })),
+    ...(choice.upgrades ?? []).map((upgradeId) => ({ type: "upgrade", id: upgradeId })),
+  ];
+}
+
+function describeProgressionChoiceOption(option) {
+  if (option.type === "skill") {
+    const skill = getSkillById(option.id, state.player);
+    return {
+      title: skill.name,
+      body: skill.description,
+      features: [`Mode: ${skill.mode === "attack_modifier" ? "Modifier Skill" : "Standalone Skill"}`, `Stat: ${skill.statUsed}`, `Cooldown: ${skill.cooldownTurns ?? 0}`],
+    };
+  }
+  const upgrade = skillUpgrades[option.id];
+  const targetSkill = getSkillById(upgrade.targetSkillId, state.player);
+  return {
+    title: upgrade.name,
+    body: upgrade.summary,
+    features: [`Upgrades ${targetSkill?.name ?? upgrade.targetSkillId}`],
+  };
+}
+
+function unlockSkill(player, skillId) {
+  normalizePlayerProgression(player);
+  if (player.unlockedSkills.includes(skillId)) {
+    return null;
+  }
+  player.unlockedSkills.push(skillId);
+  const skill = getSkillById(skillId, player);
+  return `New skill unlocked: ${skill.name} — ${skill.description}`;
+}
+
+function applySkillUpgrade(player, upgradeId) {
+  normalizePlayerProgression(player);
+  if (player.upgradedSkills.includes(upgradeId)) {
+    return null;
+  }
+  const upgrade = skillUpgrades[upgradeId];
+  if (!upgrade) return null;
+  player.upgradedSkills.push(upgradeId);
+  const skill = getSkillById(upgrade.targetSkillId, player);
+  return `Skill upgraded: ${skill.name} — ${upgrade.summary}`;
+}
+
+function applyProgressionForLevel(player, level) {
+  const progression = getClassProgressionLevel(player.classDef.id, level);
+  const results = [];
+  (progression.skills ?? []).forEach((skillId) => {
+    const message = unlockSkill(player, skillId);
+    if (message) results.push(message);
+  });
+  (progression.upgrades ?? []).forEach((upgradeId) => {
+    const message = applySkillUpgrade(player, upgradeId);
+    if (message) results.push(message);
+  });
+  const choiceId = state.levelUpDraft.progressionChoice;
+  if (progression.choice && choiceId) {
+    const option = getProgressionChoiceOptions(level).find((entry) => entry.id === choiceId);
+    if (option) {
+      const message = option.type === "skill" ? unlockSkill(player, option.id) : applySkillUpgrade(player, option.id);
+      if (message) results.push(message);
+    }
+  }
+  return results;
 }
 
 function awardLoot(player, enemy) {
@@ -2724,14 +3438,15 @@ function awardXp(player, amount) {
   recalculateResources(player, oldMaxMana, oldMaxStamina);
   addLog(`${player.name} gains ${amount} XP (${player.xp} total).`);
   if (player.level > oldLevel) {
+    const gainedLevels = [];
+    for (let level = oldLevel + 1; level <= player.level; level += 1) {
+      gainedLevels.push(level);
+    }
+    state.pendingLevelQueue.push(...gainedLevels);
     state.pendingLevelUps += player.level - oldLevel;
     addLog(`${player.name} reaches level ${player.level}. Level up will continue after rewards.`);
   }
   void saveAdventure("xp");
-}
-
-function shouldChooseSubclassForLevelUp() {
-  return state.player.level >= 2 && !state.player.subclassId;
 }
 
 function getSubclassPresentation(classId, subclassId) {
@@ -2765,6 +3480,26 @@ function renderLevelUpStatPills() {
   });
 }
 
+function renderProgressionChoicePills() {
+  elements.progressionChoicePills.innerHTML = "";
+  getProgressionChoiceOptions().forEach((option) => {
+    const details = describeProgressionChoiceOption(option);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "choice-pill progression-choice-pill";
+    if (state.levelUpDraft.progressionChoice === option.id) button.classList.add("active");
+    button.innerHTML = `<strong>${details.title}</strong><span>${details.body}</span><ul>${details.features
+      .map((feature) => `<li>${feature}</li>`)
+      .join("")}</ul>`;
+    button.addEventListener("click", () => {
+      state.levelUpDraft.progressionChoice = option.id;
+      renderLevelUpValidation();
+      renderProgressionChoicePills();
+    });
+    elements.progressionChoicePills.append(button);
+  });
+}
+
 function renderSubclassPills() {
   elements.subclassPills.innerHTML = "";
   const classId = state.player.classDef.id;
@@ -2787,15 +3522,25 @@ function renderSubclassPills() {
 }
 
 function showLevelUp() {
-  state.levelUpDraft = { stat: null, subclass: shouldChooseSubclassForLevelUp() ? null : state.player.subclassId };
+  const level = getCurrentLevelUpLevel();
+  const progression = getCurrentLevelProgression();
+  state.levelUpDraft = { stat: null, subclass: shouldChooseSubclassForLevelUp(level) ? null : state.player.subclassId, progressionChoice: null };
   elements.levelUpScreen.hidden = false;
   elements.levelUpText.textContent =
     state.pendingLevelUps > 1
-      ? `${state.player.name} reached level ${state.player.level}. Choose one improvement now. ${state.pendingLevelUps} level-ups remain.`
-      : `${state.player.name} reached level ${state.player.level}. Choose one improvement to continue the journey.`;
-  elements.subclassSection.hidden = !shouldChooseSubclassForLevelUp();
+      ? `${state.player.name} is resolving level ${level}. Choose one improvement now. ${state.pendingLevelUps} level-ups remain.`
+      : `${state.player.name} reached level ${level}. Choose one improvement to continue the journey.`;
+  const levelNotes = [];
+  if ((progression.skills ?? []).length) levelNotes.push(`Unlocks: ${(progression.skills ?? []).map((skillId) => getSkillById(skillId, state.player)?.name ?? skillId).join(", ")}`);
+  if ((progression.upgrades ?? []).length) levelNotes.push(`Major upgrade: ${(progression.upgrades ?? []).map((upgradeId) => skillUpgrades[upgradeId]?.name ?? upgradeId).join(", ")}`);
+  if (progression.choice) levelNotes.push("Choice: unlock a new skill or upgrade an existing one.");
+  if (progression.subclass) levelNotes.push("Subclass selection unlocks at this level.");
+  elements.levelProgressionInfo.textContent = levelNotes.length ? levelNotes.join(" ") : "This level grants your stat increase.";
+  elements.subclassSection.hidden = !shouldChooseSubclassForLevelUp(level);
+  elements.progressionChoiceSection.hidden = !progression.choice;
   renderLevelUpStatPills();
-  if (shouldChooseSubclassForLevelUp()) renderSubclassPills();
+  if (shouldChooseSubclassForLevelUp(level)) renderSubclassPills();
+  if (progression.choice) renderProgressionChoicePills();
   renderLevelUpValidation();
 }
 
@@ -2816,12 +3561,18 @@ function renderLevelUpValidation() {
     elements.applyLevelButton.disabled = true;
     return;
   }
+  if (getCurrentLevelProgression().choice && !state.levelUpDraft.progressionChoice) {
+    elements.levelValidationText.textContent = "Choose a skill or upgrade before confirming.";
+    elements.applyLevelButton.disabled = true;
+    return;
+  }
   elements.levelValidationText.textContent = "";
   elements.applyLevelButton.disabled = false;
 }
 
 function applyLevelUp() {
   if (state.pendingLevelUps <= 0) return;
+  const level = getCurrentLevelUpLevel();
   const stat = state.levelUpDraft.stat;
   if (!stat || state.player.stats[stat] >= MAX_STAT) {
     renderLevelUpValidation();
@@ -2831,7 +3582,7 @@ function applyLevelUp() {
   const oldMaxHp = state.player.maxHp;
   const oldMaxMana = state.player.maxMana;
   const oldMaxStamina = state.player.maxStamina;
-  const shouldChooseSubclass = shouldChooseSubclassForLevelUp();
+  const shouldChooseSubclass = shouldChooseSubclassForLevelUp(level);
   state.player.stats[stat] = clamp(state.player.stats[stat] + 1, MIN_STAT, MAX_STAT);
   recalculateHp(state.player, oldMaxHp);
   recalculateResources(state.player, oldMaxMana, oldMaxStamina);
@@ -2839,13 +3590,20 @@ function applyLevelUp() {
     state.player.subclassId = state.levelUpDraft.subclass;
     addLog(`${state.player.name} chooses ${getSubclassDef(state.player).name}.`);
   }
+  const progressionResults = applyProgressionForLevel(state.player, level);
+  if (progressionResults.length) {
+    state.lastProgressionResults = progressionResults;
+  }
+  state.pendingLevelQueue.shift();
   state.pendingLevelUps -= 1;
   addLog(
     `${state.player.name} gains +1 ${titleCase(stat)}. Max HP is now ${state.player.maxHp}, Mana ${state.player.maxMana}, Stamina ${state.player.maxStamina}.`
   );
-  state.levelUpDraft = { stat: null, subclass: null };
+  state.levelUpDraft = { stat: null, subclass: null, progressionChoice: null };
   elements.levelUpScreen.hidden = true;
-  if (state.pendingLevelUps > 0) {
+  if (state.lastProgressionResults.length > 0) {
+    showProgressionModal();
+  } else if (state.pendingLevelUps > 0) {
     showLevelUp();
   } else {
     completeVictoryIfReady();
@@ -2962,6 +3720,8 @@ elements.clearSkillButton.addEventListener("click", () => {
 elements.potionButton.addEventListener("click", usePotion);
 elements.nextEncounterButton.addEventListener("click", startNextEncounter);
 elements.rewardContinueButton.addEventListener("click", hideRewardModal);
+elements.progressionContinueButton.addEventListener("click", hideProgressionModal);
+elements.infoCloseButton.addEventListener("click", hideInfoModal);
 elements.buyPotionButton.addEventListener("click", buyPotion);
 elements.innButton.addEventListener("click", stayAtInn);
 elements.resetButton.addEventListener("click", resetToBuilder);
@@ -3014,6 +3774,15 @@ elements.adventureSlots.addEventListener("click", async (event) => {
   if (target.dataset.newSlot !== undefined) {
     prepareNewAdventure();
   }
+});
+
+document.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const infoTarget = target.closest("[data-info-title][data-info-body]");
+  if (!infoTarget) return;
+  event.preventDefault();
+  showInfoModal(infoTarget.dataset.infoTitle, infoTarget.dataset.infoBody);
 });
 
 renderBuilder();

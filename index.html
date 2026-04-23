@@ -106,6 +106,7 @@
           <section class="panel builder-panel" aria-label="Class selection">
             <h3>Class</h3>
             <div id="classPills" class="class-pill-grid"></div>
+            <div id="classInfoPanel" class="mobile-info-panel"></div>
           </section>
 
           <section class="panel builder-panel" aria-label="Equipment selection">
@@ -155,6 +156,7 @@
         <section class="modal panel levelup-modal" role="dialog" aria-modal="true" aria-labelledby="levelUpTitle">
           <h2 id="levelUpTitle">Level Up!</h2>
           <p id="levelUpText"></p>
+          <div id="levelProgressionInfo" class="mobile-info-panel"></div>
 
           <section class="levelup-section" aria-label="Stat increase">
             <h3>Choose a stat increase</h3>
@@ -166,6 +168,11 @@
             <div id="subclassPills" class="choice-pill-grid"></div>
           </section>
 
+          <section id="progressionChoiceSection" class="levelup-section" hidden aria-label="Skill progression choice">
+            <h3>Choose your skill path</h3>
+            <div id="progressionChoicePills" class="choice-pill-grid"></div>
+          </section>
+
           <p id="levelValidationText" class="validation"></p>
           <button id="applyLevelButton" type="button">Confirm Level Up</button>
         </section>
@@ -175,7 +182,10 @@
         <div class="game-layout">
           <article class="panel player-panel" id="playerCard">
             <div class="panel-heading">
-              <h2 id="playerNameHeading">Player</h2>
+              <div>
+                <h2 id="playerNameHeading">Player</h2>
+                <p id="saveStatus" class="muted"></p>
+              </div>
               <span id="playerLevelXp" class="muted"></span>
             </div>
             <div id="playerHpBar"></div>
@@ -204,6 +214,7 @@
                 <p class="stat">Attack: <span id="playerAttack"></span></p>
               </div>
               <div id="skillsList" class="skill-pills"></div>
+              <div id="skillInfoPanel" class="mobile-info-panel"></div>
               <p class="stat selected-skill">
                 Selected skill: <span id="selectedSkillText">None</span>
                 <button id="clearSkillButton" type="button" hidden>X</button>
@@ -224,7 +235,7 @@
             </section>
 
             <section id="codexTab" class="tab-panel" hidden>
-              <div id="codexList" class="plain-list"></div>
+              <div id="codexList"></div>
             </section>
           </article>
 
@@ -292,6 +303,22 @@
           <h2 id="rewardTitle">Rewards</h2>
           <div id="resultsList" class="plain-list"></div>
           <button id="rewardContinueButton" type="button">Continue</button>
+        </section>
+      </div>
+
+      <div id="infoModal" class="modal-backdrop" hidden>
+        <section class="modal panel" role="dialog" aria-modal="true" aria-labelledby="infoTitle">
+          <h2 id="infoTitle">Info</h2>
+          <div id="infoBody" class="plain-list"></div>
+          <button id="infoCloseButton" type="button">Close</button>
+        </section>
+      </div>
+
+      <div id="progressionModal" class="modal-backdrop" hidden>
+        <section class="modal panel" role="dialog" aria-modal="true" aria-labelledby="progressionTitle">
+          <h2 id="progressionTitle">New Power</h2>
+          <div id="progressionResultsList" class="plain-list"></div>
+          <button id="progressionContinueButton" type="button">Continue</button>
         </section>
       </div>
     </main>
