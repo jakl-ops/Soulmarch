@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <radialGradient id="copperFill" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(23 20) rotate(48) scale(34)">
+      <stop offset="0" stop-color="#f1c6aa"/>
+      <stop offset="0.45" stop-color="#b86a42"/>
+      <stop offset="1" stop-color="#52271f"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="25" fill="#23151a"/>
+  <circle cx="32" cy="32" r="23.5" fill="url(#copperFill)" stroke="#efc4b4" stroke-width="2.5"/>
+  <circle cx="32" cy="32" r="17" fill="#4f282b" stroke="#d99372" stroke-width="2"/>
+  <path d="M32 18l8 8-8 8-8-8 8-8zm0 14l8 8-8 8-8-8 8-8z" fill="#efccba" stroke="#7d4532" stroke-width="1.4" stroke-linejoin="round"/>
+</svg>

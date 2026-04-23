@@ -144,6 +144,12 @@ const consumableItems = {
   },
 };
 
+const currencyIcons = {
+  gold: "assets/icons/coin-gold.svg",
+  silver: "assets/icons/coin-silver.svg",
+  copper: "assets/icons/coin-copper.svg",
+};
+
 const statTooltips = {
   mind: "thinking, awareness, puzzle-solving, perception, deception, social reasoning",
   body: "weapon attacks, climbing, jumping, brute force, physical actions",
@@ -1582,6 +1588,39 @@ function formatCurrencyDetailed(currency) {
   return `${normalized.gold} gold, ${normalized.silver} silver, ${normalized.copper} copper`;
 }
 
+function getClassIconPath(classId) {
+  return `assets/icons/class-${classId}.svg`;
+}
+
+function renderClassIcon(classId, label) {
+  const path = getClassIconPath(classId ?? "default");
+  return `<img class="class-icon-image" src="${path}" alt="" aria-hidden="true"><span>${label}</span>`;
+}
+
+function renderCurrencyWithIcons(currency, options = {}) {
+  const normalized = normalizeCurrency(currency);
+  const entries = [
+    { key: "gold", value: normalized.gold, short: "g", long: "gold" },
+    { key: "silver", value: normalized.silver, short: "s", long: "silver" },
+    { key: "copper", value: normalized.copper, short: "c", long: "copper" },
+  ];
+  const compact = options.compact ?? false;
+  return `
+    <span class="currency-display${compact ? " compact" : ""}">
+      ${entries
+        .map(
+          (entry) => `
+            <span class="currency-chip currency-${entry.key}">
+              <img src="${currencyIcons[entry.key]}" alt="" aria-hidden="true">
+              <span>${entry.value}${compact ? entry.short : ` ${entry.long}`}</span>
+            </span>
+          `
+        )
+        .join("")}
+    </span>
+  `;
+}
+
 function resourceLabel(resourceType) {
   return resourceType === "mana" ? "Mana" : resourceType === "stamina" ? "Stamina" : "Free";
 }
@@ -2338,14 +2377,22 @@ function formatClassTooltip(classDef) {
   return lines.join(" | ");
 }
 
-function formatInfoTooltip(label, body) {
-  return `<button type="button" class="info-chip tooltip-term" data-info-title="${escapeAttribute(label)}" data-info-body="${escapeAttribute(
+function formatInfoTooltip(label, body, options = {}) {
+  const title = options.title ?? label;
+  const content = options.htmlLabel ?? label;
+  return `<button type="button" class="info-chip tooltip-term" data-info-title="${escapeAttribute(title)}" data-info-body="${escapeAttribute(
     body
-  )}" data-tooltip="${escapeAttribute(body)}">${label}<span class="info-chip-icon" aria-hidden="true">i</span></button>`;
+  )}" data-tooltip="${escapeAttribute(body)}">${content}<span class="info-chip-icon" aria-hidden="true">i</span></button>`;
 }
 
 function formatClassDisplay(classDef) {
-  return classDef ? formatInfoTooltip(classDef.name, `${classDef.shortDescription} | ${classDef.roleTag ?? "Class"} | ${classDef.tooltipSummary}`) : "None";
+  return classDef
+    ? formatInfoTooltip(
+        classDef.name,
+        `${classDef.shortDescription} | ${classDef.roleTag ?? "Class"} | ${classDef.tooltipSummary}`,
+        { htmlLabel: renderClassIcon(classDef.id, classDef.name) }
+      )
+    : "None";
 }
 
 function formatSubclassDisplay(subclassDef) {
@@ -2371,7 +2418,7 @@ function renderClassPills() {
     button.type = "button";
     button.className = `class-pill${state.builderSelectedClassId === classDef.id ? " active" : ""}`;
     button.dataset.tooltip = formatClassTooltip(classDef);
-    button.innerHTML = `<span class="class-icon">${classDef.icon}</span><span>${classDef.name}</span>`;
+    button.innerHTML = renderClassIcon(classDef.id, classDef.name);
     button.addEventListener("click", () => {
       state.builderSelectedClassId = classDef.id;
       renderBuilder();
@@ -2740,7 +2787,10 @@ function renderInventory() {
     })
     .join("");
   const equipmentMarkup = `
-    <p>Currency: ${formatCurrencyDetailed(inventory.currency)}</p>
+    <div class="inventory-section">
+      <h3>Currency</h3>
+      <div>${renderCurrencyWithIcons(inventory.currency)}</div>
+    </div>
     <p>Owned weapons: ${inventory.weapons.map((id) => weapons[id].name).join(", ")}</p>
     <p>Owned armor: ${inventory.armor.map((id) => armors[id].name).join(", ")}</p>
     <p>Equipped: ${state.player.weapon.name}, ${state.player.armor.name}</p>
@@ -2751,13 +2801,13 @@ function renderInventory() {
   `;
   elements.inventoryList.innerHTML = equipmentMarkup;
   elements.sideInventoryList.innerHTML = equipmentMarkup;
-  elements.shopCurrency.textContent = `Funds: ${formatCurrencyDetailed(inventory.currency)}.`;
+  elements.shopCurrency.innerHTML = `Funds: ${renderCurrencyWithIcons(inventory.currency, { compact: true })}`;
   elements.shopList.innerHTML = Object.values(consumableItems)
     .map((item) => `
       <div class="item-row">
         <div>
           <strong>${item.name}</strong>
-          <span class="item-meta">${item.description} · ${formatCurrencyCompact(item.cost)}</span>
+          <span class="item-meta">${item.description} · ${renderCurrencyWithIcons(item.cost, { compact: true })}</span>
         </div>
         <button type="button" data-buy-item="${item.id}" ${
           state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, item.cost) ? "disabled" : ""

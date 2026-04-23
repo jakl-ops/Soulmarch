@@ -641,6 +641,65 @@ label {
   width: 20px;
 }
 
+.class-icon-image {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  filter: drop-shadow(0 2px 4px rgba(18, 8, 24, 0.55));
+}
+
+.currency-display {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.currency-display.compact {
+  gap: 6px;
+}
+
+.currency-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 3px 10px 3px 6px;
+  border-radius: 999px;
+  border: 1px solid #4f5752;
+  background: #171c20;
+  color: #eef3ef;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.currency-chip img {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.currency-display.compact .currency-chip {
+  min-height: 22px;
+  padding: 2px 8px 2px 5px;
+  font-size: 12px;
+}
+
+.currency-gold {
+  border-color: #a27a36;
+  box-shadow: inset 0 0 0 1px rgba(245, 210, 138, 0.08);
+}
+
+.currency-silver {
+  border-color: #7e90a4;
+  box-shadow: inset 0 0 0 1px rgba(209, 224, 240, 0.08);
+}
+
+.currency-copper {
+  border-color: #9a5a3d;
+  box-shadow: inset 0 0 0 1px rgba(223, 165, 134, 0.08);
+}
+
 .validation {
   min-height: 24px;
   color: #ffb4a8;
