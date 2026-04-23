@@ -260,10 +260,35 @@
               <h2>Actions</h2>
               <p id="turnText"></p>
               <p id="actionText"></p>
-              <div class="action-buttons">
-                <button id="attackButton" type="button">Attack</button>
-                <button id="potionButton" type="button">Use Potion</button>
-                <button id="nextEncounterButton" type="button" hidden>Next Battle</button>
+              <div class="action-economy">
+                <p>Major Action: <span id="majorActionStatus">Available</span></p>
+                <p>Minor Actions: <span id="minorActionStatus">0 / 2 used</span></p>
+              </div>
+              <p class="action-help">
+                Major actions include attacks and powerful skills. Minor actions include potions, bandages, and quick utility
+                skills. You may take 1 Major + 1 Minor, or 2 Minor actions per turn.
+              </p>
+              <div class="action-group">
+                <h3>Major Actions</h3>
+                <div class="action-buttons">
+                  <button id="attackButton" type="button">Attack</button>
+                  <button id="majorSkillButton" type="button" hidden>Use Selected Skill</button>
+                </div>
+              </div>
+              <div class="action-group">
+                <h3>Minor Actions</h3>
+                <div class="action-buttons">
+                  <button id="minorSkillButton" type="button" hidden>Use Selected Skill</button>
+                  <button id="potionButton" type="button">Use Potion</button>
+                  <button id="bandageButton" type="button">Use Bandage</button>
+                </div>
+              </div>
+              <div class="action-group">
+                <h3>Turn</h3>
+                <div class="action-buttons">
+                  <button id="endTurnButton" type="button">End Turn</button>
+                  <button id="nextEncounterButton" type="button" hidden>Next Battle</button>
+                </div>
               </div>
             </section>
 

@@ -1326,9 +1326,15 @@ const elements = {
   initiativeList: document.querySelector("#initiativeList"),
   turnText: document.querySelector("#turnText"),
   actionText: document.querySelector("#actionText"),
+  majorActionStatus: document.querySelector("#majorActionStatus"),
+  minorActionStatus: document.querySelector("#minorActionStatus"),
   attackButton: document.querySelector("#attackButton"),
+  majorSkillButton: document.querySelector("#majorSkillButton"),
+  minorSkillButton: document.querySelector("#minorSkillButton"),
   clearSkillButton: document.querySelector("#clearSkillButton"),
   potionButton: document.querySelector("#potionButton"),
+  bandageButton: document.querySelector("#bandageButton"),
+  endTurnButton: document.querySelector("#endTurnButton"),
   nextEncounterButton: document.querySelector("#nextEncounterButton"),
   inventoryList: document.querySelector("#inventoryList"),
   sideInventoryList: document.querySelector("#sideInventoryList"),
@@ -1368,6 +1374,9 @@ const state = {
   initiative: [],
   turnIndex: 0,
   actionUsed: false,
+  majorActionUsed: false,
+  minorActionsUsed: 0,
+  turnStarted: false,
   round: 1,
   isResolvingEnemyTurn: false,
   winner: null,
@@ -1511,6 +1520,9 @@ function captureSnapshot() {
       initiative: getInitiativeSnapshot(),
       turnIndex: state.turnIndex,
       actionUsed: state.actionUsed,
+      majorActionUsed: state.majorActionUsed,
+      minorActionsUsed: state.minorActionsUsed,
+      turnStarted: state.turnStarted,
       round: state.round,
       isResolvingEnemyTurn: false,
       winnerId: state.winner?.id ?? null,
@@ -1539,9 +1551,14 @@ function loadSnapshot(snapshot) {
   state.builderSelectedClassId = snapshot.builderSelectedClassId ?? snapshot.player?.classDef?.id ?? "warrior";
   state.player = snapshot.player;
   normalizePlayerProgression(state.player);
+  state.player.inventory.consumables.bandage ??= 0;
   state.enemy = snapshot.enemy;
   state.turnIndex = snapshot.turnIndex ?? 0;
   state.actionUsed = snapshot.actionUsed ?? false;
+  state.majorActionUsed = snapshot.majorActionUsed ?? (snapshot.actionUsed ?? false);
+  state.minorActionsUsed = snapshot.minorActionsUsed ?? 0;
+  state.turnStarted = snapshot.turnStarted ?? false;
+  syncActionState();
   state.round = snapshot.round ?? 1;
   state.isResolvingEnemyTurn = false;
   state.pendingLevelUps = snapshot.pendingLevelUps ?? 0;
@@ -2011,7 +2028,7 @@ function rollDamageDice(dice) {
 function createInventory(startingWeaponId, startingArmorId) {
   return {
     currency: { copper: 0, silver: 0, gold: 0 },
-    consumables: { healthPotion: 1 },
+    consumables: { healthPotion: 1, bandage: 0 },
     weapons: [startingWeaponId],
     armor: [startingArmorId],
   };
@@ -2103,7 +2120,8 @@ function prepareNewAdventure() {
   state.enemy = null;
   state.initiative = [];
   state.turnIndex = 0;
-  state.actionUsed = false;
+  resetPlayerTurnActions();
+  state.turnStarted = false;
   state.round = 1;
   state.isResolvingEnemyTurn = false;
   state.winner = null;
@@ -2307,6 +2325,62 @@ function currentCombatant() {
   return state.initiative[state.turnIndex]?.combatant;
 }
 
+function syncActionState() {
+  state.actionUsed = state.majorActionUsed || state.minorActionsUsed > 0;
+}
+
+function resetPlayerTurnActions() {
+  state.majorActionUsed = false;
+  state.minorActionsUsed = 0;
+  syncActionState();
+}
+
+function canUseMajorAction() {
+  return currentCombatant()?.id === "player" && !state.isResolvingEnemyTurn && !state.winner && !state.majorActionUsed && state.minorActionsUsed < 2;
+}
+
+function canUseMinorAction() {
+  if (currentCombatant()?.id !== "player" || state.isResolvingEnemyTurn || state.winner) return false;
+  const maxMinorActions = state.majorActionUsed ? 1 : 2;
+  return state.minorActionsUsed < maxMinorActions;
+}
+
+function getMinorActionLimit() {
+  return state.majorActionUsed ? 1 : 2;
+}
+
+function isPlayerTurnComplete() {
+  return state.minorActionsUsed >= 2 || (state.majorActionUsed && state.minorActionsUsed >= 1);
+}
+
+function markMajorActionUsed(label) {
+  state.majorActionUsed = true;
+  syncActionState();
+  if (label) addLog(`${state.player.name} uses Major Action: ${label}.`);
+}
+
+function markMinorActionUsed(label) {
+  state.minorActionsUsed += 1;
+  syncActionState();
+  if (label) addLog(`${state.player.name} uses Minor Action: ${label}.`);
+  if (!canUseMinorAction()) {
+    addLog("No Minor Actions remaining.");
+  }
+}
+
+function finishPlayerAction() {
+  renderCombat();
+  if (!state.winner && isPlayerTurnComplete()) {
+    addLog(`${state.player.name} ends turn.`);
+    window.setTimeout(advanceTurn, 450);
+  }
+}
+
+function getSkillActionType(skill) {
+  if (!skill || skill.mode === "attack_modifier") return null;
+  return skill.attackKind === "utility" ? "minor" : "major";
+}
+
 function targetFor(attacker) {
   return attacker.id === "player" ? state.enemy : state.player;
 }
@@ -2377,7 +2451,8 @@ async function startCombat() {
   state.enemy = createScaledEnemy(state.player.level);
   state.gameState = GAME_STATES.inCombat;
   state.turnIndex = 0;
-  state.actionUsed = false;
+  resetPlayerTurnActions();
+  state.turnStarted = false;
   state.round = 1;
   state.isResolvingEnemyTurn = false;
   state.winner = null;
@@ -2505,10 +2580,12 @@ function renderInventory() {
   elements.inventoryList.innerHTML = "";
   elements.sideInventoryList.innerHTML = "";
   applyNormalizedCurrency(inventory.currency, inventory.currency);
-  elements.inventorySummary.textContent = `Inventory: ${inventory.consumables.healthPotion ?? 0} potion, ${formatCurrencyCompact(inventory.currency)}`;
+  inventory.consumables.bandage ??= 0;
+  elements.inventorySummary.textContent = `Inventory: ${inventory.consumables.healthPotion ?? 0} potion, ${inventory.consumables.bandage ?? 0} bandage, ${formatCurrencyCompact(inventory.currency)}`;
   const lines = [
     `Currency: ${formatCurrencyDetailed(inventory.currency)}`,
     `Health Potions: ${inventory.consumables.healthPotion ?? 0}`,
+    `Bandages: ${inventory.consumables.bandage ?? 0}`,
     `Owned weapons: ${inventory.weapons.map((id) => weapons[id].name).join(", ")}`,
     `Owned armor: ${inventory.armor.map((id) => armors[id].name).join(", ")}`,
     `Equipped: ${state.player.weapon.name}, ${state.player.armor.name}`,
@@ -2688,11 +2765,16 @@ function getSkillBadgeText(skill) {
 function renderSkills() {
   const skillList = getPlayerSkills();
   const selected = getSelectedSkill();
+  const selectedActionType = getSkillActionType(selected);
+  const playerTurnActive = state.gameState === GAME_STATES.inCombat && currentCombatant()?.id === "player" && !state.isResolvingEnemyTurn;
   elements.selectedSkillText.textContent = selected ? selected.name : "None";
-  elements.clearSkillButton.hidden = !selected || state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.actionUsed;
+  elements.clearSkillButton.hidden = !selected || !playerTurnActive;
   elements.skillsList.innerHTML = "";
   skillList.forEach((skill) => {
     const availability = canUseSkill(state.player, skill);
+    const actionType = getSkillActionType(skill);
+    const actionAvailable =
+      skill.mode === "attack_modifier" ? canUseMajorAction() : actionType === "major" ? canUseMajorAction() : canUseMinorAction();
     const button = document.createElement("button");
     button.type = "button";
     button.className = `skill-pill${state.player.selectedSkillId === skill.id ? " active" : ""}${availability.usable ? "" : " unavailable"}`;
@@ -2705,7 +2787,7 @@ function renderSkills() {
     }\nCooldown: ${skill.cooldownTurns ?? 0}\nCurrent cooldown: ${availability.cooldownRemaining}\nEffect: ${formatSkillEffect(skill)}${
       availability.reason ? `\nUnavailable: ${availability.reason}` : ""
     }`;
-    button.disabled = !availability.usable || state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.actionUsed;
+    button.disabled = !availability.usable || !playerTurnActive || !actionAvailable;
     button.addEventListener("click", () => selectSkill(skill.id));
     elements.skillsList.append(button);
   });
@@ -2714,7 +2796,7 @@ function renderSkills() {
         selected.mode === "attack_modifier" ? "Modifier Skill" : "Standalone Skill"
       }. Stat: ${selected.statUsed}. Resource: ${
         selected.resourceType ? `${selected.resourceCost} ${resourceLabel(selected.resourceType)}` : "None"
-      }. Cooldown: ${selected.cooldownTurns ?? 0}. Effect: ${formatSkillEffect(selected)}.`
+      }. Cooldown: ${selected.cooldownTurns ?? 0}. Action: ${selectedActionType ? titleCase(selectedActionType) : "Attack modifier"}. Effect: ${formatSkillEffect(selected)}.`
     : "Tap a skill to prepare it and read its details here.";
 }
 
@@ -2850,11 +2932,19 @@ function formatSkillEffect(skill) {
 }
 
 function selectSkill(skillId) {
-  if (state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.actionUsed) return;
+  if (state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.isResolvingEnemyTurn) return;
   const skill = getSkillById(skillId, state.player);
   const availability = canUseSkill(state.player, skill);
+  const actionType = getSkillActionType(skill);
+  const actionAvailable =
+    skill.mode === "attack_modifier" ? canUseMajorAction() : actionType === "major" ? canUseMajorAction() : canUseMinorAction();
   if (!availability.usable) {
     addLog(availability.reason);
+    renderCombat();
+    return;
+  }
+  if (!actionAvailable) {
+    addLog(actionType === "minor" ? "No Minor Actions available for that skill." : "No Major Action available for that skill.");
     renderCombat();
     return;
   }
@@ -2926,9 +3016,11 @@ function useSelectedSkill() {
   if (currentCombatant()?.id !== "player") return;
   const skill = getSelectedSkill();
   if (!skill || skill.mode !== "standalone") return;
+  const actionType = getSkillActionType(skill);
+  const actionAvailable = actionType === "major" ? canUseMajorAction() : canUseMinorAction();
   const availability = canUseSkill(state.player, skill);
-  if (!availability.usable) {
-    addLog(availability.reason);
+  if (!availability.usable || !actionAvailable) {
+    addLog(availability.reason ?? (actionType === "minor" ? "No Minor Actions available for that skill." : "No Major Action available for that skill."));
     state.player.selectedSkillId = null;
     renderCombat();
     return;
@@ -2940,7 +3032,9 @@ function useSelectedSkill() {
   }
 
   state.player.selectedSkillId = null;
-  state.actionUsed = true;
+  if (actionType === "minor") {
+    markMinorActionUsed(skill.name);
+  }
   spendSkillResource(state.player, skill);
   startSkillCooldown(state.player, skill);
 
@@ -2950,8 +3044,7 @@ function useSelectedSkill() {
     }
     addLog(`${state.player.name} uses ${skill.name}.`);
     if (!state.winner) tickStatuses(state.player, "afterAct");
-    renderCombat();
-    window.setTimeout(advanceTurn, 450);
+    finishPlayerAction();
     return;
   }
 
@@ -2964,8 +3057,7 @@ function useSelectedSkill() {
     maybeApplyStatus(state.player, state.player, skill.statusSelf, skill.name);
   }
   if (!state.winner) tickStatuses(state.player, "afterAct");
-  renderCombat();
-  window.setTimeout(advanceTurn, 450);
+  finishPlayerAction();
 }
 
 function renderInitiative() {
@@ -2994,8 +3086,9 @@ function renderCombat() {
   if (state.gameState === GAME_STATES.defeat) {
     elements.turnText.textContent = `${state.player.name} was defeated.`;
     elements.actionText.textContent = "Game over. Create a new character to try again.";
+    elements.majorActionStatus.textContent = "-";
+    elements.minorActionStatus.textContent = "-";
     setActionButtons(true);
-    elements.attackButton.textContent = "Attack";
     elements.nextEncounterButton.hidden = true;
     return;
   }
@@ -3003,8 +3096,9 @@ function renderCombat() {
   if (state.gameState === GAME_STATES.victory) {
     elements.turnText.textContent = `${state.winner.name} wins.`;
     elements.actionText.textContent = state.pendingLevelUps > 0 ? "Level up is available before the next battle." : "Processing victory.";
+    elements.majorActionStatus.textContent = "-";
+    elements.minorActionStatus.textContent = "-";
     setActionButtons(true);
-    elements.attackButton.textContent = "Attack";
     elements.nextEncounterButton.hidden = true;
     return;
   }
@@ -3012,9 +3106,11 @@ function renderCombat() {
   if (state.gameState === GAME_STATES.betweenBattles) {
     elements.turnText.textContent = "Between battles";
     elements.actionText.textContent = "Review rewards, use items, rest at the inn, or start the next battle.";
+    elements.majorActionStatus.textContent = "-";
+    elements.minorActionStatus.textContent = "-";
     setActionButtons(true);
-    elements.attackButton.textContent = "Attack";
     elements.potionButton.disabled = (state.player.inventory.consumables.healthPotion ?? 0) <= 0 || state.player.hp >= state.player.maxHp;
+    elements.bandageButton.disabled = (state.player.inventory.consumables.bandage ?? 0) <= 0 || !hasStatus(state.player, "bleed");
     elements.buyPotionButton.disabled = !canAffordCurrency(state.player.inventory.currency, POTION_PRICE);
     elements.innButton.disabled = !canAffordCurrency(state.player.inventory.currency, INN_PRICE);
     elements.nextEncounterButton.hidden = false;
@@ -3024,18 +3120,29 @@ function renderCombat() {
 
   elements.turnText.textContent = `Round ${state.round}: ${active.name}'s turn`;
   const selectedSkill = getSelectedSkill();
-  const playerCanAct = active.id === "player" && !state.actionUsed && !state.isResolvingEnemyTurn;
-  elements.attackButton.textContent = selectedSkill?.mode === "standalone" ? `Use ${selectedSkill.name}` : "Attack";
-  elements.actionText.textContent = state.actionUsed
-    ? "Action used. Advancing turn."
-    : selectedSkill
+  const selectedSkillActionType = getSkillActionType(selectedSkill);
+  const selectedSkillAvailability = selectedSkill ? canUseSkill(state.player, selectedSkill) : null;
+  const playerTurnActive = active.id === "player" && !state.isResolvingEnemyTurn;
+  elements.majorActionStatus.textContent = playerTurnActive ? (state.majorActionUsed ? "Used" : "Available") : "-";
+  elements.minorActionStatus.textContent = playerTurnActive ? `${state.minorActionsUsed} / ${getMinorActionLimit()} used` : "-";
+  elements.actionText.textContent = playerTurnActive
+    ? selectedSkill
       ? selectedSkill.mode === "attack_modifier"
         ? `Next attack modified by ${selectedSkill.name}.`
-        : `${selectedSkill.name} is ready as your action.`
-      : "One action available.";
-  elements.attackButton.disabled = !playerCanAct;
-  elements.potionButton.disabled = !playerCanAct || (state.player.inventory.consumables.healthPotion ?? 0) <= 0 || state.player.hp >= state.player.maxHp;
-  elements.clearSkillButton.hidden = !selectedSkill || !playerCanAct;
+        : `${selectedSkill.name} is ready as a ${selectedSkillActionType} action.`
+      : "Choose actions freely until you end your turn or run out."
+    : "Wait for the enemy turn to finish.";
+  elements.attackButton.disabled = !playerTurnActive || !canUseMajorAction();
+  elements.majorSkillButton.hidden = !(selectedSkill && selectedSkill.mode === "standalone" && selectedSkillActionType === "major");
+  elements.majorSkillButton.disabled = !playerTurnActive || !canUseMajorAction() || !selectedSkillAvailability?.usable;
+  elements.majorSkillButton.textContent = selectedSkill ? `Use ${selectedSkill.name}` : "Use Selected Skill";
+  elements.minorSkillButton.hidden = !(selectedSkill && selectedSkill.mode === "standalone" && selectedSkillActionType === "minor");
+  elements.minorSkillButton.disabled = !playerTurnActive || !canUseMinorAction() || !selectedSkillAvailability?.usable;
+  elements.minorSkillButton.textContent = selectedSkill ? `Use ${selectedSkill.name}` : "Use Selected Skill";
+  elements.potionButton.disabled = !playerTurnActive || !canUseMinorAction() || (state.player.inventory.consumables.healthPotion ?? 0) <= 0 || state.player.hp >= state.player.maxHp;
+  elements.bandageButton.disabled = !playerTurnActive || !canUseMinorAction() || (state.player.inventory.consumables.bandage ?? 0) <= 0 || !hasStatus(state.player, "bleed");
+  elements.endTurnButton.disabled = !playerTurnActive;
+  elements.clearSkillButton.hidden = !selectedSkill || !playerTurnActive;
   elements.buyPotionButton.disabled = true;
   elements.innButton.disabled = true;
   elements.nextEncounterButton.hidden = true;
@@ -3043,7 +3150,13 @@ function renderCombat() {
 
 function setActionButtons(disabled) {
   elements.attackButton.disabled = disabled;
+  elements.majorSkillButton.disabled = disabled;
+  elements.minorSkillButton.disabled = disabled;
   elements.potionButton.disabled = disabled;
+  elements.bandageButton.disabled = disabled;
+  elements.endTurnButton.disabled = disabled;
+  elements.majorSkillButton.hidden = true;
+  elements.minorSkillButton.hidden = true;
   elements.clearSkillButton.hidden = true;
 }
 
@@ -3054,7 +3167,9 @@ async function startNextEncounter() {
   state.player.selectedSkillId = null;
   state.gameState = GAME_STATES.inCombat;
   state.turnIndex = 0;
+  resetPlayerTurnActions();
   state.actionUsed = false;
+  state.turnStarted = false;
   state.round = 1;
   state.isResolvingEnemyTurn = false;
   state.winner = null;
@@ -3179,13 +3294,17 @@ function hasStatus(combatant, statusId) {
 }
 
 function resolveAttack(attacker, attack = attacker.weapon, options = {}) {
-  if ((state.actionUsed && !options.followUp) || state.winner) {
+  if ((attacker.id === "player" && !options.followUp && !canUseMajorAction()) || (attacker.id !== "player" && state.actionUsed && !options.followUp) || state.winner) {
     addLog(`${attacker.name} cannot act again this turn.`);
     renderCombat();
     return;
   }
 
-  state.actionUsed = true;
+  if (attacker.id === "player" && !options.followUp) {
+    markMajorActionUsed(options.skill?.name ?? "Attack");
+  } else if (attacker.id !== "player" && !options.followUp) {
+    state.actionUsed = true;
+  }
   const defender = targetFor(attacker);
   const attackDie = roll(20);
   const parts = options.skill ? getSkillParts(attacker, options.skill, options.extraHitBonus ?? 0) : getAttackParts(attacker, attack, options.extraHitBonus ?? 0);
@@ -3222,10 +3341,15 @@ function resolveAttack(attacker, attack = attacker.weapon, options = {}) {
 function usePotion() {
   if (!state.player || state.gameState === GAME_STATES.defeat || state.gameState === GAME_STATES.characterCreation) return;
   const usingInCombat = state.gameState === GAME_STATES.inCombat;
-  if (usingInCombat && (currentCombatant()?.id !== "player" || state.actionUsed)) return;
+  if (usingInCombat && (currentCombatant()?.id !== "player" || !canUseMinorAction())) return;
+  if (usingInCombat && !startTurn(state.player)) {
+    renderCombat();
+    window.setTimeout(advanceTurn, 450);
+    return;
+  }
   const quantity = state.player.inventory.consumables.healthPotion ?? 0;
   if (quantity <= 0 || state.player.hp >= state.player.maxHp) return;
-  if (usingInCombat) state.actionUsed = true;
+  if (usingInCombat) markMinorActionUsed("Health Potion");
   state.player.inventory.consumables.healthPotion -= 1;
   const healRoll = rollRange([POTION_HEALING, POTION_HEALING_MAX]);
   const oldHp = state.player.hp;
@@ -3237,6 +3361,43 @@ function usePotion() {
   renderCombat();
   void saveAdventure("inventory");
   if (usingInCombat) {
+    if (isPlayerTurnComplete()) {
+      addLog(`${state.player.name} ends turn.`);
+      window.setTimeout(advanceTurn, 450);
+    }
+  }
+}
+
+function removeStatus(combatant, statusId) {
+  const before = combatant.statuses.length;
+  combatant.statuses = combatant.statuses.filter((status) => status.id !== statusId);
+  return combatant.statuses.length !== before;
+}
+
+function useBandage() {
+  if (!state.player || state.gameState === GAME_STATES.defeat || state.gameState === GAME_STATES.characterCreation) return;
+  const usingInCombat = state.gameState === GAME_STATES.inCombat;
+  if (usingInCombat && (currentCombatant()?.id !== "player" || !canUseMinorAction())) return;
+  if (usingInCombat && !startTurn(state.player)) {
+    renderCombat();
+    window.setTimeout(advanceTurn, 450);
+    return;
+  }
+  const quantity = state.player.inventory.consumables.bandage ?? 0;
+  if (quantity <= 0) return;
+  if (!hasStatus(state.player, "bleed")) {
+    addLog(`${state.player.name} has no Bleed to remove.`);
+    renderCombat();
+    return;
+  }
+  if (usingInCombat) markMinorActionUsed("Bandage");
+  state.player.inventory.consumables.bandage -= 1;
+  removeStatus(state.player, "bleed");
+  addLog(`${state.player.name} uses Bandage. Bleed removed.`);
+  renderCombat();
+  void saveAdventure("inventory");
+  if (usingInCombat && isPlayerTurnComplete()) {
+    addLog(`${state.player.name} ends turn.`);
     window.setTimeout(advanceTurn, 450);
   }
 }
@@ -3618,6 +3779,8 @@ function applyLevelUp() {
 }
 
 function startTurn(combatant) {
+  if (state.turnStarted) return true;
+  state.turnStarted = true;
   if (combatant.id === "player") {
     tickSkillCooldowns(combatant);
   }
@@ -3628,7 +3791,13 @@ function startTurn(combatant) {
     const stun = combatant.statuses.find((status) => status.id === "stun");
     stun.duration = 0;
     combatant.statuses = combatant.statuses.filter((status) => status.duration > 0);
-    state.actionUsed = true;
+    if (combatant.id === "player") {
+      state.majorActionUsed = true;
+      state.minorActionsUsed = 1;
+      syncActionState();
+    } else {
+      state.actionUsed = true;
+    }
     return false;
   }
   return true;
@@ -3655,21 +3824,25 @@ function advanceTurn() {
     state.turnIndex = 0;
     state.round += 1;
   }
-  state.actionUsed = false;
+  state.turnStarted = false;
+  if (currentCombatant()?.id === "player") {
+    resetPlayerTurnActions();
+  } else {
+    state.actionUsed = false;
+  }
   renderCombat();
   maybeRunEnemyTurn();
 }
 
 function performPrimaryAction() {
   if (currentCombatant()?.id !== "player") return;
-  const selectedSkill = getSelectedSkill();
-  if (selectedSkill?.mode === "standalone") {
-    useSelectedSkill();
-    return;
-  }
   if (!startTurn(state.player)) {
     renderCombat();
     window.setTimeout(advanceTurn, 450);
+    return;
+  }
+  if (!canUseMajorAction()) {
+    renderCombat();
     return;
   }
   const prepared = takePreparedAttackModifier(state.player.weapon);
@@ -3682,13 +3855,13 @@ function performPrimaryAction() {
     });
   }
   if (!state.winner) tickStatuses(state.player, "afterAct");
-  renderCombat();
-  window.setTimeout(advanceTurn, 450);
+  finishPlayerAction();
 }
 
 function maybeRunEnemyTurn() {
   if (state.winner || currentCombatant()?.id !== "enemy" || state.isResolvingEnemyTurn) return;
   state.isResolvingEnemyTurn = true;
+  addLog("Enemy turn begins.");
   renderCombat();
   window.setTimeout(() => {
     if (startTurn(state.enemy)) {
@@ -3699,6 +3872,18 @@ function maybeRunEnemyTurn() {
     renderCombat();
     window.setTimeout(advanceTurn, 450);
   }, 700);
+}
+
+function endPlayerTurnEarly() {
+  if (state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.isResolvingEnemyTurn || state.winner) return;
+  if (!startTurn(state.player)) {
+    renderCombat();
+    window.setTimeout(advanceTurn, 450);
+    return;
+  }
+  addLog(`${state.player.name} ends turn.`);
+  renderCombat();
+  window.setTimeout(advanceTurn, 450);
 }
 
 [elements.nameInput, elements.descriptionInput, elements.mindInput, elements.bodyInput, elements.soulInput].forEach((input) => {
@@ -3716,13 +3901,17 @@ elements.weaponSelect.addEventListener("change", renderBuilder);
 elements.armorSelect.addEventListener("change", renderBuilder);
 elements.startButton.addEventListener("click", startCombat);
 elements.attackButton.addEventListener("click", performPrimaryAction);
+elements.majorSkillButton.addEventListener("click", useSelectedSkill);
+elements.minorSkillButton.addEventListener("click", useSelectedSkill);
 elements.clearSkillButton.addEventListener("click", () => {
-  if (state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.actionUsed) return;
+  if (state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.isResolvingEnemyTurn) return;
   state.player.selectedSkillId = null;
   addLog(`${state.player.name} clears the prepared skill.`);
   renderCombat();
 });
 elements.potionButton.addEventListener("click", usePotion);
+elements.bandageButton.addEventListener("click", useBandage);
+elements.endTurnButton.addEventListener("click", endPlayerTurnEarly);
 elements.nextEncounterButton.addEventListener("click", startNextEncounter);
 elements.rewardContinueButton.addEventListener("click", hideRewardModal);
 elements.progressionContinueButton.addEventListener("click", hideProgressionModal);
