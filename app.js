@@ -1768,10 +1768,10 @@ function getItemTierPalette(itemId, restoreType) {
   const base = itemRestoreColors[restoreType] ?? { liquid: "#7d8b90", glow: "#c4d0d6", rim: "#9ca7ae" };
   const tier = getItemTierLabel(itemId);
   const rimByTier = {
-    minor: base.rim,
-    major: "#c0c7d2",
-    advanced: "#d7b96c",
-    magical: "#d69cff",
+    minor: "#9aa1ab",
+    major: "#6f95ff",
+    advanced: "#f0c44e",
+    magical: "#ca86ff",
     utility: base.rim,
   };
   return { ...base, rim: rimByTier[tier] ?? base.rim };
@@ -3080,17 +3080,15 @@ function renderInventory() {
           const expanded = state.expandedInventoryItems.has(item.id);
           const quantity = state.player.inventory.consumables[item.id] ?? 0;
           return `
-            <div class="item-card${expanded ? " expanded" : ""}">
+            <div class="item-card inventory-item-card${expanded ? " expanded" : ""}">
               <div class="item-card-main">
-                <button type="button" class="item-icon-button" data-toggle-inventory-item="${item.id}" aria-expanded="${expanded}">
+                <button type="button" class="item-expand-badge" data-toggle-inventory-item="${item.id}" aria-expanded="${expanded}" aria-label="Show ${item.name} details">+</button>
+                <button type="button" class="item-icon-button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}" aria-label="Use ${item.name}">
                   ${renderItemIcon(item)}
                   <span class="item-count-badge">${quantity}</span>
                 </button>
-                <button type="button" class="item-action-button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}" aria-label="Use ${item.name}">
-                  ${renderUseGlyph()}
-                </button>
               </div>
-              <div class="item-card-details" ${expanded ? "" : "hidden"}>${formatItemDetails(item)}</div>
+              <div class="item-card-details" ${expanded ? "" : "hidden"}><strong>${item.name}</strong>${formatItemDetails(item)}</div>
             </div>
           `;
         })
@@ -3132,18 +3130,15 @@ function renderShop() {
     const disabled = state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, item.cost);
     row.innerHTML = `
       <div class="item-card-main">
-        <button type="button" class="item-icon-button" data-toggle-shop-item="${item.id}" aria-expanded="${expanded}">
+        <button type="button" class="item-expand-badge" data-toggle-shop-item="${item.id}" aria-expanded="${expanded}" aria-label="Show ${item.name} details">+</button>
+        <button type="button" class="shop-buy-button" data-buy-item="${item.id}" ${disabled ? "disabled" : ""} aria-label="Buy ${item.name}">
           ${renderItemIcon(item)}
-          <span class="item-count-badge">${inventory.consumables[item.id] ?? 0}</span>
         </button>
         <div class="item-card-body">
           <strong>${item.name}</strong>
           <span class="item-meta">${renderCurrencyWithIcons(item.cost, { compact: true })}</span>
           <span class="item-meta">Owned: ${inventory.consumables[item.id] ?? 0}</span>
         </div>
-        <button type="button" class="item-action-button" data-buy-item="${item.id}" ${disabled ? "disabled" : ""} aria-label="Buy ${item.name}">
-          ${renderBuyGlyph()}
-        </button>
       </div>
       <div class="item-card-details" ${expanded ? "" : "hidden"}>${formatItemDetails(item)}</div>
     `;
