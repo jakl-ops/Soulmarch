@@ -706,9 +706,8 @@ const weapons = {
     damageDice: { count: 1, sides: 4 },
     damageBonus: 0,
     damageType: "physical",
-    special: "Can attack twice; second attack -2",
+    special: "Quick weapon with precise openings",
     critMin: 20,
-    extraAttackPenalty: -2,
     initiativeBonus: 0,
     status: { id: "poison", chance: 0.25 },
   },
@@ -923,11 +922,10 @@ const skills = {
     damageDice: { count: 1, sides: 4 },
     damageBonus: 1,
     damageType: "physical",
-    followUpPenalty: -2,
     resourceType: "stamina",
     resourceCost: 2,
     cooldownTurns: 1,
-    description: "A light hit plus a second strike at -2.",
+    description: "A rapid sequence that adds light damage to the next strike.",
   },
   innerFocus: {
     id: "innerFocus",
@@ -939,6 +937,7 @@ const skills = {
     hitBonus: 0,
     canRemoveStatuses: ["bleed", "poison"],
     statusRemovalLimit: 1,
+    actionType: "minor",
     resourceType: "mana",
     resourceCost: 1,
     cooldownTurns: 1,
@@ -1133,6 +1132,7 @@ const skills = {
     canRemoveStatuses: ["stun", "freeze"],
     statusRemovalLimit: 1,
     statusSelf: { id: "shielded", chance: 1 },
+    actionType: "minor",
     resourceType: null,
     resourceCost: 0,
     cooldownTurns: 2,
@@ -1389,6 +1389,7 @@ const skills = {
     hitBonus: 0,
     canRemoveStatuses: "negative",
     statusRemovalLimit: 1,
+    actionType: "minor",
     resourceType: "mana",
     resourceCost: 1,
     cooldownTurns: 1,
@@ -1420,6 +1421,7 @@ const skills = {
     mode: "standalone",
     hitBonus: 0,
     statusSelf: { id: "shielded", chance: 1 },
+    actionType: "minor",
     resourceType: null,
     resourceCost: 0,
     cooldownTurns: 1,
@@ -1481,8 +1483,8 @@ const skillUpgrades = {
     id: "flurryMastery",
     targetSkillId: "flurry",
     name: "Flurry+",
-    summary: "Flurry lands more reliably and keeps its rhythm.",
-    changes: { name: "Flurry+", hitBonus: 2, damageBonus: 2, cooldownTurns: 0, followUpPenalty: -1, description: "A faster flurry with stronger follow-up pressure." },
+    summary: "Flurry lands more reliably and hits harder.",
+    changes: { name: "Flurry+", hitBonus: 2, damageBonus: 2, cooldownTurns: 0, description: "A faster flurry that adds stronger pressure to the next strike." },
   },
   innerFocusMastery: {
     id: "innerFocusMastery",
@@ -2529,7 +2531,7 @@ function renderHub(adventures = state.activeAdventures, graveyardEntries = state
   for (let index = 0; index < slots; index += 1) {
     const adventure = adventures[index];
     const card = document.createElement("section");
-    card.className = "panel hub-card";
+    card.className = "panel soul-frame soul-metal-border soul-glass-bg hub-card";
     if (adventure) {
       card.innerHTML = `
         <h3>${adventure.name}</h3>
@@ -2560,7 +2562,7 @@ function renderGraveyard(entries = state.graveyardEntries) {
   elements.graveyardList.innerHTML = "";
   if (!entries.length) {
     const empty = document.createElement("section");
-    empty.className = "panel hub-card";
+    empty.className = "panel soul-frame soul-metal-border soul-glass-bg hub-card";
     empty.innerHTML = "<h3>No names carved here yet.</h3><p class=\"stat\">Your fallen heroes will be remembered when the time comes.</p>";
     elements.graveyardList.append(empty);
     return;
@@ -2570,7 +2572,7 @@ function renderGraveyard(entries = state.graveyardEntries) {
       .map(([enemyType, count]) => `${count} ${enemyType}`)
       .join(", ") || "No recorded kills";
     const card = document.createElement("section");
-    card.className = "panel hub-card graveyard-card";
+    card.className = "panel soul-frame soul-metal-border soul-glass-bg hub-card graveyard-card";
     card.innerHTML = `
       <h3>${entry.name}</h3>
       <p class="stat">Class: ${classNameFromId(entry.classId)}</p>
@@ -3368,7 +3370,9 @@ function finishPlayerAction() {
 
 function getSkillActionType(skill) {
   if (!skill || skill.mode === "attack_modifier") return null;
-  return skill.attackKind === "utility" ? "minor" : "major";
+  if (skill.actionType) return skill.actionType;
+  const hasDirectDamage = Boolean(skill.damageDice || skill.damageBonus || skill.attackKind === "weapon" || skill.attackKind === "spell");
+  return hasDirectDamage ? "major" : "minor";
 }
 
 function targetFor(attacker) {
@@ -4093,7 +4097,6 @@ function takePreparedAttackModifier(baseAttack) {
       damageType: skill.damageType ?? baseAttack.damageType,
       status: skill.statusEffect ?? baseAttack.status,
       statusSelf: skill.statusSelf ?? baseAttack.statusSelf,
-      followUpPenalty: skill.followUpPenalty ?? baseAttack.extraAttackPenalty,
     },
   };
 }
@@ -4111,7 +4114,6 @@ function buildStandaloneSkillAttack(skill) {
     critMin: 20,
     status: skill.statusEffect ?? null,
     statusSelf: skill.statusSelf ?? null,
-    followUpPenalty: skill.followUpPenalty,
   };
 }
 
@@ -4164,9 +4166,6 @@ function useSelectedSkill() {
 
   const attack = buildStandaloneSkillAttack(skill);
   resolveAttack(state.player, attack, { skill, followUp: true });
-  if (!state.winner && skill.followUpPenalty !== undefined) {
-    resolveAttack(state.player, attack, { skill, followUp: true, extraHitBonus: skill.followUpPenalty });
-  }
   if (skill.statusSelf) {
     maybeApplyStatus(state.player, state.player, skill.statusSelf, skill.name);
   }
@@ -5035,13 +5034,6 @@ function performPrimaryAction() {
   }
   const prepared = takePreparedAttackModifier(state.player.weapon);
   resolveAttack(state.player, prepared.attack);
-  const followUpPenalty = prepared.attack.followUpPenalty ?? state.player.weapon.extraAttackPenalty;
-  if (!state.winner && followUpPenalty !== undefined) {
-    resolveAttack(state.player, prepared.attack, {
-      extraHitBonus: followUpPenalty,
-      followUp: true,
-    });
-  }
   if (!state.winner) tickStatuses(state.player, "afterAct");
   finishPlayerAction();
 }

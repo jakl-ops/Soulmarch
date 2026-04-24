@@ -129,8 +129,9 @@ body.auth-mode header {
   --soul-gold-mid: rgba(198, 145, 58, 0.82);
   --soul-purple-bright: rgba(132, 90, 196, 0.9);
   --soul-purple-deep: rgba(56, 36, 88, 0.94);
-  --soul-glass-dark: rgba(10, 12, 18, 0.74);
-  --soul-glass-mid: rgba(18, 22, 30, 0.66);
+  --soul-glass-dark: rgba(34, 37, 42, 0.82);
+  --soul-glass-mid: rgba(78, 83, 91, 0.48);
+  --soul-glass-highlight: rgba(255, 255, 255, 0.08);
 }
 
 h1,
@@ -330,11 +331,6 @@ label {
   flex-wrap: wrap;
 }
 
-.graveyard-card {
-  border-color: #514a4d;
-  background: #171416;
-}
-
 .soul-frame {
   border-radius: 12px;
   padding: 16px;
@@ -353,16 +349,93 @@ label {
 .combatant,
 .builder-identity,
 .mobile-info-panel,
-.modal {
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background:
-    linear-gradient(180deg, var(--soul-glass-dark), var(--soul-glass-mid)) padding-box,
-    linear-gradient(145deg, var(--soul-gold-bright), rgba(138, 98, 198, 0.92) 34%, var(--soul-purple-deep) 66%, var(--soul-gold-mid)) border-box;
+.modal,
+.item-card,
+.auth-panel,
+.hub-card,
+.graveyard-card {
+  border: 2px solid rgba(226, 189, 102, 0.92);
+  border-radius: 0;
+  position: relative;
+  overflow: visible;
+  background: rgba(46, 50, 56, 0.28) !important;
+  background-image: none !important;
   box-shadow:
-    inset 0 0 0 1px rgba(109, 76, 168, 0.36),
-    inset 0 1px 0 rgba(255, 236, 188, 0.18),
+    inset 0 0 0 1px rgba(255, 248, 217, 0.42),
+    inset 0 0 0 2px rgba(176, 128, 52, 0.55),
+    inset 0 0 0 4px rgba(114, 77, 177, 0.72),
+    inset 0 0 0 6px rgba(223, 186, 98, 0.48),
+    inset 0 0 0 8px rgba(133, 94, 32, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(73, 43, 21, 0.4),
     0 12px 28px rgba(0, 0, 0, 0.34);
+  z-index: 0;
+}
+
+.soul-frame::before,
+.soul-frame::after,
+.player-panel::before,
+.player-panel::after,
+.battle-panel::before,
+.battle-panel::after,
+.between-controls::before,
+.between-controls::after,
+.utility-panel::before,
+.utility-panel::after,
+.builder-panel::before,
+.builder-panel::after,
+.builder-summary::before,
+.builder-summary::after,
+.builder-identity::before,
+.builder-identity::after,
+.levelup-modal::before,
+.levelup-modal::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 1;
+}
+
+.soul-frame::before,
+.player-panel::before,
+.battle-panel::before,
+.between-controls::before,
+.utility-panel::before,
+.builder-panel::before,
+.builder-summary::before,
+.builder-identity::before,
+.levelup-modal::before {
+  inset: 6px;
+  border: 1px solid rgba(255, 234, 180, 0.18);
+  box-shadow:
+    inset 0 0 0 1px rgba(107, 74, 165, 0.28),
+    inset 0 0 0 3px rgba(120, 84, 33, 0.16);
+}
+
+.soul-frame::after,
+.player-panel::after,
+.battle-panel::after,
+.between-controls::after,
+.utility-panel::after,
+.builder-panel::after,
+.builder-summary::after,
+.builder-identity::after,
+.levelup-modal::after {
+  content: none;
+}
+
+.player-panel > *,
+.battle-panel > *,
+.between-controls > *,
+.utility-panel > *,
+.builder-panel > *,
+.builder-summary > *,
+.builder-identity > *,
+.levelup-modal > *,
+.soul-frame > * {
+  position: relative;
+  z-index: 1;
 }
 
 .soul-glass-bg,
@@ -370,7 +443,11 @@ label {
 .combatant,
 .builder-identity,
 .mobile-info-panel,
-.modal {
+.modal,
+.item-card,
+.auth-panel,
+.hub-card,
+.graveyard-card {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
