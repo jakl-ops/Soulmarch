@@ -274,6 +274,12 @@ const currencyIcons = {
   copper: "assets/icons/coin-copper.svg",
 };
 
+const itemRestoreColors = {
+  hp: { liquid: "#d15b5b", glow: "#ff9a8f", rim: "#d6b17a" },
+  mana: { liquid: "#4f78da", glow: "#9cc2ff", rim: "#b8c6ea" },
+  stamina: { liquid: "#cf9830", glow: "#ffd36d", rim: "#d9b47a" },
+};
+
 const statTooltips = {
   mind: "thinking, awareness, puzzle-solving, perception, deception, social reasoning",
   body: "weapon attacks, climbing, jumping, brute force, physical actions",
@@ -1575,6 +1581,7 @@ const elements = {
   enemyDamage: document.querySelector("#enemyDamage"),
   playerCard: document.querySelector("#playerCard"),
   enemyCard: document.querySelector("#enemyCard"),
+  combatLayout: document.querySelector("#combatLayout"),
   initiativeList: document.querySelector("#initiativeList"),
   turnText: document.querySelector("#turnText"),
   actionText: document.querySelector("#actionText"),
@@ -1606,6 +1613,8 @@ const elements = {
   selectedSkillText: document.querySelector("#selectedSkillText"),
   codexList: document.querySelector("#codexList"),
   codexButton: document.querySelector("#codexButton"),
+  codexModal: document.querySelector("#codexModal"),
+  codexCloseButton: document.querySelector("#codexCloseButton"),
   resetButton: document.querySelector("#resetButton"),
   diceLog: document.querySelector("#diceLog"),
 };
@@ -1638,6 +1647,8 @@ const state = {
   progress: null,
   levelUpDraft: { stat: null, subclass: null, progressionChoice: null },
   activeCodexSection: "classes",
+  expandedInventoryItems: new Set(),
+  expandedShopItems: new Set(),
 };
 
 function roll(sides) {
@@ -1743,6 +1754,131 @@ function renderCurrencyWithIcons(currency, options = {}) {
         .join("")}
     </span>
   `;
+}
+
+function getItemTierLabel(itemId) {
+  if (itemId.startsWith("minor")) return "minor";
+  if (itemId.startsWith("major")) return "major";
+  if (itemId.startsWith("advanced")) return "advanced";
+  if (itemId.startsWith("magical")) return "magical";
+  return "utility";
+}
+
+function getItemTierPalette(itemId, restoreType) {
+  const base = itemRestoreColors[restoreType] ?? { liquid: "#7d8b90", glow: "#c4d0d6", rim: "#9ca7ae" };
+  const tier = getItemTierLabel(itemId);
+  const rimByTier = {
+    minor: base.rim,
+    major: "#c0c7d2",
+    advanced: "#d7b96c",
+    magical: "#d69cff",
+    utility: base.rim,
+  };
+  return { ...base, rim: rimByTier[tier] ?? base.rim };
+}
+
+function renderUseGlyph() {
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M11 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  `;
+}
+
+function renderBuyGlyph() {
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+  `;
+}
+
+function renderPotionIcon(itemDef) {
+  const palette = getItemTierPalette(itemDef.id, itemDef.restoreType);
+  const rarityFill = {
+    minor: "#858d98",
+    major: "#5b7fda",
+    advanced: "#d7a93d",
+    magical: "#b56ae8",
+  }[getItemTierLabel(itemDef.id)] ?? palette.rim;
+  return `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <defs>
+        <linearGradient id="liquid-${itemDef.id}" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="${palette.glow}"/>
+          <stop offset="100%" stop-color="${palette.liquid}"/>
+        </linearGradient>
+      </defs>
+      <path d="M18 5h12v6l4 5c2 2 4 5 4 10 0 9-6 15-14 15S10 35 10 26c0-5 2-8 4-10l4-5V5z" fill="#14181d" stroke="${rarityFill}" stroke-width="3.2"/>
+      <path d="M15 21c0-3 2-5 4-6h10c2 1 4 3 4 6v9c0 6-4 10-9 10s-9-4-9-10v-9z" fill="url(#liquid-${itemDef.id})" opacity="0.98"/>
+      <path d="M20 6h8" stroke="${rarityFill}" stroke-width="3" stroke-linecap="round"/>
+      <path d="M16 20h16" stroke="${rarityFill}" stroke-width="1.8" opacity="0.8"/>
+      <path d="M18 38c2 2 4 3 6 3s4-1 6-3" stroke="${rarityFill}" stroke-width="1.4" opacity="0.65" fill="none" stroke-linecap="round"/>
+    </svg>
+  `;
+}
+
+function renderUtilityItemIcon(itemDef) {
+  const templates = {
+    bandage: `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="7" y="14" width="34" height="20" rx="7" fill="#1a1e22" stroke="#d7c7ad" stroke-width="2"/>
+        <path d="M14 20l20 8M14 28l20-8" stroke="#8b5a5a" stroke-width="2" opacity="0.65"/>
+        <circle cx="24" cy="24" r="3" fill="#d7c7ad"/>
+      </svg>
+    `,
+    warmingSalve: `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="11" y="14" width="26" height="22" rx="5" fill="#1a1e22" stroke="#77a8d9" stroke-width="2"/>
+        <path d="M18 27c2-5 4-7 6-10 1 4 5 6 5 10 0 3-2 5-5 5s-6-2-6-5z" fill="#77a8d9"/>
+      </svg>
+    `,
+    antitoxin: `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M19 6h10v6l7 14c2 5-2 11-8 11h-8c-6 0-10-6-8-11l7-14V6z" fill="#1a1e22" stroke="#6fc986" stroke-width="2"/>
+        <circle cx="24" cy="26" r="7" fill="#295337"/>
+        <path d="M20 26h8M24 22v8" stroke="#9de2a8" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    `,
+    soothingBalm: `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="10" y="15" width="28" height="20" rx="5" fill="#1a1e22" stroke="#df9656" stroke-width="2"/>
+        <path d="M20 29c0-4 2-6 4-9 2 3 4 5 4 9a4 4 0 0 1-8 0z" fill="#df9656"/>
+      </svg>
+    `,
+    smellingSalts: `
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="12" y="13" width="24" height="22" rx="5" fill="#1a1e22" stroke="#d2caa6" stroke-width="2"/>
+        <path d="M18 31c4-1 8-1 12 0M20 24c1-2 2-4 4-6 2 2 3 4 4 6" stroke="#efe4bf" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    `,
+  };
+  return templates[itemDef.id] ?? renderPotionIcon(itemDef);
+}
+
+function renderItemIcon(itemDef) {
+  const iconMarkup = itemDef.restoreType ? renderPotionIcon(itemDef) : renderUtilityItemIcon(itemDef);
+  return `<span class="item-icon item-icon-${getItemTierLabel(itemDef.id)}">${iconMarkup}</span>`;
+}
+
+function formatItemDetails(itemDef) {
+  const parts = [itemDef.description];
+  if (itemDef.restoreType) {
+    parts.push(`Use: Restores ${titleCase(itemDef.restoreType)}.`);
+  }
+  if (itemDef.removesStatuses?.length) {
+    parts.push(`Removes ${itemDef.removesStatuses.map((statusId) => statusDefinitions[statusId]?.name ?? statusId).join(" or ")}.`);
+  }
+  parts.push(`Action: ${titleCase(itemDef.actionType)}.`);
+  return parts.join(" ");
+}
+
+function toggleExpandedItem(setName, itemId) {
+  const targetSet = state[setName];
+  if (!targetSet) return;
+  if (targetSet.has(itemId)) targetSet.delete(itemId);
+  else targetSet.add(itemId);
 }
 
 function resourceLabel(resourceType) {
@@ -2932,30 +3068,40 @@ function renderInventory() {
   const inventory = state.player.inventory;
   normalizePlayerInventory(state.player);
   applyNormalizedCurrency(inventory.currency, inventory.currency);
-  const consumableMarkup = Object.values(consumableItems)
-    .map((item) => {
-      const useState = getConsumableUseState(state.player, item);
-      const usingInCombat = state.gameState === GAME_STATES.inCombat;
-      const actionBlocked = usingInCombat && !canUseMinorAction();
-      const disabled = !useState.usable || actionBlocked;
-      const reason = actionBlocked ? "No Minor Action available" : useState.reason;
-      return `
-        <div class="item-row">
-          <div>
-            <strong>${item.name}</strong>
-            <span class="item-meta">x${state.player.inventory.consumables[item.id] ?? 0} · ${item.description}</span>
-          </div>
-          <button type="button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}">Use</button>
-        </div>
-      `;
-    })
-    .join("");
+  const ownedConsumables = Object.values(consumableItems).filter((item) => (state.player.inventory.consumables[item.id] ?? 0) > 0);
+  const consumableMarkup = ownedConsumables.length
+    ? ownedConsumables
+        .map((item) => {
+          const useState = getConsumableUseState(state.player, item);
+          const usingInCombat = state.gameState === GAME_STATES.inCombat;
+          const actionBlocked = usingInCombat && !canUseMinorAction();
+          const disabled = !useState.usable || actionBlocked;
+          const reason = actionBlocked ? "No Minor Action available" : useState.reason;
+          const expanded = state.expandedInventoryItems.has(item.id);
+          const quantity = state.player.inventory.consumables[item.id] ?? 0;
+          return `
+            <div class="item-card${expanded ? " expanded" : ""}">
+              <div class="item-card-main">
+                <button type="button" class="item-icon-button" data-toggle-inventory-item="${item.id}" aria-expanded="${expanded}">
+                  ${renderItemIcon(item)}
+                  <span class="item-count-badge">${quantity}</span>
+                </button>
+                <button type="button" class="item-action-button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}" aria-label="Use ${item.name}">
+                  ${renderUseGlyph()}
+                </button>
+              </div>
+              <div class="item-card-details" ${expanded ? "" : "hidden"}>${formatItemDetails(item)}</div>
+            </div>
+          `;
+        })
+        .join("")
+    : '<p class="muted">No consumables on hand.</p>';
   const ownedWeapons = inventory.weapons.length
-    ? inventory.weapons.map((id) => safeEntityName(weapons, id)).join(", ")
-    : "None";
+    ? inventory.weapons.map((id) => safeEntityName(weapons, id)).join(', ')
+    : 'None';
   const ownedArmor = inventory.armor.length
-    ? inventory.armor.map((id) => safeEntityName(armors, id)).join(", ")
-    : "None";
+    ? inventory.armor.map((id) => safeEntityName(armors, id)).join(', ')
+    : 'None';
   const equipmentMarkup = `
     <div class="inventory-section">
       <h3>Currency</h3>
@@ -2978,19 +3124,28 @@ function renderShop() {
   const inventory = state.player.inventory;
   normalizePlayerInventory(state.player);
   elements.shopCurrency.innerHTML = `Funds: ${renderCurrencyWithIcons(inventory.currency, { compact: true, showZero: true })}`;
-  elements.shopList.innerHTML = "";
+  elements.shopList.innerHTML = '';
   Object.values(consumableItems).forEach((item) => {
-    const row = document.createElement("div");
-    row.className = "item-row";
+    const row = document.createElement('div');
+    const expanded = state.expandedShopItems.has(item.id);
+    row.className = 'item-card shop-item-card' + (expanded ? ' expanded' : '');
     const disabled = state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, item.cost);
     row.innerHTML = `
-      <div>
-        <strong>${item.name}</strong>
-        <span class="item-meta">${item.description}</span>
-        <span class="item-meta">Cost: ${renderCurrencyWithIcons(item.cost, { compact: true })}</span>
-        <span class="item-meta">Owned: ${inventory.consumables[item.id] ?? 0}</span>
+      <div class="item-card-main">
+        <button type="button" class="item-icon-button" data-toggle-shop-item="${item.id}" aria-expanded="${expanded}">
+          ${renderItemIcon(item)}
+          <span class="item-count-badge">${inventory.consumables[item.id] ?? 0}</span>
+        </button>
+        <div class="item-card-body">
+          <strong>${item.name}</strong>
+          <span class="item-meta">${renderCurrencyWithIcons(item.cost, { compact: true })}</span>
+          <span class="item-meta">Owned: ${inventory.consumables[item.id] ?? 0}</span>
+        </div>
+        <button type="button" class="item-action-button" data-buy-item="${item.id}" ${disabled ? "disabled" : ""} aria-label="Buy ${item.name}">
+          ${renderBuyGlyph()}
+        </button>
       </div>
-      <button type="button" data-buy-item="${item.id}" ${disabled ? "disabled" : ""}>Buy</button>
+      <div class="item-card-details" ${expanded ? "" : "hidden"}>${formatItemDetails(item)}</div>
     `;
     elements.shopList.append(row);
   });
@@ -3040,6 +3195,15 @@ function hideInfoModal() {
   elements.infoModal.hidden = true;
 }
 
+function showCodexModal() {
+  renderCodex();
+  elements.codexModal.hidden = false;
+}
+
+function hideCodexModal() {
+  elements.codexModal.hidden = true;
+}
+
 function hideRewardModal() {
   elements.rewardModal.hidden = true;
   if (state.pendingLevelUps > 0) {
@@ -3068,13 +3232,10 @@ function switchPlayerTab(tabName) {
   document.querySelectorAll(".tab-button").forEach((button) => {
     button.classList.toggle("active", button.dataset.tab === tabName);
   });
-  ["overview", "details", "inventory", "codex"].forEach((name) => {
+  ["overview", "details", "inventory"].forEach((name) => {
     const panel = document.querySelector(`#${name}Tab`);
     panel.hidden = name !== tabName;
   });
-  if (elements.codexButton) {
-    elements.codexButton.classList.toggle("active", tabName === "codex");
-  }
 }
 
 function getPlayerSkills() {
@@ -3490,6 +3651,7 @@ function renderInitiative() {
 function renderCombat() {
   const active = currentCombatant();
   const betweenBattlesView = state.gameState === GAME_STATES.betweenBattles;
+  elements.combatLayout?.classList.toggle("between-battles-view", betweenBattlesView);
   document.querySelectorAll(".battle-only").forEach((section) => {
     section.hidden = betweenBattlesView;
   });
@@ -4372,7 +4534,7 @@ function endPlayerTurnEarly() {
 document.querySelectorAll(".tab-button").forEach((button) => {
   button.addEventListener("click", () => switchPlayerTab(button.dataset.tab));
 });
-elements.codexButton.addEventListener("click", () => switchPlayerTab("codex"));
+elements.codexButton.addEventListener("click", showCodexModal);
 
 elements.weaponSelect.addEventListener("change", renderBuilder);
 elements.armorSelect.addEventListener("change", renderBuilder);
@@ -4391,16 +4553,29 @@ elements.nextEncounterButton.addEventListener("click", startNextEncounter);
 elements.rewardContinueButton.addEventListener("click", hideRewardModal);
 elements.progressionContinueButton.addEventListener("click", hideProgressionModal);
 elements.infoCloseButton.addEventListener("click", hideInfoModal);
+elements.codexCloseButton.addEventListener("click", hideCodexModal);
 elements.innButton.addEventListener("click", stayAtInn);
 elements.inventoryList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-use-item]");
-  if (!button) return;
-  useConsumableItem(button.dataset.useItem);
+  if (button) {
+    useConsumableItem(button.dataset.useItem);
+    return;
+  }
+  const toggle = event.target.closest("[data-toggle-inventory-item]");
+  if (!toggle) return;
+  toggleExpandedItem("expandedInventoryItems", toggle.dataset.toggleInventoryItem);
+  renderInventory();
 });
 elements.shopList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-buy-item]");
-  if (!button) return;
-  buyConsumable(button.dataset.buyItem);
+  if (button) {
+    buyConsumable(button.dataset.buyItem);
+    return;
+  }
+  const toggle = event.target.closest("[data-toggle-shop-item]");
+  if (!toggle) return;
+  toggleExpandedItem("expandedShopItems", toggle.dataset.toggleShopItem);
+  renderShop();
 });
 elements.resetButton.addEventListener("click", resetToBuilder);
 elements.applyLevelButton.addEventListener("click", applyLevelUp);

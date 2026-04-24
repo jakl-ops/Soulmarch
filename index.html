@@ -185,7 +185,7 @@
       </div>
 
       <section id="combatScreen" hidden aria-label="Combat">
-        <div class="game-layout">
+        <div class="game-layout" id="combatLayout">
           <article class="panel player-panel" id="playerCard">
             <div class="panel-heading">
               <div>
@@ -237,10 +237,6 @@
 
             <section id="inventoryTab" class="tab-panel" hidden>
               <div id="inventoryList" class="plain-list"></div>
-            </section>
-
-            <section id="codexTab" class="tab-panel" hidden>
-              <div id="codexList"></div>
             </section>
           </article>
 
@@ -295,7 +291,7 @@
               </div>
             </section>
 
-            <section class="panel between-only between-controls" hidden>
+            <section class="panel between-only between-controls" id="betweenControlsPanel" hidden>
               <h2>Between Battles</h2>
               <p>Recover, shop, and prepare before the next encounter.</p>
               <button id="nextEncounterButton" type="button">Next Battle</button>
@@ -313,13 +309,13 @@
               <ol id="initiativeList"></ol>
             </section>
 
-            <section class="panel utility-panel between-only" hidden>
+            <section class="panel utility-panel between-only" id="shopPanel" hidden>
               <h2>Shop</h2>
               <p id="shopCurrency" class="muted"></p>
               <div id="shopList" class="item-list"></div>
             </section>
 
-            <section class="panel utility-panel between-only" hidden>
+            <section class="panel utility-panel between-only" id="innPanel" hidden>
               <h2>Stay at the Inn</h2>
               <p class="muted">
                 Cost: 3 silver. Restores HP, Mana, and Stamina, clears cooldowns, and removes temporary negative effects.
@@ -351,6 +347,16 @@
           <h2 id="progressionTitle">New Power</h2>
           <div id="progressionResultsList" class="plain-list"></div>
           <button id="progressionContinueButton" type="button">Continue</button>
+        </section>
+      </div>
+
+      <div id="codexModal" class="modal-backdrop" hidden>
+        <section class="modal panel codex-modal" role="dialog" aria-modal="true" aria-labelledby="codexModalTitle">
+          <div class="panel-heading">
+            <h2 id="codexModalTitle">Codex</h2>
+            <button id="codexCloseButton" type="button">Close</button>
+          </div>
+          <div id="codexList"></div>
         </section>
       </div>
     </main>

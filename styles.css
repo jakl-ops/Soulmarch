@@ -324,6 +324,43 @@ label {
   align-items: start;
 }
 
+.game-layout.between-battles-view {
+  grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.15fr) minmax(240px, 0.8fr);
+}
+
+.game-layout.between-battles-view .player-panel {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.game-layout.between-battles-view .center-column {
+  display: contents;
+}
+
+.game-layout.between-battles-view .right-column {
+  display: contents;
+}
+
+.game-layout.between-battles-view #betweenControlsPanel {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.game-layout.between-battles-view #diceLogPanel {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+.game-layout.between-battles-view #shopPanel {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+}
+
+.game-layout.between-battles-view #innPanel {
+  grid-column: 3;
+  grid-row: 1;
+}
+
 .center-column,
 .right-column {
   display: grid;
@@ -1155,6 +1192,143 @@ label {
   color: #aeb8b2;
   font-size: 13px;
   line-height: 1.35;
+}
+
+.item-card {
+  border: 1px solid #30383d;
+  border-radius: 10px;
+  background: #121619;
+  padding: 10px;
+}
+
+.item-card.expanded {
+  border-color: #54615b;
+}
+
+.item-card-main {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.item-card-body {
+  min-width: 0;
+}
+
+.item-card-body strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.item-card-details {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #2b3338;
+  color: #c6ceca;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.item-icon-button,
+.item-action-button {
+  min-height: 0;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.item-icon-button {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  display: inline-grid;
+  place-items: center;
+  background: #1b2125;
+  border-color: #49545c;
+}
+
+.item-action-button {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  background: #1c2428;
+  border-color: #56636b;
+  color: #d7e3dd;
+}
+
+.item-action-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.item-count-badge {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #253039;
+  border: 1px solid #73808a;
+  color: #f3f7f4;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.item-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.item-icon svg {
+  width: 38px;
+  height: 38px;
+  display: block;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
+}
+
+.item-icon-minor {
+  filter: saturate(0.95);
+}
+
+.item-icon-major {
+  filter: saturate(1.2);
+}
+
+.item-icon-advanced {
+  filter: saturate(1.35);
+}
+
+.item-icon-magical {
+  filter: saturate(1.5);
+}
+
+#inventoryList .item-card-main {
+  grid-template-columns: auto auto;
+}
+
+#inventoryList .item-card {
+  padding: 8px 10px;
+}
+
+#inventoryList .item-card-details strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.codex-modal {
+  width: min(1100px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
 }
 
 .log-panel {
