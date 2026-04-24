@@ -18,6 +18,71 @@ const GAME_STATES = {
   defeat: "defeat",
 };
 
+const GENDER_OPTIONS = [
+  { id: "male", label: "Male" },
+  { id: "female", label: "Female" },
+  { id: "non-binary", label: "Non-binary" },
+  { id: "undisclosed", label: "Undisclosed" },
+];
+
+const ADVENTURE_BACKGROUNDS = Array.from({ length: 9 }, (_, index) =>
+  `assets/backgrounds/adventure/adventure-${String(index + 1).padStart(3, "0")}.jpg`
+);
+
+const INN_BACKGROUNDS = Array.from({ length: 4 }, (_, index) =>
+  `assets/backgrounds/inn/inn-${String(index + 1).padStart(3, "0")}.jpg`
+);
+
+const ENEMY_PORTRAITS = {
+  goblin: { icon: "◣", accent: "#6ec46a", bg: "radial-gradient(circle at 35% 30%, rgba(110, 196, 106, 0.28), rgba(19, 28, 20, 0.94))" },
+  wolf: { icon: "◈", accent: "#91a8bd", bg: "radial-gradient(circle at 35% 30%, rgba(145, 168, 189, 0.25), rgba(18, 24, 30, 0.94))" },
+  bandit: { icon: "✦", accent: "#c79767", bg: "radial-gradient(circle at 35% 30%, rgba(199, 151, 103, 0.26), rgba(31, 22, 18, 0.94))" },
+  skeleton: { icon: "☠", accent: "#d8d5c8", bg: "radial-gradient(circle at 35% 30%, rgba(216, 213, 200, 0.22), rgba(24, 24, 26, 0.95))" },
+  apprenticeMage: { icon: "✶", accent: "#81a7ff", bg: "radial-gradient(circle at 35% 30%, rgba(129, 167, 255, 0.28), rgba(19, 21, 34, 0.95))" },
+  default: { icon: "◆", accent: "#a8b1bb", bg: "radial-gradient(circle at 35% 30%, rgba(168, 177, 187, 0.22), rgba(21, 24, 28, 0.95))" },
+};
+
+Object.assign(ENEMY_PORTRAITS, {
+  goblin: { src: "assets/portraits/enemies/Goblin.png", accent: "#6ec46a", bg: "radial-gradient(circle at 35% 30%, rgba(110, 196, 106, 0.28), rgba(19, 28, 20, 0.94))" },
+  wolf: { src: "assets/portraits/enemies/Wolf.png", accent: "#91a8bd", bg: "radial-gradient(circle at 35% 30%, rgba(145, 168, 189, 0.25), rgba(18, 24, 30, 0.94))" },
+  bandit: { src: "assets/portraits/enemies/Bandit.png", accent: "#c79767", bg: "radial-gradient(circle at 35% 30%, rgba(199, 151, 103, 0.26), rgba(31, 22, 18, 0.94))" },
+  skeleton: { src: "assets/portraits/enemies/Skeleton.png", accent: "#d8d5c8", bg: "radial-gradient(circle at 35% 30%, rgba(216, 213, 200, 0.22), rgba(24, 24, 26, 0.95))" },
+  apprenticeMage: { src: "assets/portraits/enemies/Apprentice Mage.png", accent: "#81a7ff", bg: "radial-gradient(circle at 35% 30%, rgba(129, 167, 255, 0.28), rgba(19, 21, 34, 0.95))" },
+  default: { icon: "?", accent: "#a8b1bb", bg: "radial-gradient(circle at 35% 30%, rgba(168, 177, 187, 0.22), rgba(21, 24, 28, 0.95))" },
+});
+
+const WEAPON_IMAGE_FALLBACK = "assets/weapons/default.png";
+const weaponImages = {
+  sword: "assets/weapons/sword.png",
+  axe: "assets/weapons/axe.png",
+  bow: "assets/weapons/bow.png",
+  staff: "assets/weapons/staff.png",
+  dagger: "assets/weapons/dagger.png",
+  unarmed: "assets/weapons/unarmed.png",
+};
+
+const BATTLE_MUSIC_TRACKS = [
+  "assets/audio/battle/ob-lix-dead-zone-action-background-music-109863.mp3",
+  "assets/audio/battle/ob-lix-greenskin-warrior-war-background-music-111203.mp3",
+  "assets/audio/battle/ob-lix-langhus-burning-viking-background-music-109865.mp3",
+  "assets/audio/battle/ob-lix-prepare-to-die-part-3-war-background-music-113258.mp3",
+  "assets/audio/battle/ob-lix-skjaldmr-norse-viking-background-music-110364.mp3",
+  "assets/audio/battle/ob-lix-spaekona-viking-background-music-109374.mp3",
+  "assets/audio/battle/ob-lix-the-spell-dark-magic-background-music-ob-lix-8009.mp3",
+  "assets/audio/battle/ob-lix-where-the-brave-may-live-forever-viking-background-music-109867.mp3",
+];
+
+const HUB_MUSIC_TRACK = "assets/audio/hub-theme.mp3";
+const INN_MUSIC_TRACK = "assets/audio/inn-theme.mp3";
+const MUSIC_FADE_MS = 1600;
+const MUSIC_FADE_STEP_MS = 80;
+const MUSIC_VOLUMES = {
+  hubMusic: 0.32,
+  innMusic: 0.28,
+  battleMusic: 0.3,
+  battleMusicAlt: 0.3,
+};
+
 const statusDefinitions = {
   burn: {
     name: "Burn",
@@ -788,11 +853,15 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 2,
     damageType: "physical",
-    status: { id: "bleed", chance: 0.35 },
+    status: { id: "stun" },
+    baseEffectChance: 12,
+    effectScalingStat: "mind",
+    effectChancePerStat: 3,
+    maxEffectChance: 45,
     resourceType: "stamina",
     resourceCost: 2,
     cooldownTurns: 1,
-    description: "+1 hit, extra physical damage, may cause Bleed.",
+    description: "+1 hit, extra physical damage, may Stun with disciplined timing.",
   },
   guardStance: {
     id: "guardStance",
@@ -819,11 +888,15 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 1,
     damageType: "fire",
-    status: { id: "burn", chance: 0.55 },
+    status: { id: "burn" },
+    baseEffectChance: 20,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 70,
     resourceType: "mana",
     resourceCost: 2,
     cooldownTurns: 1,
-    description: "Soul spell attack with a strong Burn chance.",
+    description: "Soul spell attack that ignites more reliably with sharper focus.",
   },
   arcaneShield: {
     id: "arcaneShield",
@@ -896,11 +969,15 @@ const skills = {
     damageDice: { count: 1, sides: 6 },
     damageBonus: 1,
     damageType: "physical",
-    status: { id: "stun", chance: 0.3 },
+    status: { id: "stun" },
+    baseEffectChance: 10,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 50,
     resourceType: "stamina",
     resourceCost: 2,
     cooldownTurns: 2,
-    description: "Body attack that may Stun.",
+    description: "Body attack that may Stun when aimed with control.",
   },
   quickStab: {
     id: "quickStab",
@@ -913,11 +990,15 @@ const skills = {
     damageDice: { count: 1, sides: 4 },
     damageBonus: 1,
     damageType: "physical",
-    status: { id: "poison", chance: 0.3 },
+    status: { id: "poison" },
+    baseEffectChance: 15,
+    effectScalingStat: "mind",
+    effectChancePerStat: 3,
+    maxEffectChance: 60,
     resourceType: "stamina",
     resourceCost: 1,
     cooldownTurns: 0,
-    description: "+2 hit and may Poison.",
+    description: "+2 hit and may Poison with a precise opening.",
   },
   feint: {
     id: "feint",
@@ -930,7 +1011,11 @@ const skills = {
     damageDice: { count: 1, sides: 4 },
     damageBonus: 0,
     damageType: "physical",
-    status: { id: "freeze", chance: 0.45 },
+    status: { id: "freeze" },
+    baseEffectChance: 18,
+    effectScalingStat: "soul",
+    effectChancePerStat: 4,
+    maxEffectChance: 58,
     resourceType: null,
     resourceCost: 0,
     cooldownTurns: 1,
@@ -947,7 +1032,11 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 2,
     damageType: "lightning",
-    status: { id: "stun", chance: 0.25 },
+    status: { id: "stun" },
+    baseEffectChance: 12,
+    effectScalingStat: "mind",
+    effectChancePerStat: 3,
+    maxEffectChance: 45,
     resourceType: "mana",
     resourceCost: 2,
     cooldownTurns: 1,
@@ -964,11 +1053,15 @@ const skills = {
     damageDice: { count: 1, sides: 6 },
     damageBonus: 1,
     damageType: "ice",
-    status: { id: "freeze", chance: 0.6 },
+    status: { id: "freeze" },
+    baseEffectChance: 22,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 72,
     resourceType: "mana",
     resourceCost: 2,
     cooldownTurns: 1,
-    description: "Ice spell that often Freezes.",
+    description: "Ice spell that Freezes more often when cast with focus.",
   },
   smite: {
     id: "smite",
@@ -981,11 +1074,15 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 1,
     damageType: "lightning",
-    status: { id: "stun", chance: 0.2 },
+    status: { id: "stun" },
+    baseEffectChance: 10,
+    effectScalingStat: "body",
+    effectChancePerStat: 3,
+    maxEffectChance: 42,
     resourceType: "mana",
     resourceCost: 2,
     cooldownTurns: 1,
-    description: "Soul attack with a small Stun chance.",
+    description: "Soul attack with a Stun chance empowered by martial force.",
   },
   blessingStrike: {
     id: "blessingStrike",
@@ -1015,7 +1112,11 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 1,
     damageType: "lightning",
-    status: { id: "freeze", chance: 0.25 },
+    status: { id: "freeze" },
+    baseEffectChance: 14,
+    effectScalingStat: "soul",
+    effectChancePerStat: 4,
+    maxEffectChance: 54,
     resourceType: null,
     resourceCost: 0,
     cooldownTurns: 1,
@@ -1048,7 +1149,11 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 1,
     damageType: "physical",
-    status: { id: "bleed", chance: 0.55 },
+    status: { id: "bleed" },
+    baseEffectChance: 24,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 72,
     resourceType: "stamina",
     resourceCost: 2,
     cooldownTurns: 1,
@@ -1065,7 +1170,11 @@ const skills = {
     damageDice: { count: 1, sides: 10 },
     damageBonus: 2,
     damageType: "physical",
-    status: { id: "stun", chance: 0.3 },
+    status: { id: "stun" },
+    baseEffectChance: 14,
+    effectScalingStat: "soul",
+    effectChancePerStat: 3,
+    maxEffectChance: 46,
     resourceType: "stamina",
     resourceCost: 3,
     cooldownTurns: 2,
@@ -1082,7 +1191,11 @@ const skills = {
     damageDice: { count: 1, sides: 6 },
     damageBonus: 2,
     damageType: "ice",
-    status: { id: "freeze", chance: 0.6 },
+    status: { id: "freeze" },
+    baseEffectChance: 24,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 74,
     resourceType: "mana",
     resourceCost: 2,
     cooldownTurns: 1,
@@ -1099,7 +1212,11 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 1,
     damageType: "lightning",
-    status: { id: "stun", chance: 0.25 },
+    status: { id: "stun" },
+    baseEffectChance: 10,
+    effectScalingStat: "body",
+    effectChancePerStat: 3,
+    maxEffectChance: 42,
     resourceType: "mana",
     resourceCost: 2,
     cooldownTurns: 1,
@@ -1116,7 +1233,11 @@ const skills = {
     damageDice: { count: 1, sides: 6 },
     damageBonus: 1,
     damageType: "physical",
-    status: { id: "stun", chance: 0.35 },
+    status: { id: "stun" },
+    baseEffectChance: 14,
+    effectScalingStat: "soul",
+    effectChancePerStat: 4,
+    maxEffectChance: 58,
     resourceType: "stamina",
     resourceCost: 2,
     cooldownTurns: 1,
@@ -1147,7 +1268,11 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 1,
     damageType: "physical",
-    status: { id: "stun", chance: 0.4 },
+    status: { id: "stun" },
+    baseEffectChance: 16,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 60,
     resourceType: "stamina",
     resourceCost: 2,
     cooldownTurns: 2,
@@ -1181,7 +1306,11 @@ const skills = {
     damageDice: { count: 1, sides: 4 },
     damageBonus: 1,
     damageType: "physical",
-    status: { id: "poison", chance: 0.55 },
+    status: { id: "poison" },
+    baseEffectChance: 24,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 72,
     resourceType: "stamina",
     resourceCost: 1,
     cooldownTurns: 1,
@@ -1198,7 +1327,11 @@ const skills = {
     damageDice: { count: 1, sides: 6 },
     damageBonus: 1,
     damageType: "physical",
-    status: { id: "poison", chance: 0.4 },
+    status: { id: "poison" },
+    baseEffectChance: 16,
+    effectScalingStat: "soul",
+    effectChancePerStat: 3,
+    maxEffectChance: 52,
     resourceType: null,
     resourceCost: 0,
     cooldownTurns: 1,
@@ -1215,7 +1348,11 @@ const skills = {
     damageDice: { count: 1, sides: 10 },
     damageBonus: 1,
     damageType: "lightning",
-    status: { id: "stun", chance: 0.3 },
+    status: { id: "stun" },
+    baseEffectChance: 12,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 56,
     resourceType: "mana",
     resourceCost: 3,
     cooldownTurns: 2,
@@ -1232,7 +1369,11 @@ const skills = {
     damageDice: { count: 1, sides: 8 },
     damageBonus: 2,
     damageType: "fire",
-    status: { id: "burn", chance: 0.7 },
+    status: { id: "burn" },
+    baseEffectChance: 28,
+    effectScalingStat: "mind",
+    effectChancePerStat: 4,
+    maxEffectChance: 78,
     resourceType: "mana",
     resourceCost: 2,
     cooldownTurns: 1,
@@ -1295,7 +1436,11 @@ const skills = {
     damageDice: { count: 1, sides: 10 },
     damageBonus: 1,
     damageType: "lightning",
-    status: { id: "stun", chance: 0.2 },
+    status: { id: "stun" },
+    baseEffectChance: 12,
+    effectScalingStat: "soul",
+    effectChancePerStat: 4,
+    maxEffectChance: 56,
     resourceType: null,
     resourceCost: 0,
     cooldownTurns: 1,
@@ -1358,42 +1503,97 @@ const skillUpgrades = {
     targetSkillId: "shieldSlam",
     name: "Shield Slam+",
     summary: "Shield Slam hits harder with a better stun window.",
-    changes: { name: "Shield Slam+", damageBonus: 3, cooldownTurns: 1, status: { id: "stun", chance: 0.45 }, description: "A crushing slam with stronger stun pressure." },
+    changes: {
+      name: "Shield Slam+",
+      damageBonus: 3,
+      cooldownTurns: 1,
+      baseEffectChance: 20,
+      effectScalingStat: "mind",
+      effectChancePerStat: 4,
+      maxEffectChance: 62,
+      description: "A crushing slam with stronger stun pressure.",
+    },
   },
   quickStabMastery: {
     id: "quickStabMastery",
     targetSkillId: "quickStab",
     name: "Quick Stab+",
     summary: "Quick Stab draws more blood without waiting on cooldown.",
-    changes: { name: "Quick Stab+", damageBonus: 2, cooldownTurns: 0, status: { id: "poison", chance: 0.45 }, description: "A faster, nastier stab with stronger poison." },
+    changes: {
+      name: "Quick Stab+",
+      damageBonus: 2,
+      cooldownTurns: 0,
+      baseEffectChance: 24,
+      effectScalingStat: "mind",
+      effectChancePerStat: 4,
+      maxEffectChance: 72,
+      description: "A faster, nastier stab with stronger poison.",
+    },
   },
   feintMastery: {
     id: "feintMastery",
     targetSkillId: "feint",
     name: "Feint+",
     summary: "Feint becomes more accurate and sharper on the hit.",
-    changes: { name: "Feint+", hitBonus: 2, damageBonus: 1, cooldownTurns: 0, status: { id: "freeze", chance: 0.6 }, description: "A perfected feint that bites harder and hinders more." },
+    changes: {
+      name: "Feint+",
+      hitBonus: 2,
+      damageBonus: 1,
+      cooldownTurns: 0,
+      baseEffectChance: 28,
+      effectScalingStat: "soul",
+      effectChancePerStat: 4,
+      maxEffectChance: 68,
+      description: "A perfected feint that bites harder and hinders more.",
+    },
   },
   sparkSurgeMastery: {
     id: "sparkSurgeMastery",
     targetSkillId: "sparkSurge",
     name: "Spark Surge+",
     summary: "Spark Surge gains more damage and no cooldown.",
-    changes: { name: "Spark Surge+", damageBonus: 4, cooldownTurns: 0, status: { id: "stun", chance: 0.35 }, description: "A surging spell that crackles every turn." },
+    changes: {
+      name: "Spark Surge+",
+      damageBonus: 4,
+      cooldownTurns: 0,
+      baseEffectChance: 18,
+      effectScalingStat: "mind",
+      effectChancePerStat: 4,
+      maxEffectChance: 58,
+      description: "A surging spell that crackles every turn.",
+    },
   },
   frostMarkMastery: {
     id: "frostMarkMastery",
     targetSkillId: "frostMark",
     name: "Frost Mark+",
     summary: "Frost Mark deepens its chill and refreshes faster.",
-    changes: { name: "Frost Mark+", damageBonus: 2, cooldownTurns: 0, status: { id: "freeze", chance: 0.75 }, description: "A stronger curse of winter with no cooldown." },
+    changes: {
+      name: "Frost Mark+",
+      damageBonus: 2,
+      cooldownTurns: 0,
+      baseEffectChance: 30,
+      effectScalingStat: "mind",
+      effectChancePerStat: 4,
+      maxEffectChance: 80,
+      description: "A stronger curse of winter with no cooldown.",
+    },
   },
   smiteMastery: {
     id: "smiteMastery",
     targetSkillId: "smite",
     name: "Smite+",
     summary: "Smite strikes brighter and more often.",
-    changes: { name: "Smite+", damageBonus: 3, cooldownTurns: 0, status: { id: "stun", chance: 0.3 }, description: "A radiant strike that returns every turn." },
+    changes: {
+      name: "Smite+",
+      damageBonus: 3,
+      cooldownTurns: 0,
+      baseEffectChance: 18,
+      effectScalingStat: "body",
+      effectChancePerStat: 3,
+      maxEffectChance: 48,
+      description: "A radiant strike that returns every turn.",
+    },
   },
   blessingStrikeMastery: {
     id: "blessingStrikeMastery",
@@ -1407,7 +1607,16 @@ const skillUpgrades = {
     targetSkillId: "mindSpike",
     name: "Mind Spike+",
     summary: "Mind Spike pierces deeper and can be used every turn.",
-    changes: { name: "Mind Spike+", damageBonus: 3, cooldownTurns: 0, status: { id: "freeze", chance: 0.35 }, description: "A perfected psionic lash that refreshes instantly." },
+    changes: {
+      name: "Mind Spike+",
+      damageBonus: 3,
+      cooldownTurns: 0,
+      baseEffectChance: 20,
+      effectScalingStat: "soul",
+      effectChancePerStat: 4,
+      maxEffectChance: 60,
+      description: "A perfected psionic lash that refreshes instantly.",
+    },
   },
   thoughtLockMastery: {
     id: "thoughtLockMastery",
@@ -1493,6 +1702,10 @@ const enemyTemplates = {
 };
 
 const elements = {
+  hubMusic: document.querySelector("#hubMusic"),
+  innMusic: document.querySelector("#innMusic"),
+  battleMusic: document.querySelector("#battleMusic"),
+  battleMusicAlt: document.querySelector("#battleMusicAlt"),
   authScreen: document.querySelector("#authScreen"),
   hubScreen: document.querySelector("#hubScreen"),
   graveyardScreen: document.querySelector("#graveyardScreen"),
@@ -1513,6 +1726,7 @@ const elements = {
   backToHubButton: document.querySelector("#backToHubButton"),
   nameInput: document.querySelector("#nameInput"),
   descriptionInput: document.querySelector("#descriptionInput"),
+  genderPills: document.querySelector("#genderPills"),
   mindInput: document.querySelector("#mindInput"),
   bodyInput: document.querySelector("#bodyInput"),
   soulInput: document.querySelector("#soulInput"),
@@ -1527,10 +1741,12 @@ const elements = {
   builderWeaponAttack: document.querySelector("#builderWeaponAttack"),
   builderWeaponDamage: document.querySelector("#builderWeaponDamage"),
   builderWeaponSpecial: document.querySelector("#builderWeaponSpecial"),
+  builderWeaponPreview: document.querySelector("#builderWeaponPreview"),
   builderHp: document.querySelector("#builderHp"),
   classPills: document.querySelector("#classPills"),
   builderSummaryName: document.querySelector("#builderSummaryName"),
   builderSummaryDescription: document.querySelector("#builderSummaryDescription"),
+  builderSummaryGender: document.querySelector("#builderSummaryGender"),
   builderSummaryClass: document.querySelector("#builderSummaryClass"),
   builderSummaryStats: document.querySelector("#builderSummaryStats"),
   builderSummaryWeapon: document.querySelector("#builderSummaryWeapon"),
@@ -1554,7 +1770,9 @@ const elements = {
   playerStaminaBar: document.querySelector("#playerStaminaBar"),
   playerLevelXp: document.querySelector("#playerLevelXp"),
   saveStatus: document.querySelector("#saveStatus"),
+  playerGenderLine: document.querySelector("#playerGenderLine"),
   playerStats: document.querySelector("#playerStats"),
+  playerGender: document.querySelector("#playerGender"),
   playerClass: document.querySelector("#playerClass"),
   playerSubclass: document.querySelector("#playerSubclass"),
   playerWealth: document.querySelector("#playerWealth"),
@@ -1570,6 +1788,7 @@ const elements = {
   playerCooldowns: document.querySelector("#playerCooldowns"),
   playerDerived: document.querySelector("#playerDerived"),
   enemyNameHeading: document.querySelector("#enemyNameHeading"),
+  enemyPortrait: document.querySelector("#enemyPortrait"),
   enemyHpBar: document.querySelector("#enemyHpBar"),
   enemyTypeLevel: document.querySelector("#enemyTypeLevel"),
   enemyStats: document.querySelector("#enemyStats"),
@@ -1619,6 +1838,142 @@ const elements = {
   diceLog: document.querySelector("#diceLog"),
 };
 
+function resumeScreenMusicFromInteraction() {
+  syncScreenMusic();
+}
+
+function getNextBattleMusicTrack() {
+  if (!state.battleMusicDeck.length) {
+    state.battleMusicDeck = shuffleArray(BATTLE_MUSIC_TRACKS);
+  }
+  return state.battleMusicDeck.shift() ?? BATTLE_MUSIC_TRACKS[0];
+}
+
+function getMusicElement(key) {
+  return elements[key] ?? null;
+}
+
+function isBattleMusicKey(key) {
+  return key === "battleMusic" || key === "battleMusicAlt";
+}
+
+function clearFade(audio) {
+  if (audio?._fadeTimer) {
+    window.clearInterval(audio._fadeTimer);
+    audio._fadeTimer = null;
+  }
+}
+
+function fadeAudioTo(audio, targetVolume, { pauseOnZero = false } = {}) {
+  if (!audio) return;
+  clearFade(audio);
+  const startVolume = Number(audio.volume ?? 0);
+  if (Math.abs(startVolume - targetVolume) < 0.01) {
+    audio.volume = targetVolume;
+    if (pauseOnZero && targetVolume === 0) {
+      audio.pause();
+    }
+    return;
+  }
+  const steps = Math.max(1, Math.round(MUSIC_FADE_MS / MUSIC_FADE_STEP_MS));
+  const stepAmount = (targetVolume - startVolume) / steps;
+  let step = 0;
+  audio._fadeTimer = window.setInterval(() => {
+    step += 1;
+    const nextVolume = step >= steps ? targetVolume : startVolume + stepAmount * step;
+    audio.volume = Math.max(0, Math.min(1, nextVolume));
+    if (step >= steps) {
+      clearFade(audio);
+      if (pauseOnZero && targetVolume === 0) {
+        audio.pause();
+      }
+    }
+  }, MUSIC_FADE_STEP_MS);
+}
+
+function configureMusicElement(audio, trackUrl, loop) {
+  if (!audio || !trackUrl) return;
+  if (audio.dataset.track !== trackUrl) {
+    audio.src = trackUrl;
+    audio.dataset.track = trackUrl;
+  }
+  audio.loop = loop;
+}
+
+function crossfadeToMusic(targetKey, trackUrl, { loop = true } = {}) {
+  const target = getMusicElement(targetKey);
+  if (!target || !trackUrl) return;
+  const sameTarget = state.activeMusicKey === targetKey && target.dataset.track === trackUrl && !target.paused;
+  if (sameTarget) {
+    fadeAudioTo(target, MUSIC_VOLUMES[targetKey] ?? 0.3);
+    ["hubMusic", "innMusic", "battleMusic", "battleMusicAlt"].forEach((key) => {
+      if (key === targetKey) return;
+      fadeAudioTo(getMusicElement(key), 0, { pauseOnZero: true });
+    });
+    return;
+  }
+  configureMusicElement(target, trackUrl, loop);
+  target.volume = 0;
+  const playAttempt = target.play();
+  if (playAttempt?.catch) {
+    playAttempt.catch(() => {});
+  }
+  ["hubMusic", "innMusic", "battleMusic", "battleMusicAlt"].forEach((key) => {
+    const audio = getMusicElement(key);
+    if (!audio) return;
+    if (key === targetKey) {
+      fadeAudioTo(audio, MUSIC_VOLUMES[key] ?? 0.3);
+      return;
+    }
+    fadeAudioTo(audio, 0, { pauseOnZero: true });
+  });
+  state.activeMusicKey = targetKey;
+}
+
+function stopAllMusic() {
+  ["hubMusic", "innMusic", "battleMusic", "battleMusicAlt"].forEach((key) => {
+    fadeAudioTo(getMusicElement(key), 0, { pauseOnZero: true });
+  });
+  state.activeMusicKey = null;
+}
+
+function getBattlePlaybackKey(preferAlternate = false) {
+  if (preferAlternate) {
+    return state.activeMusicKey === "battleMusic" ? "battleMusicAlt" : "battleMusic";
+  }
+  if (state.activeMusicKey === "battleMusic" || state.activeMusicKey === "battleMusicAlt") {
+    return state.activeMusicKey;
+  }
+  return "battleMusic";
+}
+
+function syncScreenMusic(screenName = getVisibleScreenName()) {
+  if (screenName === "auth" || screenName === "hub" || screenName === "graveyard") {
+    crossfadeToMusic("hubMusic", HUB_MUSIC_TRACK, { loop: true });
+    return;
+  }
+  if (screenName === "combat" && state.gameState === GAME_STATES.betweenBattles) {
+    crossfadeToMusic("innMusic", INN_MUSIC_TRACK, { loop: true });
+    return;
+  }
+  if (screenName === "combat" && state.gameState === GAME_STATES.inCombat) {
+    if (!state.currentBattleTrack) {
+      state.currentBattleTrack = getNextBattleMusicTrack();
+    }
+    crossfadeToMusic(getBattlePlaybackKey(), state.currentBattleTrack, { loop: false });
+    return;
+  }
+  stopAllMusic();
+}
+
+function getVisibleScreenName() {
+  if (!elements.authScreen.hidden) return "auth";
+  if (!elements.hubScreen.hidden) return "hub";
+  if (!elements.graveyardScreen.hidden) return "graveyard";
+  if (!elements.combatScreen.hidden) return "combat";
+  return "builder";
+}
+
 const state = {
   user: null,
   currentAdventureId: null,
@@ -1628,6 +1983,7 @@ const state = {
   graveyardEntries: [],
   gameState: GAME_STATES.characterCreation,
   builderSelectedClassId: "warrior",
+  builderGender: "undisclosed",
   player: null,
   enemy: null,
   initiative: [],
@@ -1649,10 +2005,28 @@ const state = {
   activeCodexSection: "classes",
   expandedInventoryItems: new Set(),
   expandedShopItems: new Set(),
+  sceneBackgroundKind: null,
+  sceneBackgroundUrl: "",
+  sceneBackgroundDecks: {
+    adventure: [],
+    inn: [],
+  },
+  battleMusicDeck: [],
+  currentBattleTrack: "",
+  activeMusicKey: null,
 };
 
 function roll(sides) {
   return Math.floor(Math.random() * sides) + 1;
+}
+
+function normalizePlayerIdentity(player) {
+  if (!player) return;
+  player.gender = GENDER_OPTIONS.find((option) => option.id === player.gender)?.id ?? "undisclosed";
+}
+
+function formatGenderLabel(genderId) {
+  return GENDER_OPTIONS.find((option) => option.id === genderId)?.label ?? "Undisclosed";
 }
 
 function rollRange(range) {
@@ -1665,6 +2039,85 @@ function signed(value) {
 
 function titleCase(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function shuffleArray(items) {
+  const copy = [...items];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+  }
+  return copy;
+}
+
+function getSceneBackgroundPool(kind) {
+  return kind === "inn" ? INN_BACKGROUNDS : ADVENTURE_BACKGROUNDS;
+}
+
+function drawSceneBackground(kind) {
+  const pool = getSceneBackgroundPool(kind);
+  if (!pool.length) return "";
+  if (!state.sceneBackgroundDecks[kind]?.length) {
+    state.sceneBackgroundDecks[kind] = shuffleArray(pool);
+    if (pool.length > 1 && state.sceneBackgroundUrl) {
+      const currentName = decodeURIComponent(state.sceneBackgroundUrl.split("/").pop() ?? "");
+      if (state.sceneBackgroundDecks[kind][0]?.endsWith(currentName)) {
+        state.sceneBackgroundDecks[kind].push(state.sceneBackgroundDecks[kind].shift());
+      }
+    }
+  }
+  return state.sceneBackgroundDecks[kind].shift() ?? pool[0];
+}
+
+function getEnemyPortrait(templateId) {
+  return ENEMY_PORTRAITS[templateId] ?? ENEMY_PORTRAITS.default;
+}
+
+function renderEnemyPortrait(combatant) {
+  if (!elements.enemyPortrait) return;
+  const portrait = getEnemyPortrait(combatant?.templateId);
+  elements.enemyPortrait.style.setProperty("--enemy-portrait-accent", portrait.accent);
+  elements.enemyPortrait.style.setProperty("--enemy-portrait-bg", portrait.bg);
+  elements.enemyPortrait.innerHTML = portrait.src
+    ? `<img class="enemy-portrait-image" src="${portrait.src}" alt="" loading="eager" decoding="async">`
+    : `<span class="enemy-portrait-glyph">${portrait.icon}</span>`;
+  elements.enemyPortrait.setAttribute("aria-label", combatant ? `${combatant.name} portrait` : "Enemy portrait");
+  elements.enemyPortrait.title = combatant ? combatant.name : "Enemy";
+}
+
+function syncSceneBackground(force = false) {
+  const kind = state.gameState === GAME_STATES.betweenBattles ? "inn" : "adventure";
+  if (!force && state.sceneBackgroundKind === kind && state.sceneBackgroundUrl) return;
+  state.sceneBackgroundKind = kind;
+  state.sceneBackgroundUrl = drawSceneBackground(kind);
+}
+
+function applySceneBackground(screenName) {
+  const combatActive = screenName === "combat" && !!state.sceneBackgroundUrl;
+  const hubActive = screenName === "hub";
+  const graveyardActive = screenName === "graveyard";
+  document.body.classList.toggle("scene-mode", combatActive || hubActive || graveyardActive);
+  document.body.dataset.sceneKind = combatActive ? state.sceneBackgroundKind : hubActive ? "hub" : graveyardActive ? "graveyard" : "";
+  document.body.style.backgroundImage =
+    combatActive
+      ? `linear-gradient(180deg, rgba(8, 10, 12, 0.58), rgba(8, 10, 12, 0.72)), url("${state.sceneBackgroundUrl}")`
+      : hubActive
+        ? `linear-gradient(180deg, rgba(8, 10, 12, 0.58), rgba(8, 10, 12, 0.72)), url("login-splash-background.jpg")`
+        : graveyardActive
+          ? `linear-gradient(180deg, rgba(8, 10, 12, 0.58), rgba(8, 10, 12, 0.72)), url("assets/backgrounds/graveyard/graveyard-background.jpg")`
+          : "";
+  document.body.style.backgroundSize = "";
+  document.body.style.backgroundPosition = combatActive || hubActive || graveyardActive ? "center center" : "";
+  document.body.style.backgroundRepeat = combatActive || hubActive || graveyardActive ? "no-repeat" : "";
+  document.body.style.backgroundAttachment = combatActive || hubActive || graveyardActive ? "fixed" : "";
+  if (!elements.combatScreen) return;
+  if (combatActive) {
+    elements.combatScreen.classList.add("scene-screen");
+    elements.combatScreen.style.setProperty("--combat-scene-background", `url("${state.sceneBackgroundUrl}")`);
+  } else {
+    elements.combatScreen.classList.remove("scene-screen");
+    elements.combatScreen.style.removeProperty("--combat-scene-background");
+  }
 }
 
 function escapeAttribute(value) {
@@ -1756,6 +2209,28 @@ function renderCurrencyWithIcons(currency, options = {}) {
   `;
 }
 
+function getWeaponImagePath(weaponId) {
+  return weaponImages[weaponId] ?? WEAPON_IMAGE_FALLBACK;
+}
+
+function renderWeaponImage(weaponId, weaponName, options = {}) {
+  const label = weaponName ?? safeEntityName(weapons, weaponId, "Weapon");
+  const showName = options.showName ?? true;
+  const sizeClass = options.size ? ` weapon-image-${options.size}` : "";
+  return `
+    <span class="weapon-inline${options.compact ? " compact" : ""}">
+      <img
+        class="weapon-image${sizeClass}"
+        src="${getWeaponImagePath(weaponId)}"
+        alt=""
+        aria-hidden="true"
+        onerror="this.onerror=null;this.src='${WEAPON_IMAGE_FALLBACK}'"
+      >
+      ${showName ? `<span>${label}</span>` : ""}
+    </span>
+  `;
+}
+
 function getItemTierLabel(itemId) {
   if (itemId.startsWith("minor")) return "minor";
   if (itemId.startsWith("major")) return "major";
@@ -1804,14 +2279,10 @@ function renderPotionIcon(itemDef) {
   }[getItemTierLabel(itemDef.id)] ?? palette.rim;
   return `
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <defs>
-        <linearGradient id="liquid-${itemDef.id}" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stop-color="${palette.glow}"/>
-          <stop offset="100%" stop-color="${palette.liquid}"/>
-        </linearGradient>
-      </defs>
       <path d="M18 5h12v6l4 5c2 2 4 5 4 10 0 9-6 15-14 15S10 35 10 26c0-5 2-8 4-10l4-5V5z" fill="#14181d" stroke="${rarityFill}" stroke-width="3.2"/>
-      <path d="M15 21c0-3 2-5 4-6h10c2 1 4 3 4 6v9c0 6-4 10-9 10s-9-4-9-10v-9z" fill="url(#liquid-${itemDef.id})" opacity="0.98"/>
+      <path d="M15 21c0-3 2-5 4-6h10c2 1 4 3 4 6v9c0 6-4 10-9 10s-9-4-9-10v-9z" fill="${palette.liquid}" opacity="0.98"/>
+      <ellipse cx="24" cy="22" rx="7" ry="4" fill="${palette.glow}" opacity="0.35"/>
+      <path d="M20 17c1.4-1.8 2.9-2.8 4.8-3.5" stroke="${palette.glow}" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
       <path d="M20 6h8" stroke="${rarityFill}" stroke-width="3" stroke-linecap="round"/>
       <path d="M16 20h16" stroke="${rarityFill}" stroke-width="1.8" opacity="0.8"/>
       <path d="M18 38c2 2 4 3 6 3s4-1 6-3" stroke="${rarityFill}" stroke-width="1.4" opacity="0.65" fill="none" stroke-linecap="round"/>
@@ -1923,6 +2394,8 @@ function activeScreen(screenName) {
   if (elements.codexButton) {
     elements.codexButton.hidden = screenName !== "combat";
   }
+  applySceneBackground(screenName);
+  syncScreenMusic(screenName);
 }
 
 function getInitiativeSnapshot() {
@@ -1939,6 +2412,7 @@ function captureSnapshot() {
     JSON.stringify({
       gameState: state.gameState,
       builderSelectedClassId: state.builderSelectedClassId,
+      builderGender: state.builderGender,
       player: state.player,
       enemy: state.enemy,
       initiative: getInitiativeSnapshot(),
@@ -1973,7 +2447,9 @@ function hydrateInitiative(snapshot) {
 function loadSnapshot(snapshot) {
   state.gameState = snapshot.gameState ?? GAME_STATES.betweenBattles;
   state.builderSelectedClassId = snapshot.builderSelectedClassId ?? snapshot.player?.classDef?.id ?? "warrior";
+  state.builderGender = snapshot.builderGender ?? snapshot.player?.gender ?? "undisclosed";
   state.player = snapshot.player;
+  normalizePlayerIdentity(state.player);
   normalizePlayerProgression(state.player);
   normalizePlayerInventory(state.player);
   if (state.player.inventory?.consumables?.healthPotion) {
@@ -2058,6 +2534,7 @@ function renderHub(adventures = state.activeAdventures, graveyardEntries = state
       card.innerHTML = `
         <h3>${adventure.name}</h3>
         <p class="stat">Class: ${classNameFromId(adventure.classId)}</p>
+        ${adventure.gender ? `<p class="stat">Gender: ${formatGenderLabel(adventure.gender)}</p>` : ""}
         <p class="stat">Level: ${adventure.level}</p>
         <div class="action-buttons hub-card-actions">
           <button type="button" data-continue="${adventure.id}">Continue</button>
@@ -2168,10 +2645,11 @@ function finalizeSkillDefinition(skill) {
   skill.statUsed = titleCase(skill.stat);
   skill.statusEffect = skill.status ?? null;
   skill.classRestriction = skill.classId;
+  const statusChanceText = skill.status ? formatStatusChanceText(skill) : "";
   skill.tooltipText = `${skill.description} (${skill.mode === "attack_modifier" ? "Modifier Skill" : "Standalone Skill"}; ${skill.statUsed}; ${
     skill.damageDice ? `${formatDice(skill.damageDice)} ${skill.damageType}` : "no direct damage"
   }; ${skill.resourceCost ?? 0} ${resourceLabel(skill.resourceType)}; cooldown ${skill.cooldownTurns ?? 0}${
-    skill.status ? `; ${statusDefinitions[skill.status.id].name}` : ""
+    statusChanceText ? `; ${statusChanceText}` : skill.status ? `; ${statusDefinitions[skill.status.id].name}` : ""
   })`;
   return skill;
 }
@@ -2229,6 +2707,40 @@ function getResolvedSkill(skillId, player = state.player) {
   finalizeSkillDefinition(resolved);
   resolved.appliedUpgrades = appliedUpgrades;
   return resolved;
+}
+
+function calculateEffectChance(actor, source) {
+  if (!source?.status?.id) return null;
+  if (source.baseEffectChance !== undefined && source.effectScalingStat && source.effectChancePerStat !== undefined) {
+    const scalingStatId = String(source.effectScalingStat).toLowerCase();
+    const statValue = actor?.stats?.[scalingStatId] ?? 0;
+    const rawChance = source.baseEffectChance + statValue * source.effectChancePerStat;
+    const maxChance = source.maxEffectChance ?? 100;
+    return {
+      chancePercent: Math.max(0, Math.min(maxChance, rawChance)),
+      baseEffectChance: source.baseEffectChance,
+      effectScalingStat: titleCase(scalingStatId),
+      effectChancePerStat: source.effectChancePerStat,
+      maxEffectChance: maxChance,
+      usesScaling: true,
+    };
+  }
+  if (source.status?.chance !== undefined) {
+    return {
+      chancePercent: Math.round(source.status.chance * 100),
+      usesScaling: false,
+    };
+  }
+  return null;
+}
+
+function formatStatusChanceText(source, actor = state.player) {
+  if (!source?.status?.id) return "";
+  const statusName = statusDefinitions[source.status.id]?.name ?? source.status.id;
+  const chance = calculateEffectChance(actor, source);
+  if (!chance) return statusName;
+  if (!chance.usesScaling) return `${statusName} chance: ${chance.chancePercent}%`;
+  return `${statusName} chance: ${chance.chancePercent}% (${chance.baseEffectChance}% base + ${chance.effectScalingStat} scaling, max ${chance.maxEffectChance}%)`;
 }
 
 function getSkillById(skillId, player = state.player) {
@@ -2507,6 +3019,7 @@ function createPlayer() {
     id: "player",
     name: elements.nameInput.value.trim() || "Adventurer",
     description: elements.descriptionInput.value.trim(),
+    gender: state.builderGender,
     level,
     xp: 0,
     maxHp,
@@ -2562,6 +3075,7 @@ function prepareNewAdventure() {
   state.currentAdventureId = null;
   state.progress = createProgress();
   state.gameState = GAME_STATES.characterCreation;
+  state.builderGender = "undisclosed";
   state.player = null;
   state.enemy = null;
   state.initiative = [];
@@ -2711,6 +3225,22 @@ function renderClassPills() {
   });
 }
 
+function renderGenderPills() {
+  if (!elements.genderPills) return;
+  elements.genderPills.innerHTML = "";
+  GENDER_OPTIONS.forEach((option) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `class-pill gender-pill${state.builderGender === option.id ? " active" : ""}`;
+    button.textContent = option.label;
+    button.addEventListener("click", () => {
+      state.builderGender = option.id;
+      renderBuilder();
+    });
+    elements.genderPills.append(button);
+  });
+}
+
 function renderClassInfoPanel(classDef) {
   if (!classDef) {
     elements.classInfoPanel.textContent = "Choose a class to see its role, bonuses, and starting skills.";
@@ -2732,6 +3262,7 @@ function renderBuilder() {
     id: "preview",
     name: elements.nameInput.value.trim() || "Adventurer",
     description: elements.descriptionInput.value.trim(),
+    gender: state.builderGender,
     level: 1,
     stats: validation.stats,
     classDef: previewClass,
@@ -2747,13 +3278,18 @@ function renderBuilder() {
   const weaponParts = getAttackParts(preview, preview.weapon);
 
   renderClassPills();
+  renderGenderPills();
   elements.totalSpent.textContent = validation.total;
   elements.totalRemaining.textContent = Math.max(0, STAT_LIMIT - validation.total);
   elements.builderSummaryName.textContent = preview.name;
   elements.builderSummaryDescription.textContent = preview.description || "No description";
+  elements.builderSummaryGender.textContent = formatGenderLabel(preview.gender);
   elements.builderSummaryClass.innerHTML = formatClassDisplay(previewClass);
   elements.builderSummaryStats.innerHTML = formatStatsMarkup(preview.stats);
-  elements.builderSummaryWeapon.textContent = preview.weapon.name;
+    elements.builderSummaryWeapon.innerHTML = renderWeaponImage(preview.weapon.id, preview.weapon.name);
+    if (elements.builderWeaponPreview) {
+      elements.builderWeaponPreview.innerHTML = `${renderWeaponImage(preview.weapon.id, preview.weapon.name)}<span class="muted">${preview.weapon.special}</span>`;
+    }
   elements.builderSummaryArmor.textContent = preview.armor.name;
   elements.builderSummarySkills.textContent = previewClass
     ? getClassStartingSkillIds(previewClass.id)
@@ -3013,6 +3549,7 @@ function renderCombatant(prefix, combatant) {
   if (!combatant) {
     if (prefix === "enemy") {
       elements.enemyNameHeading.textContent = "Enemy";
+      renderEnemyPortrait(null);
       elements.enemyTypeLevel.textContent = "-";
       elements.enemyStats.textContent = "-";
       elements.enemyWeapon.textContent = "-";
@@ -3029,7 +3566,7 @@ function renderCombatant(prefix, combatant) {
   const attackTotal = sumParts(attackParts);
   renderHpBar(elements[`${prefix}HpBar`], combatant);
   elements[`${prefix}Stats`].innerHTML = formatStatsMarkup(combatant.stats);
-  elements[`${prefix}Weapon`].textContent = `${combatant.weapon.name}: ${combatant.weapon.special}`;
+    elements[`${prefix}Weapon`].innerHTML = `${renderWeaponImage(combatant.weapon.id, combatant.weapon.name)}<span class="weapon-special-copy">${combatant.weapon.special}</span>`;
   elements[`${prefix}Traits`].textContent = formatTraits(combatant);
   elements[`${prefix}Statuses`].innerHTML = formatStatuses(combatant);
   elements[`${prefix}Ac`].innerHTML = formatInfoTooltip(`${getAc(combatant)}`, getAcFormula(combatant), { title: `AC ${getAc(combatant)}` });
@@ -3038,14 +3575,16 @@ function renderCombatant(prefix, combatant) {
   });
   elements[`${prefix}Damage`].textContent = `${formatDice(combatant.weapon.damageDice)} ${combatant.weapon.damageType}`;
 
-  if (prefix === "player") {
+    if (prefix === "player") {
     elements.playerNameHeading.textContent = combatant.name;
     elements.playerLevelXp.textContent = `Level ${combatant.level}, ${combatant.xp} XP, next ${getNextLevelText(combatant)}`;
     elements.saveStatus.textContent = state.savePending
       ? "Saving..."
       : state.saveMessage || (state.user ? "" : "Not logged in — progress will not be saved.");
+    elements.playerGenderLine.textContent = `Gender: ${formatGenderLabel(combatant.gender)}`;
     renderResourceBar(elements.playerManaBar, "Mana", combatant.mana, combatant.maxMana, "mana");
     renderResourceBar(elements.playerStaminaBar, "Stamina", combatant.stamina, combatant.maxStamina, "stamina");
+    elements.playerGender.textContent = formatGenderLabel(combatant.gender);
     elements.playerClass.innerHTML = formatClassDisplay(combatant.classDef);
     elements.playerSubclass.innerHTML = formatSubclassDisplay(getSubclassDef(combatant));
     elements.playerWealth.textContent = formatCurrencyCompact(combatant.inventory.currency);
@@ -3057,11 +3596,12 @@ function renderCombatant(prefix, combatant) {
     elements.playerSpell.textContent = magicalSkills.length
       ? magicalSkills.map((skill) => `${skill.name}: ${skill.statUsed}-based ${skill.mode}`).join(", ")
       : "None";
-  } else {
-    elements.enemyNameHeading.textContent = combatant.name;
-    elements.enemyTypeLevel.textContent = `${combatant.templateId}, level ${combatant.level}`;
+    } else {
+      elements.enemyNameHeading.textContent = combatant.name;
+      renderEnemyPortrait(combatant);
+      elements.enemyTypeLevel.textContent = `${combatant.templateId}, level ${combatant.level}`;
+    }
   }
-}
 
 function renderInventory() {
   if (!state.player || !elements.inventoryList) return;
@@ -3081,22 +3621,21 @@ function renderInventory() {
           const quantity = state.player.inventory.consumables[item.id] ?? 0;
           return `
             <div class="item-card inventory-item-card${expanded ? " expanded" : ""}">
-              <div class="item-card-main">
-                <button type="button" class="item-expand-badge" data-toggle-inventory-item="${item.id}" aria-expanded="${expanded}" aria-label="Show ${item.name} details">+</button>
-                <button type="button" class="item-icon-button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}" aria-label="Use ${item.name}">
-                  ${renderItemIcon(item)}
-                  <span class="item-count-badge">${quantity}</span>
-                </button>
-              </div>
+              <button type="button" class="item-expand-badge" data-toggle-inventory-item="${item.id}" aria-expanded="${expanded}" aria-label="Show ${item.name} details">+</button>
+              <button type="button" class="item-icon-button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}" aria-label="Use ${item.name}">
+                <span class="sr-only">${item.name}</span>
+                ${renderItemIcon(item)}
+                <span class="item-count-badge">${quantity}</span>
+              </button>
               <div class="item-card-details" ${expanded ? "" : "hidden"}><strong>${item.name}</strong>${formatItemDetails(item)}</div>
             </div>
           `;
         })
         .join("")
     : '<p class="muted">No consumables on hand.</p>';
-  const ownedWeapons = inventory.weapons.length
-    ? inventory.weapons.map((id) => safeEntityName(weapons, id)).join(', ')
-    : 'None';
+    const ownedWeapons = inventory.weapons.length
+      ? `<div class="weapon-chip-row">${inventory.weapons.map((id) => renderWeaponImage(id, safeEntityName(weapons, id), { compact: true })).join("")}</div>`
+      : '<p class="muted">No weapons owned.</p>';
   const ownedArmor = inventory.armor.length
     ? inventory.armor.map((id) => safeEntityName(armors, id)).join(', ')
     : 'None';
@@ -3105,9 +3644,12 @@ function renderInventory() {
       <h3>Currency</h3>
       <div>${renderCurrencyWithIcons(inventory.currency, { showZero: true })}</div>
     </div>
-    <p>Owned weapons: ${ownedWeapons}</p>
-    <p>Owned armor: ${ownedArmor}</p>
-    <p>Equipped: ${state.player.weapon.name}, ${state.player.armor.name}</p>
+      <div class="inventory-section">
+        <h3>Owned weapons</h3>
+        ${ownedWeapons}
+      </div>
+      <p>Owned armor: ${ownedArmor}</p>
+      <p>Equipped: ${renderWeaponImage(state.player.weapon.id, state.player.weapon.name, { compact: true })}, ${state.player.armor.name}</p>
     <div class="inventory-section">
       <h3>Consumables</h3>
       <div class="item-list">${consumableMarkup}</div>
@@ -3129,10 +3671,12 @@ function renderShop() {
     row.className = 'item-card shop-item-card' + (expanded ? ' expanded' : '');
     const disabled = state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, item.cost);
     row.innerHTML = `
+      <button type="button" class="item-expand-badge" data-toggle-shop-item="${item.id}" aria-expanded="${expanded}" aria-label="Show ${item.name} details">+</button>
       <div class="item-card-main">
-        <button type="button" class="item-expand-badge" data-toggle-shop-item="${item.id}" aria-expanded="${expanded}" aria-label="Show ${item.name} details">+</button>
-        <button type="button" class="shop-buy-button" data-buy-item="${item.id}" ${disabled ? "disabled" : ""} aria-label="Buy ${item.name}">
+        <button type="button" class="item-icon-button shop-buy-button" data-buy-item="${item.id}" ${disabled ? "disabled" : ""} aria-label="Buy ${item.name}">
+          <span class="sr-only">${item.name}</span>
           ${renderItemIcon(item)}
+          <span class="item-count-badge">${inventory.consumables[item.id] ?? 0}</span>
         </button>
         <div class="item-card-body">
           <strong>${item.name}</strong>
@@ -3335,9 +3879,10 @@ function renderSkills() {
       availability.cooldownRemaining > 0 ? `<span class="cooldown-badge">${availability.cooldownRemaining}</span>` : ""
     }`;
     button.dataset.skillId = skill.id;
+    const chanceLine = skill.status ? `\n${formatStatusChanceText(skill, state.player)}` : "";
     button.dataset.tooltip = `${skill.description}\nMode: ${skill.mode === "attack_modifier" ? "Modifier Skill" : "Standalone Skill"}\nStat: ${skill.statUsed}\nResource: ${
       skill.resourceType ? `${skill.resourceCost} ${resourceLabel(skill.resourceType)}` : "None"
-    }\nCooldown: ${skill.cooldownTurns ?? 0}\nCurrent cooldown: ${availability.cooldownRemaining}\nEffect: ${formatSkillEffect(skill)}${
+    }\nCooldown: ${skill.cooldownTurns ?? 0}\nCurrent cooldown: ${availability.cooldownRemaining}${chanceLine}\nEffect: ${formatSkillEffect(skill, state.player)}${
       availability.reason ? `\nUnavailable: ${availability.reason}` : ""
     }`;
     button.disabled = !availability.usable || !playerTurnActive || !actionAvailable;
@@ -3349,7 +3894,7 @@ function renderSkills() {
         selected.mode === "attack_modifier" ? "Modifier Skill" : "Standalone Skill"
       }. Stat: ${selected.statUsed}. Resource: ${
         selected.resourceType ? `${selected.resourceCost} ${resourceLabel(selected.resourceType)}` : "None"
-      }. Cooldown: ${selected.cooldownTurns ?? 0}. Action: ${selectedActionType ? titleCase(selectedActionType) : "Attack modifier"}. Effect: ${formatSkillEffect(selected)}.`
+      }. Cooldown: ${selected.cooldownTurns ?? 0}. Action: ${selectedActionType ? titleCase(selectedActionType) : "Attack modifier"}. Effect: ${formatSkillEffect(selected, state.player)}.`
     : "Tap a skill to prepare it and read its details here.";
 }
 
@@ -3417,14 +3962,14 @@ function renderCodex() {
     );
   } else if (state.activeCodexSection === "weapons") {
     content = renderCodexCards(
-      Object.values(weapons).filter((weapon) => !["crudeBlade", "bite", "boneClaw", "emberBolt", "rustySword"].includes(weapon.id)),
-      (weapon) =>
-        createCodexCard(
-          weapon.name,
-          `${formatDice(weapon.damageDice)} ${weapon.damageType}`,
-          weapon.special,
-          [`Stat: ${titleCase(weapon.stat)}`, `Type: ${weapon.attackKind}`]
-        )
+        Object.values(weapons).filter((weapon) => !["crudeBlade", "bite", "boneClaw", "emberBolt", "rustySword"].includes(weapon.id)),
+        (weapon) =>
+          createCodexCard(
+            renderWeaponImage(weapon.id, weapon.name, { size: "sm" }),
+            `${formatDice(weapon.damageDice)} ${weapon.damageType}`,
+            weapon.special,
+            [`Stat: ${titleCase(weapon.stat)}`, `Type: ${weapon.attackKind}`]
+          )
     );
   } else if (state.activeCodexSection === "enemies") {
     content = renderCodexCards(Object.values(enemyTemplates), (enemy) =>
@@ -3473,15 +4018,14 @@ function describeStatus(status) {
   return parts.join(". ");
 }
 
-function formatSkillEffect(skill) {
+function formatSkillEffect(skill, actor = state.player) {
   const effects = [];
   effects.push(skill.mode === "attack_modifier" ? "Attack modifier" : "Standalone");
   effects.push(`${skill.statUsed}-based`);
   if (skill.hitBonus) effects.push(`${signed(skill.hitBonus)} hit`);
   if (skill.damageDice) effects.push(`${formatDice(skill.damageDice)} ${skill.damageType}`);
   if (skill.damageBonus) effects.push(`${signed(skill.damageBonus)} damage`);
-  if (skill.statusEffect) effects.push(`${statusDefinitions[skill.statusEffect.id].name} ${Math.round(skill.statusEffect.chance * 100)}%`);
-  if (skill.status) effects.push(`${statusDefinitions[skill.status.id].name} ${Math.round(skill.status.chance * 100)}%`);
+  if (skill.statusEffect || skill.status) effects.push(formatStatusChanceText(skill, actor));
   if (skill.statusSelf) effects.push(`Self: ${statusDefinitions[skill.statusSelf.id].name}`);
   if (skill.canRemoveStatuses === "negative") effects.push("Removes 1 negative status");
   if (Array.isArray(skill.canRemoveStatuses) && skill.canRemoveStatuses.length) {
@@ -3646,6 +4190,9 @@ function renderInitiative() {
 function renderCombat() {
   const active = currentCombatant();
   const betweenBattlesView = state.gameState === GAME_STATES.betweenBattles;
+  syncSceneBackground();
+  applySceneBackground("combat");
+  syncScreenMusic("combat");
   elements.combatLayout?.classList.toggle("between-battles-view", betweenBattlesView);
   document.querySelectorAll(".battle-only").forEach((section) => {
     section.hidden = betweenBattlesView;
@@ -3857,14 +4404,22 @@ function applyStatus(target, statusId, sourceName) {
   addLog(`${sourceName} applies ${def.name} to ${target.name}.`);
 }
 
-function maybeApplyStatus(source, target, status, sourceName) {
+function maybeApplyStatus(source, target, status, sourceName, effectSource = null) {
   if (!status) return;
-  const rollValue = Math.random();
-  const chancePercent = Math.round(status.chance * 100);
-  if (rollValue <= status.chance) {
+  const chance = calculateEffectChance(source, effectSource ?? { status });
+  if (!chance) return;
+  const statusName = statusDefinitions[status.id]?.name ?? status.id;
+  const rollValue = roll(100);
+  if (chance.usesScaling) {
+    addLog(`${statusName} chance: ${chance.chancePercent}% (${chance.baseEffectChance}% base + ${chance.effectScalingStat} scaling, max ${chance.maxEffectChance}%).`);
+  } else {
+    addLog(`${statusName} chance: ${chance.chancePercent}%.`);
+  }
+  if (rollValue <= chance.chancePercent) {
+    addLog(`Rolled ${rollValue} -> ${statusName} applied.`);
     applyStatus(target, status.id, sourceName);
   } else {
-    addLog(`${sourceName} status chance ${chancePercent}% -> no effect.`);
+    addLog(`Rolled ${rollValue} -> No ${statusName.toLowerCase()}.`);
   }
 }
 
@@ -3928,7 +4483,7 @@ function resolveAttack(attacker, attack = attacker.weapon, options = {}) {
     const critText = isCrit ? " CRITICAL HIT!" : "";
 
     addLog(`${attacker.name} uses ${sourceName}: ${formatRollMath(attackDie, parts)} vs ${defender.name} AC ${defenderAc} -> HIT.${critText} Damage ${formatDice(damageDice)} (${damageRoll.rolls.join(", ")})${bonusText} = ${traitResult.finalDamage} ${attack.damageType}.${traitText}`);
-    maybeApplyStatus(attacker, defender, attack.status, sourceName);
+    maybeApplyStatus(attacker, defender, attack.status, sourceName, options.skill ?? attack);
     checkWinner();
     return;
   }
@@ -4631,6 +5186,18 @@ document.addEventListener("click", (event) => {
   if (!infoTarget) return;
   event.preventDefault();
   showInfoModal(infoTarget.dataset.infoTitle, infoTarget.dataset.infoBody);
+});
+
+document.addEventListener("pointerdown", resumeScreenMusicFromInteraction);
+document.addEventListener("keydown", resumeScreenMusicFromInteraction);
+[elements.battleMusic, elements.battleMusicAlt].forEach((audio) => {
+  audio?.addEventListener("ended", () => {
+    if (state.gameState !== GAME_STATES.inCombat || elements.combatScreen.hidden) return;
+    if (state.activeMusicKey && getMusicElement(state.activeMusicKey) !== audio) return;
+    const nextTrack = getNextBattleMusicTrack();
+    state.currentBattleTrack = nextTrack;
+    crossfadeToMusic(getBattlePlaybackKey(true), nextTrack, { loop: false });
+  });
 });
 
 renderBuilder();

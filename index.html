@@ -4,9 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Soulmarch</title>
+    <link rel="icon" type="image/jpeg" href="assets/icons/soulmarch-icon.jpg" />
+    <link rel="apple-touch-icon" href="assets/icons/soulmarch-icon.jpg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <audio id="hubMusic" src="assets/audio/hub-theme.mp3" preload="auto" loop></audio>
+    <audio id="innMusic" src="assets/audio/inn-theme.mp3" preload="auto" loop></audio>
+    <audio id="battleMusic" preload="none"></audio>
+    <audio id="battleMusicAlt" preload="none"></audio>
     <main class="app">
       <header>
         <div class="header-spacer" aria-hidden="true"></div>
@@ -72,15 +78,19 @@
       <section id="builderScreen" aria-label="Character creation">
         <h2>Character Creation</h2>
 
-        <section class="builder-identity" aria-label="Identity">
+        <section class="builder-identity soul-frame soul-metal-border soul-glass-bg" aria-label="Identity">
           <label for="nameInput">Character Name</label>
           <input id="nameInput" type="text" maxlength="32" value="Adventurer" />
           <label for="descriptionInput">Description</label>
           <input id="descriptionInput" type="text" maxlength="80" placeholder="Optional character note" />
+          <div class="builder-gender-row">
+            <span class="builder-gender-label">Gender</span>
+            <div id="genderPills" class="class-pill-grid gender-pill-grid" aria-label="Gender selection"></div>
+          </div>
         </section>
 
         <div class="builder-grid compact-builder">
-          <section class="panel builder-panel" aria-label="Stats">
+          <section class="panel soul-frame soul-metal-border soul-glass-bg builder-panel" aria-label="Stats">
             <h3>Stats</h3>
             <p class="help">Each stat must be 1 to 10. Total cannot exceed 10.</p>
 
@@ -109,13 +119,13 @@
             <p class="stat">Remaining: <strong id="totalRemaining">0</strong></p>
           </section>
 
-          <section class="panel builder-panel" aria-label="Class selection">
+          <section class="panel soul-frame soul-metal-border soul-glass-bg builder-panel" aria-label="Class selection">
             <h3>Class</h3>
             <div id="classPills" class="class-pill-grid"></div>
             <div id="classInfoPanel" class="mobile-info-panel"></div>
           </section>
 
-          <section class="panel builder-panel" aria-label="Equipment selection">
+          <section class="panel soul-frame soul-metal-border soul-glass-bg builder-panel" aria-label="Equipment selection">
             <h3>Equipment</h3>
             <label for="weaponSelect">Weapon</label>
             <select id="weaponSelect">
@@ -126,6 +136,7 @@
               <option value="dagger">Dagger</option>
               <option value="unarmed">Unarmed</option>
             </select>
+            <div id="builderWeaponPreview" class="weapon-preview-row"></div>
 
             <label for="armorSelect">Armor</label>
             <select id="armorSelect">
@@ -137,11 +148,12 @@
           </section>
         </div>
 
-        <section class="panel builder-summary" aria-label="Character summary">
+        <section class="panel soul-frame soul-metal-border soul-glass-bg builder-summary" aria-label="Character summary">
           <h3>Summary</h3>
           <div class="builder-summary-grid">
             <p class="stat">Name: <span id="builderSummaryName"></span></p>
             <p class="stat">Description: <span id="builderSummaryDescription"></span></p>
+            <p class="stat">Gender: <span id="builderSummaryGender"></span></p>
             <p class="stat">Class: <span id="builderSummaryClass"></span></p>
             <p class="stat">Stats: <span id="builderSummaryStats"></span></p>
             <p class="stat">Weapon: <span id="builderSummaryWeapon"></span></p>
@@ -159,7 +171,7 @@
       </section>
 
       <div id="levelUpScreen" class="modal-backdrop" hidden aria-label="Level up">
-        <section class="modal panel levelup-modal" role="dialog" aria-modal="true" aria-labelledby="levelUpTitle">
+        <section class="modal panel soul-frame soul-metal-border soul-glass-bg levelup-modal" role="dialog" aria-modal="true" aria-labelledby="levelUpTitle">
           <h2 id="levelUpTitle">Level Up!</h2>
           <p id="levelUpText"></p>
           <div id="levelProgressionInfo" class="mobile-info-panel"></div>
@@ -186,11 +198,12 @@
 
       <section id="combatScreen" hidden aria-label="Combat">
         <div class="game-layout" id="combatLayout">
-          <article class="panel player-panel" id="playerCard">
+          <article class="panel soul-frame soul-metal-border soul-glass-bg player-panel" id="playerCard">
             <div class="panel-heading">
               <div>
                 <h2 id="playerNameHeading">Player</h2>
                 <p id="saveStatus" class="muted"></p>
+                <p id="playerGenderLine" class="muted player-identity-meta"></p>
               </div>
               <span id="playerLevelXp" class="muted"></span>
             </div>
@@ -209,6 +222,7 @@
             <section id="overviewTab" class="tab-panel">
               <div class="compact-grid">
                 <p class="stat">Class: <span id="playerClass"></span></p>
+                <p class="stat">Gender: <span id="playerGender"></span></p>
                 <p class="stat">Subclass: <span id="playerSubclass"></span></p>
                 <p class="stat">Stats: <span id="playerStats"></span></p>
                 <p class="stat">Wealth: <span id="playerWealth"></span></p>
@@ -241,81 +255,90 @@
           </article>
 
           <section class="center-column">
-            <article class="panel enemy-panel battle-only" id="enemyCard">
-              <h2 id="enemyNameHeading">Enemy</h2>
-              <div id="enemyHpBar"></div>
-              <details>
-                <summary>Enemy details</summary>
-                <p class="stat">Type / Level: <span id="enemyTypeLevel"></span></p>
-                <p class="stat">Stats: <span id="enemyStats"></span></p>
-                <p class="stat">Weapon: <span id="enemyWeapon"></span></p>
-                <p class="stat">Resist / Weak: <span id="enemyTraits"></span></p>
+            <article class="panel soul-frame soul-metal-border soul-glass-bg battle-panel battle-only" id="battlePanel">
+              <section class="battle-panel-section enemy-panel" id="enemyCard">
+                <div class="battle-panel-header">
+                  <div class="enemy-summary">
+                    <div id="enemyPortrait" class="enemy-portrait" aria-hidden="true"></div>
+                    <div class="enemy-summary-text">
+                      <h2 id="enemyNameHeading">Enemy</h2>
+                    </div>
+                  </div>
+                </div>
+                <div id="enemyHpBar"></div>
                 <p class="stat">Status: <span id="enemyStatuses"></span></p>
-                <p class="stat">AC: <span id="enemyAc"></span></p>
-                <p class="stat">Attack: <span id="enemyAttack"></span></p>
-                <p class="stat">Damage: <span id="enemyDamage"></span></p>
+                <details>
+                  <summary>Enemy details</summary>
+                  <p class="stat">Type / Level: <span id="enemyTypeLevel"></span></p>
+                  <p class="stat">Stats: <span id="enemyStats"></span></p>
+                  <p class="stat">Weapon: <span id="enemyWeapon"></span></p>
+                  <p class="stat">Resist / Weak: <span id="enemyTraits"></span></p>
+                  <p class="stat">AC: <span id="enemyAc"></span></p>
+                  <p class="stat">Attack: <span id="enemyAttack"></span></p>
+                  <p class="stat">Damage: <span id="enemyDamage"></span></p>
+                </details>
+              </section>
+
+              <section class="battle-panel-section initiative-panel">
+                <h3>Initiative</h3>
+                <ol id="initiativeList"></ol>
+              </section>
+
+              <section class="battle-panel-section actions-panel">
+                <h3>Actions</h3>
+                <p id="turnText"></p>
+                <p id="actionText"></p>
+                <div class="action-economy">
+                  <p>Major Action: <span id="majorActionStatus">Available</span></p>
+                  <p>Minor Actions: <span id="minorActionStatus">0 / 2 used</span></p>
+                </div>
+                <p class="action-help">
+                  Major actions include attacks and powerful skills. Minor actions include potions, bandages, and quick utility
+                  skills. You may take 1 Major + 1 Minor, or 2 Minor actions per turn.
+                </p>
+                <div class="action-group">
+                  <h4>Major Actions</h4>
+                  <div class="action-buttons">
+                    <button id="attackButton" type="button">Attack</button>
+                    <button id="majorSkillButton" type="button" hidden>Use Selected Skill</button>
+                  </div>
+                </div>
+                <div class="action-group">
+                  <h4>Minor Actions</h4>
+                  <div class="action-buttons">
+                    <button id="minorSkillButton" type="button" hidden>Use Selected Skill</button>
+                  </div>
+                  <p class="action-help inventory-hint">Use potions and remedies from the Inventory tab.</p>
+                </div>
+                <div class="action-group">
+                  <h4>Turn</h4>
+                  <div class="action-buttons">
+                    <button id="endTurnButton" type="button">End Turn</button>
+                  </div>
+                </div>
+              </section>
+
+              <details id="diceLogPanel" class="battle-panel-section log-panel" aria-label="Dice log" open>
+                <summary>Dice Log</summary>
+                <ol id="diceLog" class="dice-log"></ol>
               </details>
             </article>
 
-            <section class="panel actions-panel battle-only">
-              <h2>Actions</h2>
-              <p id="turnText"></p>
-              <p id="actionText"></p>
-              <div class="action-economy">
-                <p>Major Action: <span id="majorActionStatus">Available</span></p>
-                <p>Minor Actions: <span id="minorActionStatus">0 / 2 used</span></p>
-              </div>
-              <p class="action-help">
-                Major actions include attacks and powerful skills. Minor actions include potions, bandages, and quick utility
-                skills. You may take 1 Major + 1 Minor, or 2 Minor actions per turn.
-              </p>
-              <div class="action-group">
-                <h3>Major Actions</h3>
-                <div class="action-buttons">
-                  <button id="attackButton" type="button">Attack</button>
-                  <button id="majorSkillButton" type="button" hidden>Use Selected Skill</button>
-                </div>
-              </div>
-              <div class="action-group">
-                <h3>Minor Actions</h3>
-                <div class="action-buttons">
-                  <button id="minorSkillButton" type="button" hidden>Use Selected Skill</button>
-                </div>
-                <p class="action-help inventory-hint">Use potions and remedies from the Inventory tab.</p>
-              </div>
-              <div class="action-group">
-                <h3>Turn</h3>
-                <div class="action-buttons">
-                  <button id="endTurnButton" type="button">End Turn</button>
-                </div>
-              </div>
-            </section>
-
-            <section class="panel between-only between-controls" id="betweenControlsPanel" hidden>
+            <section class="panel soul-frame soul-metal-border soul-glass-bg between-only between-controls" id="betweenControlsPanel" hidden>
               <h2>Between Battles</h2>
               <p>Recover, shop, and prepare before the next encounter.</p>
               <button id="nextEncounterButton" type="button">Next Battle</button>
             </section>
-
-            <details id="diceLogPanel" class="panel log-panel" aria-label="Dice log" open>
-              <summary>Dice Log</summary>
-              <ol id="diceLog" class="dice-log"></ol>
-            </details>
           </section>
 
           <aside class="right-column">
-            <section class="panel initiative-panel battle-only">
-              <h2>Initiative</h2>
-              <ol id="initiativeList"></ol>
-            </section>
-
-            <section class="panel utility-panel between-only" id="shopPanel" hidden>
+            <section class="panel soul-frame soul-metal-border soul-glass-bg utility-panel between-only" id="shopPanel" hidden>
               <h2>Shop</h2>
               <p id="shopCurrency" class="muted"></p>
               <div id="shopList" class="item-list"></div>
             </section>
 
-            <section class="panel utility-panel between-only" id="innPanel" hidden>
+            <section class="panel soul-frame soul-metal-border soul-glass-bg utility-panel between-only" id="innPanel" hidden>
               <h2>Stay at the Inn</h2>
               <p class="muted">
                 Cost: 3 silver. Restores HP, Mana, and Stamina, clears cooldowns, and removes temporary negative effects.
@@ -354,7 +377,7 @@
         <section class="modal panel codex-modal" role="dialog" aria-modal="true" aria-labelledby="codexModalTitle">
           <div class="panel-heading">
             <h2 id="codexModalTitle">Codex</h2>
-            <button id="codexCloseButton" type="button">Close</button>
+            <button id="codexCloseButton" type="button" aria-label="Close Codex">×</button>
           </div>
           <div id="codexList"></div>
         </section>

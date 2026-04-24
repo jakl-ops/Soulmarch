@@ -26,6 +26,7 @@ const MIME_TYPES = {
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".mp3": "audio/mpeg",
 };
 
 function sendJson(res, statusCode, payload, headers = {}) {
@@ -103,7 +104,7 @@ function requireUser(req, res) {
 }
 
 function serveStatic(req, res) {
-  const requested = req.url === "/" ? "/index.html" : req.url;
+  const requested = req.url === "/" ? "/index.html" : decodeURIComponent(req.url);
   const safePath = path.normalize(requested).replace(/^(\.\.[/\\])+/, "");
   const filePath = path.join(__dirname, safePath);
   if (!filePath.startsWith(__dirname)) {
