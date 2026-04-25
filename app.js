@@ -21,9 +21,51 @@ const GAME_STATES = {
 const GENDER_OPTIONS = [
   { id: "male", label: "Male" },
   { id: "female", label: "Female" },
-  { id: "non-binary", label: "Non-binary" },
   { id: "undisclosed", label: "Undisclosed" },
 ];
+
+const CLASS_PORTRAITS = {
+  warrior: {
+    male: "assets/portraits/classes/Warrior_Male.png",
+    female: "assets/portraits/classes/Warrior_Female.png",
+    undisclosed: "assets/portraits/classes/Warrior_Undiclosed.png",
+  },
+  monk: {
+    male: "assets/portraits/classes/Monk_Male.png",
+    female: "assets/portraits/classes/Monk_Female.png",
+    undisclosed: "assets/portraits/classes/Monk_Undisclosed.png",
+  },
+  magician: {
+    male: "assets/portraits/classes/Magician_Male.png",
+    female: "assets/portraits/classes/Magician_Female.png",
+    undisclosed: "assets/portraits/classes/Magician_Undisclosed.png",
+  },
+  guardian: {
+    male: "assets/portraits/classes/Guardian_Male.png",
+    female: "assets/portraits/classes/Guardian_Female.png",
+    undisclosed: "assets/portraits/classes/Guardian_Undiclosed.png",
+  },
+  rogue: {
+    male: "assets/portraits/classes/Rogue_Male.png",
+    female: "assets/portraits/classes/Rogue_Female.png",
+    undisclosed: "assets/portraits/classes/Rogue_Undiclosed.png",
+  },
+  sorcerer: {
+    male: "assets/portraits/classes/Sorcerer_Male.png",
+    female: "assets/portraits/classes/Sorcerer_Female.png",
+    undisclosed: "assets/portraits/classes/Sorcerer_Undisclosed.png",
+  },
+  paladin: {
+    male: "assets/portraits/classes/Paladin_Male.png",
+    female: "assets/portraits/classes/Paladin_Female.png",
+    undisclosed: "assets/portraits/classes/Paladin_Undiclosed.png",
+  },
+  mystic: {
+    male: "assets/portraits/classes/Mystic_Male.png",
+    female: "assets/portraits/classes/Mystic_Female.png",
+    undisclosed: "assets/portraits/classes/Mystic_Undiclosed.png",
+  },
+};
 
 const ADVENTURE_BACKGROUNDS = Array.from({ length: 9 }, (_, index) =>
   `assets/backgrounds/adventure/adventure-${String(index + 1).padStart(3, "0")}.jpg`
@@ -1754,6 +1796,9 @@ const elements = {
   builderSummaryWeapon: document.querySelector("#builderSummaryWeapon"),
   builderSummaryArmor: document.querySelector("#builderSummaryArmor"),
   builderSummarySkills: document.querySelector("#builderSummarySkills"),
+  builderAvatarPreview: document.querySelector("#builderAvatarPreview"),
+  builderAvatarTitle: document.querySelector("#builderAvatarTitle"),
+  builderAvatarMeta: document.querySelector("#builderAvatarMeta"),
   classInfoPanel: document.querySelector("#classInfoPanel"),
   validationText: document.querySelector("#validationText"),
   startButton: document.querySelector("#startButton"),
@@ -1771,6 +1816,7 @@ const elements = {
   playerManaBar: document.querySelector("#playerManaBar"),
   playerStaminaBar: document.querySelector("#playerStaminaBar"),
   playerLevelXp: document.querySelector("#playerLevelXp"),
+  playerAvatar: document.querySelector("#playerAvatar"),
   saveStatus: document.querySelector("#saveStatus"),
   playerGenderLine: document.querySelector("#playerGenderLine"),
   playerStats: document.querySelector("#playerStats"),
@@ -1950,7 +1996,7 @@ function getBattlePlaybackKey(preferAlternate = false) {
 }
 
 function syncScreenMusic(screenName = getVisibleScreenName()) {
-  if (screenName === "auth" || screenName === "hub" || screenName === "graveyard") {
+  if (screenName === "auth" || screenName === "hub" || screenName === "builder" || screenName === "graveyard") {
     crossfadeToMusic("hubMusic", HUB_MUSIC_TRACK, { loop: true });
     return;
   }
@@ -2024,11 +2070,15 @@ function roll(sides) {
 
 function normalizePlayerIdentity(player) {
   if (!player) return;
-  player.gender = GENDER_OPTIONS.find((option) => option.id === player.gender)?.id ?? "undisclosed";
+  player.gender = normalizeGender(player.gender);
+}
+
+function normalizeGender(genderId) {
+  return GENDER_OPTIONS.find((option) => option.id === genderId)?.id ?? "undisclosed";
 }
 
 function formatGenderLabel(genderId) {
-  return GENDER_OPTIONS.find((option) => option.id === genderId)?.label ?? "Undisclosed";
+  return GENDER_OPTIONS.find((option) => option.id === normalizeGender(genderId))?.label ?? "Undisclosed";
 }
 
 function rollRange(range) {
@@ -2075,6 +2125,32 @@ function getEnemyPortrait(templateId) {
   return ENEMY_PORTRAITS[templateId] ?? ENEMY_PORTRAITS.default;
 }
 
+function getClassPortraitPath(classId, genderId) {
+  const normalizedGender = normalizeGender(genderId);
+  return (
+    CLASS_PORTRAITS[classId]?.[normalizedGender] ??
+    CLASS_PORTRAITS[classId]?.undisclosed ??
+    CLASS_PORTRAITS.warrior.undisclosed
+  );
+}
+
+function renderCharacterAvatar(classId, genderId, label, options = {}) {
+  const classDef = classes[classId];
+  const portraitPath = getClassPortraitPath(classId, genderId);
+  const sizeClass = options.large ? " character-avatar-large" : options.small ? " character-avatar-small" : "";
+  const alt = label ? `${label} portrait` : `${classDef?.name ?? "Character"} portrait`;
+  return `<span class="character-avatar${sizeClass}"><img src="${portraitPath}" alt="${escapeAttribute(alt)}" loading="${
+    options.eager ? "eager" : "lazy"
+  }" decoding="async"></span>`;
+}
+
+function setCharacterAvatar(element, classId, genderId, label, options = {}) {
+  if (!element) return;
+  element.innerHTML = `<img src="${getClassPortraitPath(classId, genderId)}" alt="${escapeAttribute(
+    label ? `${label} portrait` : "Character portrait"
+  )}" loading="${options.eager ? "eager" : "lazy"}" decoding="async">`;
+}
+
 function renderEnemyPortrait(combatant) {
   if (!elements.enemyPortrait) return;
   const portrait = getEnemyPortrait(combatant?.templateId);
@@ -2097,21 +2173,22 @@ function syncSceneBackground(force = false) {
 function applySceneBackground(screenName) {
   const combatActive = screenName === "combat" && !!state.sceneBackgroundUrl;
   const hubActive = screenName === "hub";
+  const builderActive = screenName === "builder";
   const graveyardActive = screenName === "graveyard";
-  document.body.classList.toggle("scene-mode", combatActive || hubActive || graveyardActive);
-  document.body.dataset.sceneKind = combatActive ? state.sceneBackgroundKind : hubActive ? "hub" : graveyardActive ? "graveyard" : "";
+  document.body.classList.toggle("scene-mode", combatActive || hubActive || builderActive || graveyardActive);
+  document.body.dataset.sceneKind = combatActive ? state.sceneBackgroundKind : hubActive || builderActive ? "hub" : graveyardActive ? "graveyard" : "";
   document.body.style.backgroundImage =
     combatActive
       ? `linear-gradient(180deg, rgba(8, 10, 12, 0.58), rgba(8, 10, 12, 0.72)), url("${state.sceneBackgroundUrl}")`
-      : hubActive
+      : hubActive || builderActive
         ? `linear-gradient(180deg, rgba(8, 10, 12, 0.58), rgba(8, 10, 12, 0.72)), url("login-splash-background.jpg")`
         : graveyardActive
           ? `linear-gradient(180deg, rgba(8, 10, 12, 0.58), rgba(8, 10, 12, 0.72)), url("assets/backgrounds/graveyard/graveyard-background.jpg")`
           : "";
   document.body.style.backgroundSize = "";
-  document.body.style.backgroundPosition = combatActive || hubActive || graveyardActive ? "center center" : "";
-  document.body.style.backgroundRepeat = combatActive || hubActive || graveyardActive ? "no-repeat" : "";
-  document.body.style.backgroundAttachment = combatActive || hubActive || graveyardActive ? "fixed" : "";
+  document.body.style.backgroundPosition = combatActive || hubActive || builderActive || graveyardActive ? "center center" : "";
+  document.body.style.backgroundRepeat = combatActive || hubActive || builderActive || graveyardActive ? "no-repeat" : "";
+  document.body.style.backgroundAttachment = combatActive || hubActive || builderActive || graveyardActive ? "fixed" : "";
   if (!elements.combatScreen) return;
   if (combatActive) {
     elements.combatScreen.classList.add("scene-screen");
@@ -2449,7 +2526,7 @@ function hydrateInitiative(snapshot) {
 function loadSnapshot(snapshot) {
   state.gameState = snapshot.gameState ?? GAME_STATES.betweenBattles;
   state.builderSelectedClassId = snapshot.builderSelectedClassId ?? snapshot.player?.classDef?.id ?? "warrior";
-  state.builderGender = snapshot.builderGender ?? snapshot.player?.gender ?? "undisclosed";
+  state.builderGender = normalizeGender(snapshot.builderGender ?? snapshot.player?.gender ?? "undisclosed");
   state.player = snapshot.player;
   normalizePlayerIdentity(state.player);
   normalizePlayerProgression(state.player);
@@ -2534,10 +2611,15 @@ function renderHub(adventures = state.activeAdventures, graveyardEntries = state
     card.className = "panel soul-frame soul-metal-border soul-glass-bg hub-card";
     if (adventure) {
       card.innerHTML = `
-        <h3>${adventure.name}</h3>
-        <p class="stat">Class: ${classNameFromId(adventure.classId)}</p>
-        ${adventure.gender ? `<p class="stat">Gender: ${formatGenderLabel(adventure.gender)}</p>` : ""}
-        <p class="stat">Level: ${adventure.level}</p>
+        <div class="hub-card-profile">
+          ${renderCharacterAvatar(adventure.classId, adventure.gender, adventure.name)}
+          <div class="hub-card-info">
+            <h3>${adventure.name}</h3>
+            <p class="stat">Class: ${classNameFromId(adventure.classId)}</p>
+            ${adventure.gender ? `<p class="stat">Gender: ${formatGenderLabel(adventure.gender)}</p>` : ""}
+            <p class="stat">Level: ${adventure.level}</p>
+          </div>
+        </div>
         <div class="action-buttons hub-card-actions">
           <button type="button" data-continue="${adventure.id}">Continue</button>
           <button type="button" data-delete="${adventure.id}">Delete</button>
@@ -3021,7 +3103,7 @@ function createPlayer() {
     id: "player",
     name: elements.nameInput.value.trim() || "Adventurer",
     description: elements.descriptionInput.value.trim(),
-    gender: state.builderGender,
+    gender: normalizeGender(state.builderGender),
     level,
     xp: 0,
     maxHp,
@@ -3264,7 +3346,7 @@ function renderBuilder() {
     id: "preview",
     name: elements.nameInput.value.trim() || "Adventurer",
     description: elements.descriptionInput.value.trim(),
-    gender: state.builderGender,
+    gender: normalizeGender(state.builderGender),
     level: 1,
     stats: validation.stats,
     classDef: previewClass,
@@ -3292,6 +3374,14 @@ function renderBuilder() {
     if (elements.builderWeaponPreview) {
       elements.builderWeaponPreview.innerHTML = `${renderWeaponImage(preview.weapon.id, preview.weapon.name)}<span class="muted">${preview.weapon.special}</span>`;
     }
+  const previewClassName = previewClass?.name ?? "Adventurer";
+  setCharacterAvatar(elements.builderAvatarPreview, previewClass?.id, preview.gender, `${preview.name} ${previewClassName}`, { eager: true });
+  if (elements.builderAvatarTitle) {
+    elements.builderAvatarTitle.textContent = preview.name;
+  }
+  if (elements.builderAvatarMeta) {
+    elements.builderAvatarMeta.textContent = `${formatGenderLabel(preview.gender)} ${previewClassName}`;
+  }
   elements.builderSummaryArmor.textContent = preview.armor.name;
   elements.builderSummarySkills.textContent = previewClass
     ? getClassStartingSkillIds(previewClass.id)
@@ -3581,6 +3671,7 @@ function renderCombatant(prefix, combatant) {
 
     if (prefix === "player") {
     elements.playerNameHeading.textContent = combatant.name;
+    setCharacterAvatar(elements.playerAvatar, combatant.classDef?.id, combatant.gender, combatant.name, { eager: true });
     elements.playerLevelXp.textContent = `Level ${combatant.level}, ${combatant.xp} XP, next ${getNextLevelText(combatant)}`;
     elements.saveStatus.textContent = state.savePending
       ? "Saving..."

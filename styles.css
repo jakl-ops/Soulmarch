@@ -320,6 +320,18 @@ label {
   justify-content: flex-start;
 }
 
+.hub-card-profile {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.hub-card-info h3 {
+  margin-bottom: 6px;
+}
+
 .hub-header,
 .graveyard-header {
   margin-bottom: 12px;
@@ -477,7 +489,7 @@ label {
 }
 
 .gender-pill-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .gender-pill {
@@ -496,6 +508,55 @@ label {
 
 .builder-summary {
   margin-top: 12px;
+}
+
+.builder-avatar-panel {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 12px;
+}
+
+.character-avatar {
+  width: 74px;
+  height: 74px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 2px solid rgba(222, 178, 81, 0.84);
+  background: rgba(12, 14, 18, 0.66);
+  box-shadow:
+    inset 0 0 0 1px rgba(118, 78, 176, 0.7),
+    0 8px 18px rgba(0, 0, 0, 0.3);
+}
+
+.character-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.character-avatar-large {
+  width: min(260px, 100%);
+  height: auto;
+  aspect-ratio: 4 / 5;
+}
+
+.character-avatar-small {
+  width: 64px;
+  height: 64px;
+}
+
+.player-heading-main {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
 .builder-summary-grid {
@@ -1935,6 +1996,7 @@ label {
   }
 
   .builder-identity,
+  .builder-avatar-panel,
   .builder-summary-grid,
   .class-pill-grid,
   .gender-pill-grid,
@@ -1943,6 +2005,24 @@ label {
   .hub-grid,
   .auth-grid {
     grid-template-columns: 1fr;
+  }
+
+  .builder-avatar-panel {
+    text-align: center;
+  }
+
+  .builder-avatar-panel .character-avatar-large {
+    justify-self: center;
+    width: min(220px, 100%);
+  }
+
+  .hub-card-profile {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+
+  .hub-card-profile .character-avatar {
+    width: 60px;
+    height: 60px;
   }
 
   .builder-gender-row {

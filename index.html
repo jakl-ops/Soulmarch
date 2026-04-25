@@ -89,6 +89,14 @@
           </div>
         </section>
 
+        <section class="panel soul-frame soul-metal-border soul-glass-bg builder-avatar-panel" aria-label="Character portrait">
+          <div id="builderAvatarPreview" class="character-avatar character-avatar-large"></div>
+          <div>
+            <h3 id="builderAvatarTitle">Adventurer</h3>
+            <p id="builderAvatarMeta" class="muted"></p>
+          </div>
+        </section>
+
         <div class="builder-grid compact-builder">
           <section class="panel soul-frame soul-metal-border soul-glass-bg builder-panel" aria-label="Stats">
             <h3>Stats</h3>
@@ -200,10 +208,13 @@
         <div class="game-layout" id="combatLayout">
           <article class="panel soul-frame soul-metal-border soul-glass-bg player-panel" id="playerCard">
             <div class="panel-heading">
-              <div>
-                <h2 id="playerNameHeading">Player</h2>
-                <p id="saveStatus" class="muted"></p>
-                <p id="playerGenderLine" class="muted player-identity-meta"></p>
+              <div class="player-heading-main">
+                <div id="playerAvatar" class="character-avatar character-avatar-small"></div>
+                <div>
+                  <h2 id="playerNameHeading">Player</h2>
+                  <p id="saveStatus" class="muted"></p>
+                  <p id="playerGenderLine" class="muted player-identity-meta"></p>
+                </div>
               </div>
               <span id="playerLevelXp" class="muted"></span>
             </div>
