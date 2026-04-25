@@ -3458,11 +3458,14 @@ function finishPlayerAction() {
   }
 }
 
+function skillHasDirectOffense(skill) {
+  return Boolean(skill?.damageDice || skill?.damageBonus || skill?.attackKind === "weapon" || skill?.attackKind === "spell");
+}
+
 function getSkillActionType(skill) {
   if (!skill || skill.mode === "attack_modifier") return null;
-  if (skill.actionType) return skill.actionType;
-  const hasDirectDamage = Boolean(skill.damageDice || skill.damageBonus || skill.attackKind === "weapon" || skill.attackKind === "spell");
-  return hasDirectDamage ? "major" : "minor";
+  if (skill.mode === "standalone" && skillHasDirectOffense(skill)) return "major";
+  return skill.actionType ?? "major";
 }
 
 function targetFor(attacker) {
@@ -4228,7 +4231,9 @@ function useSelectedSkill() {
   }
 
   state.player.selectedSkillId = null;
-  if (actionType === "minor") {
+  if (actionType === "major") {
+    markMajorActionUsed(skill.name);
+  } else {
     markMinorActionUsed(skill.name);
   }
   spendSkillResource(state.player, skill);
