@@ -224,6 +224,10 @@ function deleteAdventure(userId, adventureId) {
 }
 
 function recordDeath(userId, adventureId, snapshot) {
+  const adventure = getAdventure(userId, adventureId);
+  if (!adventure) {
+    return { alreadyHandled: true };
+  }
   const player = snapshot.player ?? {};
   const progress = snapshot.progress ?? {};
   const deathDate = nowIso();
@@ -247,6 +251,7 @@ function recordDeath(userId, adventureId, snapshot) {
     deathDate
   );
   deleteAdventure(userId, adventureId);
+  return { alreadyHandled: false };
 }
 
 function listGraveyardEntries(userId) {

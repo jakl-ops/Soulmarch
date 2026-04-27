@@ -476,25 +476,30 @@ label {
 .builder-gender-row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 120px minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
-  align-items: start;
+  align-items: center;
 }
 
 .builder-gender-label {
   display: inline-flex;
   align-items: center;
-  min-height: 42px;
+  min-height: 32px;
   font-weight: 600;
 }
 
 .gender-pill-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .gender-pill {
+  width: auto;
   justify-content: center;
-  min-height: 40px;
+  min-height: 32px;
+  padding: 0 12px;
 }
 
 .compact-builder {
@@ -583,11 +588,19 @@ label {
 }
 
 .game-layout.between-battles-view .center-column {
-  display: contents;
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  align-content: start;
+  gap: 12px;
 }
 
 .game-layout.between-battles-view .right-column {
-  display: contents;
+  grid-column: 3;
+  grid-row: 1;
+  display: grid;
+  align-content: start;
+  gap: 12px;
 }
 
 .game-layout:not(.between-battles-view) .right-column {
@@ -595,23 +608,23 @@ label {
 }
 
 .game-layout.between-battles-view #betweenControlsPanel {
-  grid-column: 3;
-  grid-row: 2;
+  grid-column: auto;
+  grid-row: auto;
 }
 
 .game-layout.between-battles-view #diceLogPanel {
-  grid-column: 3;
-  grid-row: 3;
+  grid-column: auto;
+  grid-row: auto;
 }
 
 .game-layout.between-battles-view #shopPanel {
-  grid-column: 2;
-  grid-row: 1 / span 3;
+  grid-column: auto;
+  grid-row: auto;
 }
 
 .game-layout.between-battles-view #innPanel {
-  grid-column: 3;
-  grid-row: 1;
+  grid-column: auto;
+  grid-row: auto;
 }
 
 .center-column,
@@ -905,6 +918,13 @@ label {
   gap: 8px;
 }
 
+.class-pill-grid.gender-pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .mobile-info-panel {
   margin-top: 10px;
   padding: 10px 12px;
@@ -962,6 +982,13 @@ label {
   min-height: 42px;
   margin: 0;
   border-radius: 999px;
+  padding: 0 12px;
+}
+
+.class-pill.gender-pill {
+  width: auto;
+  min-height: 32px;
+  justify-content: center;
   padding: 0 12px;
 }
 
@@ -1946,6 +1973,12 @@ label {
   width: min(420px, 100%);
 }
 
+#rewardModal .modal,
+#infoModal .modal,
+#progressionModal .modal {
+  padding: 18px 20px 20px;
+}
+
 .modal.codex-modal {
   width: calc(100vw - 24px);
   max-width: calc(100vw - 24px);
@@ -2014,6 +2047,12 @@ label {
   .builder-avatar-panel .character-avatar-large {
     justify-self: center;
     width: min(220px, 100%);
+  }
+
+  .game-layout.between-battles-view .center-column,
+  .game-layout.between-battles-view .right-column {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .hub-card-profile {

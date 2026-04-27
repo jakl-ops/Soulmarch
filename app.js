@@ -865,6 +865,28 @@ const armors = {
   robe: { id: "robe", name: "Robe", acBonus: 0, checkBonuses: {} },
 };
 
+const classArmorIds = {
+  warrior: "medium",
+  rogue: "medium",
+  monk: "light",
+  magician: "none",
+  sorcerer: "none",
+  paladin: "heavy",
+  guardian: "heavy",
+  mystic: "light",
+};
+
+const classWeaponIds = {
+  warrior: ["sword", "axe", "bow", "staff", "dagger", "unarmed"],
+  guardian: ["sword", "axe", "staff", "unarmed"],
+  rogue: ["sword", "bow", "dagger", "unarmed"],
+  monk: ["staff", "dagger", "unarmed"],
+  magician: ["staff", "dagger", "unarmed"],
+  sorcerer: ["staff", "dagger", "unarmed"],
+  paladin: ["sword", "axe", "staff", "unarmed"],
+  mystic: ["staff", "dagger", "unarmed"],
+};
+
 const spells = {
   spark: {
     id: "spark",
@@ -1780,7 +1802,6 @@ const elements = {
   totalSpent: document.querySelector("#totalSpent"),
   totalRemaining: document.querySelector("#totalRemaining"),
   weaponSelect: document.querySelector("#weaponSelect"),
-  armorSelect: document.querySelector("#armorSelect"),
   builderAc: document.querySelector("#builderAc"),
   builderWeaponAttack: document.querySelector("#builderWeaponAttack"),
   builderWeaponDamage: document.querySelector("#builderWeaponDamage"),
@@ -2046,6 +2067,7 @@ const state = {
   pendingLevelUps: 0,
   pendingLevelQueue: [],
   combatEnded: false,
+  deathRecordInFlight: false,
   lastRewards: [],
   lastProgressionResults: [],
   progress: null,
@@ -2073,8 +2095,18 @@ function normalizePlayerIdentity(player) {
   player.gender = normalizeGender(player.gender);
 }
 
+function clearCombatStatuses(...combatants) {
+  combatants.forEach((combatant) => {
+    if (!combatant?.statuses) return;
+    combatant.statuses = [];
+  });
+}
+
 function normalizeGender(genderId) {
-  return GENDER_OPTIONS.find((option) => option.id === genderId)?.id ?? "undisclosed";
+  const normalized = String(genderId ?? "")
+    .trim()
+    .toLowerCase();
+  return GENDER_OPTIONS.find((option) => option.id === normalized)?.id ?? "undisclosed";
 }
 
 function formatGenderLabel(genderId) {
@@ -2132,6 +2164,34 @@ function getClassPortraitPath(classId, genderId) {
     CLASS_PORTRAITS[classId]?.undisclosed ??
     CLASS_PORTRAITS.warrior.undisclosed
   );
+}
+
+function getClassArmorId(classId) {
+  return classArmorIds[classId] ?? "none";
+}
+
+function getValidWeaponIdsForClass(classId) {
+  return classWeaponIds[classId] ?? classWeaponIds.warrior;
+}
+
+function getBuilderWeaponId(classId = state.builderSelectedClassId) {
+  const validWeaponIds = getValidWeaponIdsForClass(classId);
+  const selectedWeaponId = elements.weaponSelect?.value;
+  return validWeaponIds.includes(selectedWeaponId) ? selectedWeaponId : validWeaponIds[0];
+}
+
+function syncBuilderWeaponOptions(classId = state.builderSelectedClassId) {
+  if (!elements.weaponSelect) return;
+  const validWeaponIds = getValidWeaponIdsForClass(classId);
+  const selectedWeaponId = getBuilderWeaponId(classId);
+  elements.weaponSelect.innerHTML = "";
+  validWeaponIds.forEach((weaponId) => {
+    const option = document.createElement("option");
+    option.value = weaponId;
+    option.textContent = weapons[weaponId]?.name ?? titleCase(weaponId);
+    elements.weaponSelect.append(option);
+  });
+  elements.weaponSelect.value = selectedWeaponId;
 }
 
 function renderCharacterAvatar(classId, genderId, label, options = {}) {
@@ -2435,6 +2495,10 @@ function resourceLabel(resourceType) {
   return resourceType === "mana" ? "Mana" : resourceType === "stamina" ? "Stamina" : "Free";
 }
 
+function getSnapshotGender(snapshot) {
+  return normalizeGender(snapshot?.player?.gender ?? snapshot?.builderGender ?? "undisclosed");
+}
+
 async function apiRequest(url, options = {}) {
   const response = await fetch(url, {
     credentials: "same-origin",
@@ -2554,11 +2618,15 @@ function loadSnapshot(snapshot) {
     }
   }
   state.combatEnded = snapshot.combatEnded ?? false;
+  state.deathRecordInFlight = false;
   state.lastRewards = snapshot.lastRewards ?? [];
   state.lastProgressionResults = snapshot.lastProgressionResults ?? [];
   state.progress = snapshot.progress ?? createProgress();
   state.winner = snapshot.winnerId === "enemy" ? state.enemy : snapshot.winnerId === "player" ? state.player : null;
   state.initiative = hydrateInitiative(snapshot);
+  if (state.gameState === GAME_STATES.betweenBattles) {
+    clearCombatStatuses(state.player, state.enemy);
+  }
 }
 
 async function saveAdventure(reason = "autosave") {
@@ -2670,10 +2738,25 @@ function renderGraveyard(entries = state.graveyardEntries) {
 
 async function refreshHub() {
   const data = await apiRequest("/api/hub");
+  const adventures = await Promise.all(
+    data.adventures.map(async (adventure) => {
+      try {
+        const full = await apiRequest(`/api/adventures/${adventure.id}`, { method: "GET" });
+        const snapshot = full.adventure?.snapshot;
+        return {
+          ...adventure,
+          classId: snapshot?.player?.classDef?.id ?? adventure.classId,
+          gender: getSnapshotGender(snapshot),
+        };
+      } catch {
+        return { ...adventure, gender: normalizeGender(adventure.gender) };
+      }
+    })
+  );
   state.user = data.user;
-  state.activeAdventures = data.adventures;
+  state.activeAdventures = adventures;
   state.graveyardEntries = data.graveyard;
-  renderHub(data.adventures, data.graveyard);
+  renderHub(adventures, data.graveyard);
   renderGraveyard(data.graveyard);
   activeScreen("hub");
   elements.resetButton.hidden = true;
@@ -3092,8 +3175,8 @@ function addInventoryItem(inventory, category, id, quantity = 1) {
 function createPlayer() {
   const stats = getBuilderStats();
   const classDef = getSelectedClass();
-  const weapon = weapons[elements.weaponSelect.value];
-  const armor = armors[elements.armorSelect.value];
+  const weapon = weapons[getBuilderWeaponId(classDef.id)];
+  const armor = armors[getClassArmorId(classDef.id)];
   const level = 1;
   const maxHp = calculateMaxHp(stats, level);
   const maxMana = calculateMaxMana(stats, level);
@@ -3172,6 +3255,7 @@ function prepareNewAdventure() {
   state.pendingLevelUps = 0;
   state.pendingLevelQueue = [];
   state.combatEnded = false;
+  state.deathRecordInFlight = false;
   state.lastRewards = [];
   state.lastProgressionResults = [];
   state.levelUpDraft = { stat: null, subclass: null, progressionChoice: null };
@@ -3227,14 +3311,17 @@ function validateCharacter() {
   const messages = [];
   const values = Object.values(stats);
   const total = statTotal(stats);
+  const selectedClass = getSelectedClass();
+  const selectedWeaponId = selectedClass ? getBuilderWeaponId(selectedClass.id) : null;
 
   if (!elements.nameInput.value.trim()) messages.push("Enter a character name.");
   if (values.some((value) => !Number.isInteger(value))) messages.push("All stats must be whole numbers.");
   if (values.some((value) => value < MIN_STAT || value > MAX_STAT)) messages.push("Each stat must be between 1 and 10.");
   if (total > STAT_LIMIT) messages.push("Total stats cannot exceed 10.");
-  if (!getSelectedClass()) messages.push("Choose a class.");
-  if (!weapons[elements.weaponSelect.value]) messages.push("Choose a weapon.");
-  if (!armors[elements.armorSelect.value]) messages.push("Choose armor.");
+  if (!selectedClass) messages.push("Choose a class.");
+  if (!selectedWeaponId || !getValidWeaponIdsForClass(selectedClass?.id).includes(selectedWeaponId) || !weapons[selectedWeaponId]) {
+    messages.push("Choose a valid class weapon.");
+  }
 
   return { valid: messages.length === 0, messages, stats, total };
 }
@@ -3337,8 +3424,11 @@ function renderClassInfoPanel(classDef) {
 }
 
 function renderBuilder() {
-  const validation = validateCharacter();
   const previewClass = getSelectedClass();
+  syncBuilderWeaponOptions(previewClass?.id);
+  const validation = validateCharacter();
+  const previewWeaponId = getBuilderWeaponId(previewClass?.id);
+  const previewArmorId = getClassArmorId(previewClass?.id);
   elements.mindValue.textContent = validation.stats.mind;
   elements.bodyValue.textContent = validation.stats.body;
   elements.soulValue.textContent = validation.stats.soul;
@@ -3351,8 +3441,8 @@ function renderBuilder() {
     stats: validation.stats,
     classDef: previewClass,
     subclassId: null,
-    weapon: weapons[elements.weaponSelect.value],
-    armor: armors[elements.armorSelect.value],
+    weapon: weapons[previewWeaponId],
+    armor: armors[previewArmorId],
     acBonus: 0,
     resistances: [],
     weaknesses: [],
@@ -3370,10 +3460,10 @@ function renderBuilder() {
   elements.builderSummaryGender.textContent = formatGenderLabel(preview.gender);
   elements.builderSummaryClass.innerHTML = formatClassDisplay(previewClass);
   elements.builderSummaryStats.innerHTML = formatStatsMarkup(preview.stats);
-    elements.builderSummaryWeapon.innerHTML = renderWeaponImage(preview.weapon.id, preview.weapon.name);
-    if (elements.builderWeaponPreview) {
-      elements.builderWeaponPreview.innerHTML = `${renderWeaponImage(preview.weapon.id, preview.weapon.name)}<span class="muted">${preview.weapon.special}</span>`;
-    }
+  elements.builderSummaryWeapon.innerHTML = renderWeaponImage(preview.weapon.id, preview.weapon.name);
+  if (elements.builderWeaponPreview) {
+    elements.builderWeaponPreview.innerHTML = `${renderWeaponImage(preview.weapon.id, preview.weapon.name)}<span class="muted">${preview.weapon.special}</span>`;
+  }
   const previewClassName = previewClass?.name ?? "Adventurer";
   setCharacterAvatar(elements.builderAvatarPreview, previewClass?.id, preview.gender, `${preview.name} ${previewClassName}`, { eager: true });
   if (elements.builderAvatarTitle) {
@@ -4702,12 +4792,14 @@ function checkWinner() {
   if (!living(state.enemy)) {
     state.winner = state.player;
     state.gameState = GAME_STATES.victory;
+    clearCombatStatuses(state.player, state.enemy);
     awardLoot(state.player, state.enemy);
   } else if (!living(state.player)) {
     state.winner = state.enemy;
     state.gameState = GAME_STATES.defeat;
     state.combatEnded = true;
     state.player.selectedSkillId = null;
+    clearCombatStatuses(state.player, state.enemy);
     const deathSnapshot = captureSnapshot();
     handleCharacterDeath(deathSnapshot);
   }
@@ -4726,21 +4818,28 @@ function completeVictoryIfReady() {
   // Victory is only fully complete after loot, XP, and any level-up choices are resolved.
   state.player.selectedSkillId = null;
   state.player.hasAttacked = false;
-  addLog(`${state.player.name} keeps current HP, Mana, Stamina, statuses, and cooldowns between battles.`);
+  clearCombatStatuses(state.player, state.enemy);
+  addLog(`${state.player.name} keeps current HP, Mana, Stamina, and cooldowns between battles. Combat statuses fade.`);
   state.gameState = GAME_STATES.betweenBattles;
   void saveAdventure("combat");
 }
 
 async function handleCharacterDeath(snapshot) {
   if (!state.currentAdventureId || !state.user) return;
+  if (state.deathRecordInFlight) return;
+  state.deathRecordInFlight = true;
+  const adventureId = state.currentAdventureId;
   try {
-    await apiRequest(`/api/death/${state.currentAdventureId}`, {
+    await apiRequest(`/api/death/${adventureId}`, {
       method: "POST",
       body: JSON.stringify({ snapshot }),
     });
-    state.currentAdventureId = null;
+    if (state.currentAdventureId === adventureId) {
+      state.currentAdventureId = null;
+    }
     await refreshHub();
   } catch (error) {
+    state.deathRecordInFlight = false;
     addLog(`Death record error: ${error.message}`);
   }
 }
@@ -5175,7 +5274,6 @@ document.querySelectorAll(".tab-button").forEach((button) => {
 elements.codexButton.addEventListener("click", showCodexModal);
 
 elements.weaponSelect.addEventListener("change", renderBuilder);
-elements.armorSelect.addEventListener("change", renderBuilder);
 elements.startButton.addEventListener("click", startCombat);
 elements.attackButton.addEventListener("click", performPrimaryAction);
 elements.majorSkillButton.addEventListener("click", useSelectedSkill);

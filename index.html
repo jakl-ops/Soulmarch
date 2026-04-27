@@ -136,23 +136,9 @@
           <section class="panel soul-frame soul-metal-border soul-glass-bg builder-panel" aria-label="Equipment selection">
             <h3>Equipment</h3>
             <label for="weaponSelect">Weapon</label>
-            <select id="weaponSelect">
-              <option value="sword">Sword</option>
-              <option value="axe">Axe</option>
-              <option value="bow">Bow</option>
-              <option value="staff">Staff</option>
-              <option value="dagger">Dagger</option>
-              <option value="unarmed">Unarmed</option>
-            </select>
+            <select id="weaponSelect"></select>
+            <p class="help">Available weapons depend on class.</p>
             <div id="builderWeaponPreview" class="weapon-preview-row"></div>
-
-            <label for="armorSelect">Armor</label>
-            <select id="armorSelect">
-              <option value="none">No Armor</option>
-              <option value="light">Light</option>
-              <option value="medium">Medium</option>
-              <option value="heavy">Heavy</option>
-            </select>
           </section>
         </div>
 
@@ -322,7 +308,6 @@
                   <p class="action-help inventory-hint">Use potions and remedies from the Inventory tab.</p>
                 </div>
                 <div class="action-group">
-                  <h4>Turn</h4>
                   <div class="action-buttons">
                     <button id="endTurnButton" type="button">End Turn</button>
                   </div>
@@ -335,26 +320,26 @@
               </details>
             </article>
 
-            <section class="panel soul-frame soul-metal-border soul-glass-bg between-only between-controls" id="betweenControlsPanel" hidden>
-              <h2>Between Battles</h2>
-              <p>Recover, shop, and prepare before the next encounter.</p>
-              <button id="nextEncounterButton" type="button">Next Battle</button>
-            </section>
-          </section>
-
-          <aside class="right-column">
             <section class="panel soul-frame soul-metal-border soul-glass-bg utility-panel between-only" id="shopPanel" hidden>
               <h2>Shop</h2>
               <p id="shopCurrency" class="muted"></p>
               <div id="shopList" class="item-list"></div>
             </section>
+          </section>
 
+          <aside class="right-column">
             <section class="panel soul-frame soul-metal-border soul-glass-bg utility-panel between-only" id="innPanel" hidden>
               <h2>Stay at the Inn</h2>
               <p class="muted">
                 Cost: 3 silver. Restores HP, Mana, and Stamina, clears cooldowns, and removes temporary negative effects.
               </p>
               <button id="innButton" type="button">Stay at the Inn (3s)</button>
+            </section>
+
+            <section class="panel soul-frame soul-metal-border soul-glass-bg between-only between-controls" id="betweenControlsPanel" hidden>
+              <h2>Between Battles</h2>
+              <p>Recover, shop, and prepare before the next encounter.</p>
+              <button id="nextEncounterButton" type="button">Next Battle</button>
             </section>
           </aside>
         </div>

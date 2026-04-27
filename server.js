@@ -123,11 +123,14 @@ function serveStatic(req, res) {
 }
 
 function adventureSummary(entry) {
+  const snapshot = entry.snapshot ?? {};
+  const player = snapshot.player ?? {};
   return {
     id: entry.id,
     name: entry.name,
     description: entry.description,
     classId: entry.classId,
+    gender: player.gender ?? snapshot.builderGender ?? "undisclosed",
     level: entry.level,
     updatedAt: entry.updatedAt,
   };
@@ -259,6 +262,11 @@ const server = http.createServer(async (req, res) => {
       const user = requireUser(req, res);
       if (!user) return;
       const adventureId = url.pathname.split("/").pop();
+      const adventure = getAdventure(user.id, adventureId);
+      if (!adventure) {
+        sendJson(res, 200, { ok: true, alreadyHandled: true });
+        return;
+      }
       const body = await readBody(req);
       const snapshot = body.snapshot;
       if (!snapshot?.player) {
