@@ -103,6 +103,30 @@ const weaponImages = {
   unarmed: "assets/weapons/unarmed.png",
 };
 
+const ARMOR_IMAGE_FALLBACK = "assets/armor/no-armor.png";
+const armorImages = {
+  none: "assets/armor/no-armor.png",
+  light: "assets/armor/light-armor.png",
+  medium: "assets/armor/medium-armor.png",
+  heavy: "assets/armor/heavy-armor.png",
+  scraps: "assets/armor/light-armor.png",
+  hide: "assets/armor/light-armor.png",
+  bone: "assets/armor/heavy-armor.png",
+  robe: "assets/armor/no-armor.png",
+};
+
+const weaponSellValues = {
+  sword: { copper: 0, silver: 1, gold: 0 },
+  axe: { copper: 0, silver: 1, gold: 0 },
+  bow: { copper: 0, silver: 1, gold: 0 },
+  staff: { copper: 5, silver: 0, gold: 0 },
+  dagger: { copper: 5, silver: 0, gold: 0 },
+  unarmed: { copper: 0, silver: 0, gold: 0 },
+  flameWand: { copper: 0, silver: 2, gold: 0 },
+  crudeBlade: { copper: 5, silver: 0, gold: 0 },
+  boneClub: { copper: 4, silver: 0, gold: 0 },
+};
+
 const BATTLE_MUSIC_TRACKS = [
   "assets/audio/battle/ob-lix-dead-zone-action-background-music-109863.mp3",
   "assets/audio/battle/ob-lix-greenskin-warrior-war-background-music-111203.mp3",
@@ -406,11 +430,11 @@ const subclassDescriptions = {
   warrior: {
     berserker: {
       summary: "High damage warrior who sacrifices defense.",
-      features: ["+2 damage", "-1 AC"],
+      features: ["+2 damage", "-1 Defense"],
     },
     defender: {
       summary: "Defensive specialist focused on survivability.",
-      features: ["+2 AC", "-1 damage"],
+      features: ["+2 Defense", "-1 damage"],
     },
   },
   magician: {
@@ -436,7 +460,7 @@ const subclassDescriptions = {
   guardian: {
     bulwark: {
       summary: "Immovable wall that hardens body and armor.",
-      features: ["+1 AC", "+1 Body checks"],
+      features: ["+1 Defense", "+1 Body checks"],
     },
     sentinel: {
       summary: "Watchful protector who punishes openings.",
@@ -466,7 +490,7 @@ const subclassDescriptions = {
   paladin: {
     oathkeeper: {
       summary: "Steadfast holy defender bound to sacred duty.",
-      features: ["+1 AC", "+1 Soul checks"],
+      features: ["+1 Defense", "+1 Soul checks"],
     },
     avenger: {
       summary: "Holy striker who channels conviction into offense.",
@@ -480,7 +504,7 @@ const subclassDescriptions = {
     },
     telekinetic: {
       summary: "Will-forged combatant who turns thought into force.",
-      features: ["+1 AC", "+1 damage"],
+      features: ["+1 Defense", "+1 damage"],
     },
   },
 };
@@ -491,7 +515,7 @@ const classes = {
     name: "Warrior",
     icon: "🛡️",
     shortDescription: "Durable martial veteran.",
-    tooltipSummary: "+2 weapon hit, +1 AC, +1 damage reduction, +2 Body checks",
+    tooltipSummary: "+2 weapon hit, +1 Defense, +1 damage reduction, +2 Body checks",
     weaponHitBonus: 2,
     spellHitBonus: 0,
     acBonus: 1,
@@ -527,7 +551,7 @@ const classes = {
     name: "Monk",
     icon: "🥋",
     shortDescription: "Mobile fighter with inner discipline.",
-    tooltipSummary: "+1 weapon hit, +1 AC, +1 first attack hit, +1 Body checks, +1 Soul checks",
+    tooltipSummary: "+1 weapon hit, +1 Defense, +1 first attack hit, +1 Body checks, +1 Soul checks",
     weaponHitBonus: 1,
     spellHitBonus: 0,
     acBonus: 1,
@@ -545,7 +569,7 @@ const classes = {
     name: "Guardian",
     icon: "🧱",
     shortDescription: "Wall-like defender built to absorb pressure.",
-    tooltipSummary: "+3 AC, +1 Body checks, reduce incoming damage by 2",
+    tooltipSummary: "+3 Defense, +1 Body checks, reduce incoming damage by 2",
     weaponHitBonus: 0,
     spellHitBonus: 0,
     acBonus: 3,
@@ -581,7 +605,7 @@ const classes = {
     name: "Sorcerer",
     icon: "⚡",
     shortDescription: "Explosive elemental caster.",
-    tooltipSummary: "+3 spell hit, +1 Soul checks, +1 spell damage, -1 AC",
+    tooltipSummary: "+3 spell hit, +1 Soul checks, +1 spell damage, -1 Defense",
     weaponHitBonus: 0,
     spellHitBonus: 3,
     acBonus: -1,
@@ -599,7 +623,7 @@ const classes = {
     name: "Paladin",
     icon: "✨",
     shortDescription: "Holy knight with steady mixed offense.",
-    tooltipSummary: "+1 weapon hit, +1 spell hit, +1 AC, +1 Soul checks, +1 damage reduction",
+    tooltipSummary: "+1 weapon hit, +1 spell hit, +1 Defense, +1 Soul checks, +1 damage reduction",
     weaponHitBonus: 1,
     spellHitBonus: 1,
     acBonus: 1,
@@ -617,7 +641,7 @@ const classes = {
     name: "Mystic",
     icon: "🧠",
     shortDescription: "Psionic adept who fights with pure Mind.",
-    tooltipSummary: "+2 spell hit, +2 Mind checks, +1 AC, precise control skills",
+    tooltipSummary: "+2 spell hit, +2 Mind checks, +1 Defense, precise control skills",
     weaponHitBonus: 0,
     spellHitBonus: 2,
     acBonus: 1,
@@ -1149,7 +1173,7 @@ const skills = {
   },
   blessingStrike: {
     id: "blessingStrike",
-    name: "Blessing Strike",
+    name: "Blessed Strike",
     classId: "paladin",
     stat: "body",
     attackKind: "weapon",
@@ -1664,9 +1688,9 @@ const skillUpgrades = {
   blessingStrikeMastery: {
     id: "blessingStrikeMastery",
     targetSkillId: "blessingStrike",
-    name: "Blessing Strike+",
-    summary: "Blessing Strike gains more force and no cooldown.",
-    changes: { name: "Blessing Strike+", damageBonus: 2, cooldownTurns: 0, description: "A stronger blessed attack that also refreshes instantly." },
+    name: "Blessed Strike+",
+    summary: "Blessed Strike gains more force and no cooldown.",
+    changes: { name: "Blessed Strike+", damageBonus: 2, cooldownTurns: 0, description: "A stronger blessed attack that also refreshes instantly." },
   },
   mindSpikeMastery: {
     id: "mindSpikeMastery",
@@ -1908,6 +1932,8 @@ const elements = {
 };
 
 function resumeScreenMusicFromInteraction() {
+  if (!isPageMusicAllowed()) return;
+  state.musicSuppressedByFocus = false;
   syncScreenMusic();
 }
 
@@ -1970,6 +1996,11 @@ function configureMusicElement(audio, trackUrl, loop) {
 }
 
 function crossfadeToMusic(targetKey, trackUrl, { loop = true } = {}) {
+  if (!isPageMusicAllowed()) {
+    state.musicSuppressedByFocus = true;
+    pauseAllMusicImmediately();
+    return;
+  }
   const target = getMusicElement(targetKey);
   if (!target || !trackUrl) return;
   const sameTarget = state.activeMusicKey === targetKey && target.dataset.track === trackUrl && !target.paused;
@@ -2006,6 +2037,28 @@ function stopAllMusic() {
   state.activeMusicKey = null;
 }
 
+function pauseAllMusicImmediately() {
+  ["hubMusic", "innMusic", "battleMusic", "battleMusicAlt"].forEach((key) => {
+    const audio = getMusicElement(key);
+    if (!audio) return;
+    clearFade(audio);
+    audio.pause();
+    audio.volume = 0;
+  });
+  state.activeMusicKey = null;
+}
+
+function isPageMusicAllowed() {
+  return document.visibilityState !== "hidden" && document.hasFocus();
+}
+
+function handleMusicFocusChange() {
+  if (!isPageMusicAllowed()) {
+    state.musicSuppressedByFocus = true;
+    pauseAllMusicImmediately();
+  }
+}
+
 function getBattlePlaybackKey(preferAlternate = false) {
   if (preferAlternate) {
     return state.activeMusicKey === "battleMusic" ? "battleMusicAlt" : "battleMusic";
@@ -2017,6 +2070,10 @@ function getBattlePlaybackKey(preferAlternate = false) {
 }
 
 function syncScreenMusic(screenName = getVisibleScreenName()) {
+  if (!isPageMusicAllowed() || state.musicSuppressedByFocus) {
+    pauseAllMusicImmediately();
+    return;
+  }
   if (screenName === "auth" || screenName === "hub" || screenName === "builder" || screenName === "graveyard") {
     crossfadeToMusic("hubMusic", HUB_MUSIC_TRACK, { loop: true });
     return;
@@ -2073,7 +2130,6 @@ const state = {
   progress: null,
   levelUpDraft: { stat: null, subclass: null, progressionChoice: null },
   activeCodexSection: "classes",
-  expandedInventoryItems: new Set(),
   expandedShopItems: new Set(),
   sceneBackgroundKind: null,
   sceneBackgroundUrl: "",
@@ -2084,6 +2140,7 @@ const state = {
   battleMusicDeck: [],
   currentBattleTrack: "",
   activeMusicKey: null,
+  musicSuppressedByFocus: false,
 };
 
 function roll(sides) {
@@ -2313,6 +2370,63 @@ function formatCurrencyDetailed(currency) {
   return `${normalized.gold} gold, ${normalized.silver} silver, ${normalized.copper} copper`;
 }
 
+function halveCurrencyValue(currency) {
+  const copper = Math.floor(currencyToCopper(currency) / 2);
+  return normalizeCurrency({ copper, silver: 0, gold: 0 });
+}
+
+function getConsumableSellValue(item) {
+  return item?.sellValue ? normalizeCurrency(item.sellValue) : halveCurrencyValue(item?.cost ?? {});
+}
+
+function getWeaponSellValue(weaponId) {
+  return normalizeCurrency(weapons[weaponId]?.sellValue ?? weaponSellValues[weaponId] ?? { copper: 5, silver: 0, gold: 0 });
+}
+
+function isBetweenBattles() {
+  return state.gameState === GAME_STATES.betweenBattles;
+}
+
+function playerNeedsInnRest(player) {
+  return Boolean(player && (player.hp < player.maxHp || player.mana < player.maxMana || player.stamina < player.maxStamina));
+}
+
+function getInnButtonState(player) {
+  if (!player || state.gameState !== GAME_STATES.betweenBattles) {
+    return { disabled: true, title: "Stay at the Inn is available between battles." };
+  }
+  if (!playerNeedsInnRest(player)) {
+    return { disabled: true, title: "You are already fully rested." };
+  }
+  if (!canAffordCurrency(player.inventory.currency, INN_PRICE)) {
+    return { disabled: true, title: `You need ${formatCurrencyCompact(INN_PRICE)}.` };
+  }
+  return { disabled: false, title: "Restore HP, Mana, and Stamina." };
+}
+
+function updateInnButtonState() {
+  if (!elements.innButton) return;
+  const buttonState = getInnButtonState(state.player);
+  elements.innButton.disabled = buttonState.disabled;
+  elements.innButton.title = buttonState.title;
+}
+
+function canEquipWeaponId(player, weaponId) {
+  if (!player || !weapons[weaponId]) return false;
+  return player.inventory.weapons.includes(weaponId) && getValidWeaponIdsForClass(player.classDef?.id).includes(weaponId);
+}
+
+function findFallbackWeaponId(player, excludingWeaponId = null) {
+  const validWeaponIds = getValidWeaponIdsForClass(player.classDef?.id);
+  return player.inventory.weapons.find((weaponId) => weaponId !== excludingWeaponId && validWeaponIds.includes(weaponId)) ?? null;
+}
+
+function formatDateOnly(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
 function getClassIconPath(classId) {
   return `assets/icons/class-${classId}.svg`;
 }
@@ -2364,6 +2478,28 @@ function renderWeaponImage(weaponId, weaponName, options = {}) {
         alt=""
         aria-hidden="true"
         onerror="this.onerror=null;this.src='${WEAPON_IMAGE_FALLBACK}'"
+      >
+      ${showName ? `<span>${label}</span>` : ""}
+    </span>
+  `;
+}
+
+function getArmorImagePath(armorId) {
+  return armorImages[armorId] ?? ARMOR_IMAGE_FALLBACK;
+}
+
+function renderArmorImage(armorId, armorName, options = {}) {
+  const label = armorName ?? safeEntityName(armors, armorId, "Armor");
+  const showName = options.showName ?? true;
+  const sizeClass = options.size ? ` armor-image-${options.size}` : "";
+  return `
+    <span class="armor-inline${options.compact ? " compact" : ""}">
+      <img
+        class="armor-image${sizeClass}"
+        src="${getArmorImagePath(armorId)}"
+        alt=""
+        aria-hidden="true"
+        onerror="this.onerror=null;this.src='${ARMOR_IMAGE_FALLBACK}'"
       >
       ${showName ? `<span>${label}</span>` : ""}
     </span>
@@ -2484,6 +2620,31 @@ function formatItemDetails(itemDef) {
   return parts.join(" ");
 }
 
+function formatItemInfoBody(itemDef) {
+  if (!itemDef) return "";
+  const lines = [];
+  lines.push(itemDef.description);
+  if (itemDef.restoreType) {
+    lines.push(`Effect: Restores ${titleCase(itemDef.restoreType)}.`);
+  }
+  if (itemDef.removesStatuses?.length) {
+    lines.push(`Effect: Removes ${itemDef.removesStatuses.map((statusId) => statusDefinitions[statusId]?.name ?? statusId).join(" or ")}.`);
+  }
+  lines.push(`Action: ${titleCase(itemDef.actionType)}.`);
+  if (itemDef.cost) {
+    lines.push(`Shop cost: ${formatCurrencyDetailed(itemDef.cost)}.`);
+  }
+  const sellValue = getConsumableSellValue(itemDef);
+  if (currencyToCopper(sellValue) > 0) {
+    lines.push(`Sell value: ${formatCurrencyDetailed(sellValue)}.`);
+  }
+  const useState = state.player ? getConsumableUseState(state.player, itemDef) : null;
+  if (useState && !useState.usable) {
+    lines.push(`Restriction: ${useState.reason}`);
+  }
+  return lines.join("|");
+}
+
 function toggleExpandedItem(setName, itemId) {
   const targetSet = state[setName];
   if (!targetSet) return;
@@ -2535,7 +2696,7 @@ function activeScreen(screenName) {
   });
   document.body.classList.toggle("auth-mode", screenName === "auth");
   if (elements.codexButton) {
-    elements.codexButton.hidden = screenName !== "combat";
+    elements.codexButton.hidden = true;
   }
   applySceneBackground(screenName);
   syncScreenMusic(screenName);
@@ -2718,19 +2879,15 @@ function renderGraveyard(entries = state.graveyardEntries) {
     return;
   }
   entries.forEach((entry) => {
-    const killText = Object.entries(entry.killStats)
-      .map(([enemyType, count]) => `${count} ${enemyType}`)
-      .join(", ") || "No recorded kills";
     const card = document.createElement("section");
-    card.className = "panel soul-frame soul-metal-border soul-glass-bg hub-card graveyard-card";
+    card.className = "graveyard-tombstone";
+    const summary = entry.summary ?? `${entry.name} made it to level ${entry.level}. Their soul marches on.`;
     card.innerHTML = `
-      <h3>${entry.name}</h3>
-      <p class="stat">Class: ${classNameFromId(entry.classId)}</p>
-      <p class="stat">Level: ${entry.level}</p>
-      <p class="stat">Battles: ${entry.totalBattles}</p>
-      <p class="stat">Kills: ${killText}</p>
-      <p class="stat">Death: ${new Date(entry.deathDate).toLocaleString()}</p>
-      <p class="stat">${entry.summary}</p>
+      <div class="graveyard-epitaph">
+        <h3>${escapeAttribute(entry.name)}</h3>
+        <p class="graveyard-date">${formatDateOnly(entry.deathDate)}</p>
+        <p class="graveyard-summary">${escapeAttribute(summary)}</p>
+      </div>
     `;
     elements.graveyardList.append(card);
   });
@@ -3269,7 +3426,7 @@ function prepareNewAdventure() {
 }
 
 // Enemy scaling is intentionally simple: each level adds HP, small stat pressure,
-// AC at even levels, damage via level bonus, and larger rewards.
+// Defense at even levels, damage via level bonus, and larger rewards.
 function createScaledEnemy(playerLevel) {
   const templateList = Object.values(enemyTemplates);
   const template = templateList[Math.floor(Math.random() * templateList.length)];
@@ -3334,7 +3491,7 @@ function formatClassTooltip(classDef) {
     classDef.playstyle ? `Playstyle ${classDef.playstyle}` : null,
     `Weapon hit ${signed(classDef.weaponHitBonus)}`,
     `Spell hit ${signed(classDef.spellHitBonus)}`,
-    `AC ${signed(classDef.acBonus)}`,
+    `Defense ${signed(classDef.acBonus)}`,
   ].filter(Boolean);
   Object.entries(classDef.checkBonuses)
     .filter(([, value]) => value !== 0)
@@ -3368,7 +3525,7 @@ function formatSubclassDisplay(subclassDef) {
   if (!subclassDef) {
     return "Locked until level 3";
   }
-  const summary = `AC ${signed(subclassDef.acBonus ?? 0)}, damage ${signed(subclassDef.damageBonus ?? 0)}`;
+  const summary = `Defense ${signed(subclassDef.acBonus ?? 0)}, damage ${signed(subclassDef.damageBonus ?? 0)}`;
   return formatInfoTooltip(subclassDef.name, `${subclassDef.name} | ${summary}`);
 }
 
@@ -3472,7 +3629,7 @@ function renderBuilder() {
   if (elements.builderAvatarMeta) {
     elements.builderAvatarMeta.textContent = `${formatGenderLabel(preview.gender)} ${previewClassName}`;
   }
-  elements.builderSummaryArmor.textContent = preview.armor.name;
+  elements.builderSummaryArmor.innerHTML = renderArmorImage(preview.armor.id, preview.armor.name);
   elements.builderSummarySkills.textContent = previewClass
     ? getClassStartingSkillIds(previewClass.id)
         .map((id) => getSkillById(id)?.name ?? id)
@@ -3651,8 +3808,8 @@ async function startCombat() {
 
   rollInitiative();
   state.progress.battlesFought += 1;
-  addLog(`${state.player.name} AC: ${getAcFormula(state.player)}.`);
-  addLog(`${state.enemy.name} AC: ${getAcFormula(state.enemy)}.`);
+  addLog(`${state.player.name} Defense: ${getAcFormula(state.player)}.`);
+  addLog(`${state.enemy.name} Defense: ${getAcFormula(state.enemy)}.`);
   try {
     if (!state.currentAdventureId) {
       await createAdventureSave();
@@ -3689,7 +3846,6 @@ function rollInitiative() {
     { combatant: state.enemy, total: enemyTotal, die: enemyRoll, parts: enemyParts },
   ].sort((a, b) => b.total - a.total || (a.combatant.id === "player" ? -1 : 1));
 
-  addLog(`Initiative: ${state.player.name} ${formatRollMath(playerRoll, playerParts)}; ${state.enemy.name} ${formatRollMath(enemyRoll, enemyParts)}.`);
 }
 
 function resetToBuilder() {
@@ -3756,7 +3912,7 @@ function renderCombatant(prefix, combatant) {
     elements[`${prefix}Weapon`].innerHTML = `${renderWeaponImage(combatant.weapon.id, combatant.weapon.name)}<span class="weapon-special-copy">${combatant.weapon.special}</span>`;
   elements[`${prefix}Traits`].textContent = formatTraits(combatant);
   elements[`${prefix}Statuses`].innerHTML = formatStatuses(combatant);
-  elements[`${prefix}Ac`].innerHTML = formatInfoTooltip(`${getAc(combatant)}`, getAcFormula(combatant), { title: `AC ${getAc(combatant)}` });
+  elements[`${prefix}Ac`].innerHTML = formatInfoTooltip(`${getAc(combatant)}`, getAcFormula(combatant), { title: `Defense ${getAc(combatant)}` });
   elements[`${prefix}Attack`].innerHTML = formatInfoTooltip(`${signed(attackTotal)}`, attackParts.map((part) => `${part.label} ${signed(part.value)}`).join(" | "), {
     title: `Attack ${signed(attackTotal)}`,
   });
@@ -3776,7 +3932,7 @@ function renderCombatant(prefix, combatant) {
     elements.playerClass.innerHTML = formatClassDisplay(combatant.classDef);
     elements.playerSubclass.innerHTML = formatSubclassDisplay(getSubclassDef(combatant));
     elements.playerWealth.textContent = formatCurrencyCompact(combatant.inventory.currency);
-    elements.playerArmor.textContent = combatant.armor.name;
+    elements.playerArmor.innerHTML = renderArmorImage(combatant.armor.id, combatant.armor.name);
     elements.playerAttackFormula.textContent = `d20 + ${attackParts.map((part) => `${part.label} ${part.value}`).join(" + ")}`;
     elements.playerCooldowns.textContent = formatCooldownSummary(combatant);
     elements.playerDerived.textContent = `Max HP ${combatant.maxHp}; Max Mana ${combatant.maxMana}; Max Stamina ${combatant.maxStamina}; ${getAcFormula(combatant)}`;
@@ -3796,6 +3952,7 @@ function renderInventory() {
   const inventory = state.player.inventory;
   normalizePlayerInventory(state.player);
   applyNormalizedCurrency(inventory.currency, inventory.currency);
+  const canManageGear = isBetweenBattles();
   const ownedConsumables = Object.values(consumableItems).filter((item) => (state.player.inventory.consumables[item.id] ?? 0) > 0);
   const consumableMarkup = ownedConsumables.length
     ? ownedConsumables
@@ -3805,28 +3962,72 @@ function renderInventory() {
           const actionBlocked = usingInCombat && !canUseMinorAction();
           const disabled = !useState.usable || actionBlocked;
           const reason = actionBlocked ? "No Minor Action available" : useState.reason;
-          const expanded = state.expandedInventoryItems.has(item.id);
           const quantity = state.player.inventory.consumables[item.id] ?? 0;
+          const sellValue = getConsumableSellValue(item);
           return `
-            <div class="item-card inventory-item-card${expanded ? " expanded" : ""}">
-              <button type="button" class="item-expand-badge" data-toggle-inventory-item="${item.id}" aria-expanded="${expanded}" aria-label="Show ${item.name} details">+</button>
-              <button type="button" class="item-icon-button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}" aria-label="Use ${item.name}">
-                <span class="sr-only">${item.name}</span>
-                ${renderItemIcon(item)}
-                <span class="item-count-badge">${quantity}</span>
-              </button>
-              <div class="item-card-details" ${expanded ? "" : "hidden"}><strong>${item.name}</strong>${formatItemDetails(item)}</div>
+            <div class="item-card inventory-item-card">
+              <span class="inventory-item-icon-wrap">
+                <button type="button" class="item-icon-button" data-use-item="${item.id}" ${disabled ? "disabled" : ""} title="${reason}" aria-label="Use ${item.name}">
+                  <span class="sr-only">${item.name}</span>
+                  ${renderItemIcon(item)}
+                  <span class="item-count-badge">${quantity}</span>
+                </button>
+                <button type="button" class="item-info-badge" data-info-item="${item.id}" aria-label="Show ${item.name} info">i</button>
+              </span>
+              ${
+                canManageGear
+                  ? `<button type="button" class="item-sell-button" data-sell-item="${item.id}" title="Sell ${item.name}">Sell ${renderCurrencyWithIcons(sellValue, { compact: true })}</button>`
+                  : ""
+              }
             </div>
           `;
         })
         .join("")
     : '<p class="muted">No consumables on hand.</p>';
-    const ownedWeapons = inventory.weapons.length
-      ? `<div class="weapon-chip-row">${inventory.weapons.map((id) => renderWeaponImage(id, safeEntityName(weapons, id), { compact: true })).join("")}</div>`
-      : '<p class="muted">No weapons owned.</p>';
+  const ownedWeapons = inventory.weapons.length
+    ? `<div class="inventory-weapon-list">${inventory.weapons
+        .map((id) => {
+          const weapon = weapons[id];
+          const weaponName = safeEntityName(weapons, id);
+          const equipped = state.player.weapon?.id === id;
+          const classValid = getValidWeaponIdsForClass(state.player.classDef?.id).includes(id);
+          const equipDisabled = !canManageGear || equipped || !classValid;
+          const sellDisabled = id === "unarmed";
+          const equipTitle = equipped
+            ? "Currently equipped"
+            : !classValid
+              ? `${weaponName} is not available to ${state.player.classDef?.name ?? "this class"}`
+              : canManageGear
+                ? `Equip ${weaponName}`
+                : "Can only equip between battles";
+          return `
+            <div class="inventory-weapon-card">
+              <div class="inventory-weapon-main">
+                ${renderWeaponImage(id, weaponName, { compact: true, showName: false, size: "lg" })}
+                <div>
+                  <strong>${weaponName}</strong>
+                  <span class="item-meta">${weapon?.special ?? "No special effect"}</span>
+                  <span class="item-meta">${equipped ? "Equipped" : classValid ? "Available" : "Class restricted"}</span>
+                </div>
+              </div>
+              <div class="inventory-card-actions">
+                <button type="button" data-equip-weapon="${id}" ${equipDisabled ? "disabled" : ""} title="${escapeAttribute(equipTitle)}">Equip</button>
+                ${
+                  canManageGear
+                    ? `<button type="button" data-sell-weapon="${id}" ${sellDisabled ? "disabled" : ""} title="${id === "unarmed" ? "Unarmed cannot be sold" : "Sell weapon"}">Sell ${renderCurrencyWithIcons(getWeaponSellValue(id), { compact: true })}</button>`
+                    : ""
+                }
+              </div>
+            </div>
+          `;
+        })
+        .join("")}</div>`
+    : '<p class="muted">No weapons owned.</p>';
   const ownedArmor = inventory.armor.length
-    ? inventory.armor.map((id) => safeEntityName(armors, id)).join(', ')
-    : 'None';
+    ? `<div class="armor-chip-row">${inventory.armor
+        .map((id) => renderArmorImage(id, safeEntityName(armors, id), { compact: true }))
+        .join("")}</div>`
+    : '<p class="muted">No armor owned.</p>';
   const equipmentMarkup = `
     <div class="inventory-section">
       <h3>Currency</h3>
@@ -3836,8 +4037,17 @@ function renderInventory() {
         <h3>Owned weapons</h3>
         ${ownedWeapons}
       </div>
-      <p>Owned armor: ${ownedArmor}</p>
-      <p>Equipped: ${renderWeaponImage(state.player.weapon.id, state.player.weapon.name, { compact: true })}, ${state.player.armor.name}</p>
+      <div class="inventory-section">
+        <h3>Owned armor</h3>
+        ${ownedArmor}
+      </div>
+      <p class="equipment-line">
+        Equipped:
+        ${renderWeaponImage(state.player.weapon.id, state.player.weapon.name, { compact: true, showName: false, size: "lg" })}
+        <span>${state.player.weapon.name}</span>
+        ${renderArmorImage(state.player.armor.id, state.player.armor.name, { compact: true, showName: false, size: "lg" })}
+        <span>${state.player.armor.name}</span>
+      </p>
     <div class="inventory-section">
       <h3>Consumables</h3>
       <div class="item-list">${consumableMarkup}</div>
@@ -3876,7 +4086,7 @@ function renderShop() {
     `;
     elements.shopList.append(row);
   });
-  elements.innButton.disabled = state.gameState !== GAME_STATES.betweenBattles || !canAffordCurrency(inventory.currency, INN_PRICE);
+  updateInnButtonState();
 }
 
 function renderResults() {
@@ -3956,6 +4166,10 @@ function hideProgressionModal() {
 }
 
 function switchPlayerTab(tabName) {
+  if (tabName === "codex") {
+    showCodexModal();
+    return;
+  }
   document.querySelectorAll(".tab-button").forEach((button) => {
     button.classList.toggle("active", button.dataset.tab === tabName);
   });
@@ -4136,7 +4350,7 @@ function renderCodex() {
         classDef.name,
         classDef.roleTag ?? "Class",
         classDef.shortDescription,
-        [`Weapon hit ${signed(classDef.weaponHitBonus)}`, `Spell hit ${signed(classDef.spellHitBonus)}`, `AC ${signed(classDef.acBonus)}`],
+        [`Weapon hit ${signed(classDef.weaponHitBonus)}`, `Spell hit ${signed(classDef.spellHitBonus)}`, `Defense ${signed(classDef.acBonus)}`],
         [classDef.playstyle, classDef.tooltipSummary]
       )
     );
@@ -4176,10 +4390,17 @@ function renderCodex() {
           name: item.name,
           use: item.description,
           cost: formatCurrencyCompact(item.cost),
+          type: "Consumable",
         })),
-        { name: "Inn Stay", use: "Restore HP, Mana, and Stamina, clear cooldowns, and remove temporary negative effects.", cost: formatCurrencyCompact(INN_PRICE) },
+        ...["none", "light", "medium", "heavy"].map((armorId) => ({
+          name: renderArmorImage(armorId, armors[armorId].name, { size: "sm" }),
+          use: `Armor. Defense bonus ${signed(armors[armorId].acBonus)}${Object.keys(armors[armorId].checkBonuses).length ? "; affects checks." : "."}`,
+          cost: "Class assigned",
+          type: "Armor",
+        })),
+        { name: "Inn Stay", use: "Restore HP, Mana, and Stamina, clear cooldowns, and remove temporary negative effects.", cost: formatCurrencyCompact(INN_PRICE), type: "Service" },
       ],
-      (item) => createCodexCard(item.name, `Cost: ${item.cost}`, item.use)
+      (item) => createCodexCard(item.name, item.type === "Consumable" || item.type === "Service" ? `Cost: ${item.cost}` : item.cost, item.use, [item.type])
     );
   } else {
     content = renderCodexCards(Object.entries(statusDefinitions), ([statusId, status]) =>
@@ -4360,6 +4581,7 @@ function useSelectedSkill() {
 }
 
 function renderInitiative() {
+  if (!elements.initiativeList) return;
   elements.initiativeList.innerHTML = "";
   if (!state.initiative?.length) {
     return;
@@ -4447,7 +4669,7 @@ function renderCombat() {
     elements.majorActionStatus.textContent = "-";
     elements.minorActionStatus.textContent = "-";
     setActionButtons(true);
-    elements.innButton.disabled = !canAffordCurrency(state.player.inventory.currency, INN_PRICE);
+    updateInnButtonState();
     elements.nextEncounterButton.hidden = false;
     elements.nextEncounterButton.disabled = state.pendingLevelUps > 0;
     return;
@@ -4477,6 +4699,7 @@ function renderCombat() {
   elements.endTurnButton.disabled = !playerTurnActive;
   elements.clearSkillButton.hidden = !selectedSkill || !playerTurnActive;
   elements.innButton.disabled = true;
+  elements.innButton.title = "Stay at the Inn is available between battles.";
   elements.nextEncounterButton.hidden = true;
 }
 
@@ -4509,7 +4732,7 @@ async function startNextEncounter() {
   rollInitiative();
   state.progress.battlesFought += 1;
   addLog(`New encounter: ${state.enemy.name} level ${state.enemy.level}.`);
-  addLog(`${state.enemy.name} AC: ${getAcFormula(state.enemy)}.`);
+  addLog(`${state.enemy.name} Defense: ${getAcFormula(state.enemy)}.`);
   await saveAdventure("combat start");
   renderCombat();
   maybeRunEnemyTurn();
@@ -4667,13 +4890,13 @@ function resolveAttack(attacker, attack = attacker.weapon, options = {}) {
     const sourceName = options.skill?.name ?? attack.name;
     const critText = isCrit ? " CRITICAL HIT!" : "";
 
-    addLog(`${attacker.name} uses ${sourceName}: ${formatRollMath(attackDie, parts)} vs ${defender.name} AC ${defenderAc} -> HIT.${critText} Damage ${formatDice(damageDice)} (${damageRoll.rolls.join(", ")})${bonusText} = ${traitResult.finalDamage} ${attack.damageType}.${traitText}`);
+    addLog(`${attacker.name} uses ${sourceName}: ${formatRollMath(attackDie, parts)} vs ${defender.name} Defense ${defenderAc} -> HIT.${critText} Damage ${formatDice(damageDice)} (${damageRoll.rolls.join(", ")})${bonusText} = ${traitResult.finalDamage} ${attack.damageType}.${traitText}`);
     maybeApplyStatus(attacker, defender, attack.status, sourceName, options.skill ?? attack);
     checkWinner();
     return;
   }
 
-  addLog(`${attacker.name} uses ${options.skill?.name ?? attack.name}: ${formatRollMath(attackDie, parts)} vs ${defender.name} AC ${defenderAc} -> MISS.`);
+  addLog(`${attacker.name} uses ${options.skill?.name ?? attack.name}: ${formatRollMath(attackDie, parts)} vs ${defender.name} Defense ${defenderAc} -> MISS.`);
 }
 
 function usePotion() {
@@ -4788,6 +5011,70 @@ function buyConsumable(itemId) {
   void saveAdventure("shop purchase");
 }
 
+function equipOwnedWeapon(weaponId) {
+  if (!state.player) return;
+  if (!isBetweenBattles()) {
+    addLog("Weapons can only be swapped between battles.");
+    renderCombat();
+    return;
+  }
+  if (!canEquipWeaponId(state.player, weaponId)) {
+    addLog(`${state.player.name} cannot equip ${safeEntityName(weapons, weaponId)}.`);
+    renderCombat();
+    return;
+  }
+  state.player.weapon = weapons[weaponId];
+  addLog(`${state.player.name} equips ${state.player.weapon.name}.`);
+  renderCombat();
+  void saveAdventure("equipment");
+}
+
+function sellConsumableItem(itemId) {
+  if (!state.player || !isBetweenBattles()) return;
+  const item = consumableItems[itemId];
+  const quantity = state.player.inventory.consumables[itemId] ?? 0;
+  if (!item || quantity <= 0) return;
+  const sellValue = getConsumableSellValue(item);
+  if (currencyToCopper(sellValue) <= 0) return;
+  state.player.inventory.consumables[itemId] = quantity - 1;
+  addCurrency(state.player.inventory, sellValue);
+  addLog(`Sold ${item.name} for ${formatCurrencyCompact(sellValue)}.`);
+  renderCombat();
+  void saveAdventure("sale");
+}
+
+function sellOwnedWeapon(weaponId) {
+  if (!state.player || !isBetweenBattles()) return;
+  const inventory = state.player.inventory;
+  const weaponIndex = inventory.weapons.indexOf(weaponId);
+  if (weaponIndex < 0 || weaponId === "unarmed") return;
+  const weaponName = safeEntityName(weapons, weaponId);
+  const equipped = state.player.weapon?.id === weaponId;
+  if (equipped) {
+    const fallbackWeaponId = findFallbackWeaponId(state.player, weaponId);
+    if (fallbackWeaponId) {
+      const confirmed = window.confirm(`Sell equipped ${weaponName}? ${safeEntityName(weapons, fallbackWeaponId)} will be equipped instead.`);
+      if (!confirmed) return;
+      state.player.weapon = weapons[fallbackWeaponId];
+    } else if (getValidWeaponIdsForClass(state.player.classDef?.id).includes("unarmed")) {
+      const confirmed = window.confirm(`Sell equipped ${weaponName}? You will switch to Unarmed.`);
+      if (!confirmed) return;
+      if (!inventory.weapons.includes("unarmed")) inventory.weapons.push("unarmed");
+      state.player.weapon = weapons.unarmed;
+    } else {
+      addLog(`${weaponName} cannot be sold without another valid weapon available.`);
+      renderCombat();
+      return;
+    }
+  }
+  inventory.weapons.splice(weaponIndex, 1);
+  const sellValue = getWeaponSellValue(weaponId);
+  addCurrency(inventory, sellValue);
+  addLog(`Sold ${weaponName} for ${formatCurrencyCompact(sellValue)}.`);
+  renderCombat();
+  void saveAdventure("sale");
+}
+
 function checkWinner() {
   if (!living(state.enemy)) {
     state.winner = state.player;
@@ -4846,6 +5133,11 @@ async function handleCharacterDeath(snapshot) {
 
 function stayAtInn() {
   if (!state.player || state.gameState !== GAME_STATES.betweenBattles) return;
+  if (!playerNeedsInnRest(state.player)) {
+    addLog("You are already fully rested.");
+    renderCombat();
+    return;
+  }
   if (!spendCurrency(state.player.inventory, INN_PRICE)) {
     addLog(`${state.player.name} cannot afford the inn.`);
     renderCombat();
@@ -5003,7 +5295,7 @@ function getSubclassPresentation(classId, subclassId) {
   const subclass = subclasses[classId]?.[subclassId];
   if (!subclass) return { summary: "Subclass path.", features: [] };
   const features = [];
-  if (subclass.acBonus) features.push(`${signed(subclass.acBonus)} AC`);
+  if (subclass.acBonus) features.push(`${signed(subclass.acBonus)} Defense`);
   if (subclass.damageBonus) features.push(`${signed(subclass.damageBonus)} damage`);
   Object.entries(subclass.checkBonuses ?? {}).forEach(([stat, bonus]) => {
     if (bonus) features.push(`${signed(bonus)} ${titleCase(stat)} checks`);
@@ -5292,15 +5584,32 @@ elements.infoCloseButton.addEventListener("click", hideInfoModal);
 elements.codexCloseButton.addEventListener("click", hideCodexModal);
 elements.innButton.addEventListener("click", stayAtInn);
 elements.inventoryList.addEventListener("click", (event) => {
+  const equipWeaponButton = event.target.closest("[data-equip-weapon]");
+  if (equipWeaponButton) {
+    equipOwnedWeapon(equipWeaponButton.dataset.equipWeapon);
+    return;
+  }
+  const sellWeaponButton = event.target.closest("[data-sell-weapon]");
+  if (sellWeaponButton) {
+    sellOwnedWeapon(sellWeaponButton.dataset.sellWeapon);
+    return;
+  }
+  const sellItemButton = event.target.closest("[data-sell-item]");
+  if (sellItemButton) {
+    sellConsumableItem(sellItemButton.dataset.sellItem);
+    return;
+  }
+  const infoItemButton = event.target.closest("[data-info-item]");
+  if (infoItemButton) {
+    const item = consumableItems[infoItemButton.dataset.infoItem];
+    if (item) showInfoModal(item.name, formatItemInfoBody(item));
+    return;
+  }
   const button = event.target.closest("[data-use-item]");
   if (button) {
     useConsumableItem(button.dataset.useItem);
     return;
   }
-  const toggle = event.target.closest("[data-toggle-inventory-item]");
-  if (!toggle) return;
-  toggleExpandedItem("expandedInventoryItems", toggle.dataset.toggleInventoryItem);
-  renderInventory();
 });
 elements.shopList.addEventListener("click", (event) => {
   const button = event.target.closest("[data-buy-item]");
@@ -5376,6 +5685,9 @@ document.addEventListener("click", (event) => {
 
 document.addEventListener("pointerdown", resumeScreenMusicFromInteraction);
 document.addEventListener("keydown", resumeScreenMusicFromInteraction);
+document.addEventListener("visibilitychange", handleMusicFocusChange);
+window.addEventListener("blur", handleMusicFocusChange);
+window.addEventListener("beforeunload", pauseAllMusicImmediately);
 [elements.battleMusic, elements.battleMusicAlt].forEach((audio) => {
   audio?.addEventListener("ended", () => {
     if (state.gameState !== GAME_STATES.inCombat || elements.combatScreen.hidden) return;

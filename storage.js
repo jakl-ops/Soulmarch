@@ -128,14 +128,50 @@ function normalizeCurrency(currency = {}) {
   };
 }
 
+const MEMORIAL_ENDINGS = [
+  "May their legend always be remembered.",
+  "Their march has ended, but their story remains.",
+  "Let their name be carved in gold and shadow.",
+  "They fell, but the road remembers.",
+  "Their soul marches on.",
+  "Rest now, brave wanderer.",
+];
+
+function formatEnemyType(enemyType) {
+  return String(enemyType)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function pluralizeEnemyType(enemyType, count) {
+  const label = formatEnemyType(enemyType);
+  if (count === 1) return label;
+  return label.endsWith("s") ? label : `${label}s`;
+}
+
+function joinMemorialList(parts) {
+  if (!parts.length) return "no foes";
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts.at(-1)}`;
+}
+
+function chooseMemorialEnding() {
+  return MEMORIAL_ENDINGS[Math.floor(Math.random() * MEMORIAL_ENDINGS.length)];
+}
+
 function buildGraveyardSummary(snapshot) {
   const player = snapshot.player ?? {};
+  const name = player.name ?? "Unknown Adventurer";
+  const level = player.level ?? 1;
   const stats = snapshot.progress?.killStats ?? {};
   const fragments = Object.entries(stats)
     .filter(([, count]) => count > 0)
-    .map(([enemyType, count]) => `${count} ${enemyType}${count === 1 ? "" : "s"}`);
-  const killsText = fragments.length ? fragments.join(", ") : "no foes";
-  return `${player.name} made it to level ${player.level}, killed ${killsText}. May their legend always be remembered.`;
+    .map(([enemyType, count]) => `${count} ${pluralizeEnemyType(enemyType, count)}`);
+  const killsText = joinMemorialList(fragments);
+  return `${name} made it to level ${level}, killed ${killsText}. ${chooseMemorialEnding()}`;
 }
 
 function createUser(username, password) {

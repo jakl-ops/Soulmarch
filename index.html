@@ -152,7 +152,7 @@
             <p class="stat">Stats: <span id="builderSummaryStats"></span></p>
             <p class="stat">Weapon: <span id="builderSummaryWeapon"></span></p>
             <p class="stat">Armor: <span id="builderSummaryArmor"></span></p>
-            <p class="stat">AC: <span id="builderAc"></span></p>
+            <p class="stat">Defense: <span id="builderAc"></span></p>
             <p class="stat">Attack: <span id="builderWeaponAttack"></span></p>
             <p class="stat">Damage: <span id="builderWeaponDamage"></span></p>
             <p class="stat">Special: <span id="builderWeaponSpecial"></span></p>
@@ -212,8 +212,9 @@
 
             <nav class="tabs" aria-label="Player panel tabs">
               <button class="tab-button active" type="button" data-tab="overview">Overview</button>
-              <button class="tab-button" type="button" data-tab="details">Details</button>
               <button class="tab-button" type="button" data-tab="inventory">Inventory</button>
+              <button class="tab-button" type="button" data-tab="codex">Codex</button>
+              <button class="tab-button" type="button" data-tab="details">Character</button>
             </nav>
 
             <section id="overviewTab" class="tab-panel">
@@ -223,7 +224,7 @@
                 <p class="stat">Subclass: <span id="playerSubclass"></span></p>
                 <p class="stat">Stats: <span id="playerStats"></span></p>
                 <p class="stat">Wealth: <span id="playerWealth"></span></p>
-                <p class="stat">AC: <span id="playerAc"></span></p>
+                <p class="stat">Defense: <span id="playerAc"></span></p>
                 <p class="stat">Weapon: <span id="playerWeapon"></span></p>
                 <p class="stat">Armor: <span id="playerArmor"></span></p>
                 <p class="stat">Status: <span id="playerStatuses"></span></p>
@@ -270,15 +271,10 @@
                   <p class="stat">Stats: <span id="enemyStats"></span></p>
                   <p class="stat">Weapon: <span id="enemyWeapon"></span></p>
                   <p class="stat">Resist / Weak: <span id="enemyTraits"></span></p>
-                  <p class="stat">AC: <span id="enemyAc"></span></p>
+                  <p class="stat">Defense: <span id="enemyAc"></span></p>
                   <p class="stat">Attack: <span id="enemyAttack"></span></p>
                   <p class="stat">Damage: <span id="enemyDamage"></span></p>
                 </details>
-              </section>
-
-              <section class="battle-panel-section initiative-panel">
-                <h3>Initiative</h3>
-                <ol id="initiativeList"></ol>
               </section>
 
               <section class="battle-panel-section actions-panel">
