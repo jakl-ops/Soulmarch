@@ -101,6 +101,8 @@ const weaponImages = {
   staff: "assets/weapons/staff.png",
   dagger: "assets/weapons/dagger.png",
   unarmed: "assets/weapons/unarmed.png",
+  wand: "assets/weapons/wand.png",
+  flameWand: "assets/weapons/flame-wand.png",
 };
 
 const ARMOR_IMAGE_FALLBACK = "assets/armor/no-armor.png";
@@ -122,6 +124,7 @@ const weaponSellValues = {
   staff: { copper: 5, silver: 0, gold: 0 },
   dagger: { copper: 5, silver: 0, gold: 0 },
   unarmed: { copper: 0, silver: 0, gold: 0 },
+  wand: { copper: 5, silver: 0, gold: 0 },
   flameWand: { copper: 0, silver: 2, gold: 0 },
   crudeBlade: { copper: 5, silver: 0, gold: 0 },
   boneClub: { copper: 4, silver: 0, gold: 0 },
@@ -419,7 +422,7 @@ const statTooltips = {
 
 const levelUpStatDescriptions = {
   mind:
-    "+1 Mind — Improves perception, deception, and mental abilities. Powers Mystic skills and increases effectiveness of Mind-based actions.",
+    "+1 Mind — Improves perception, deception, and mental abilities. Powers Psion skills and increases effectiveness of Mind-based actions.",
   body:
     "+1 Body — Improves weapon attacks, survivability, and physical checks. Increases HP and boosts martial effectiveness.",
   soul:
@@ -443,7 +446,7 @@ const subclassDescriptions = {
       features: ["+2 elemental damage", "Empowers fire, ice, and lightning"],
     },
     sage: {
-      summary: "Mystic scholar who sharpens insight and control.",
+      summary: "Arcane scholar who sharpens insight and control.",
       features: ["+2 Mind checks"],
     },
   },
@@ -515,6 +518,7 @@ const classes = {
     name: "Warrior",
     icon: "🛡️",
     shortDescription: "Durable martial veteran.",
+    creationTagline: "Strike first. Strike hard.",
     tooltipSummary: "+2 weapon hit, +1 Defense, +1 damage reduction, +2 Body checks",
     weaponHitBonus: 2,
     spellHitBonus: 0,
@@ -533,6 +537,7 @@ const classes = {
     name: "Magician",
     icon: "🔮",
     shortDescription: "Careful arcane caster.",
+    creationTagline: "Study the impossible. Shape it.",
     tooltipSummary: "+2 spell hit, +2 Soul checks, efficient control magic",
     weaponHitBonus: 0,
     spellHitBonus: 2,
@@ -548,9 +553,10 @@ const classes = {
   },
   monk: {
     id: "monk",
-    name: "Monk",
+    name: "Ascendant",
     icon: "🥋",
-    shortDescription: "Mobile fighter with inner discipline.",
+    shortDescription: "Mobile fighter pursuing physical and spiritual perfection.",
+    creationTagline: "Perfect the body. Master the self.",
     tooltipSummary: "+1 weapon hit, +1 Defense, +1 first attack hit, +1 Body checks, +1 Soul checks",
     weaponHitBonus: 1,
     spellHitBonus: 0,
@@ -561,7 +567,7 @@ const classes = {
     checkBonuses: { mind: 0, body: 1, soul: 1 },
     hasSpells: false,
     skillIds: ["flurry", "innerFocus"],
-    playstyle: "Agile hybrid that mixes momentum attacks with self-buffing defense.",
+    playstyle: "Agile hybrid that mixes momentum attacks with disciplined self-buffing defense.",
     roleTag: "Hybrid",
   },
   guardian: {
@@ -569,6 +575,7 @@ const classes = {
     name: "Guardian",
     icon: "🧱",
     shortDescription: "Wall-like defender built to absorb pressure.",
+    creationTagline: "Stand firm. Endure everything.",
     tooltipSummary: "+3 Defense, +1 Body checks, reduce incoming damage by 2",
     weaponHitBonus: 0,
     spellHitBonus: 0,
@@ -584,9 +591,10 @@ const classes = {
   },
   rogue: {
     id: "rogue",
-    name: "Rogue",
+    name: "Stalker",
     icon: "🗡️",
-    shortDescription: "Precision striker who punishes openings.",
+    shortDescription: "Precision striker who moves unseen and punishes openings.",
+    creationTagline: "Move unseen. Kill clean.",
     tooltipSummary: "+1 weapon hit, +2 Mind checks, +2 first-hit attack bonus, +1 damage",
     weaponHitBonus: 1,
     spellHitBonus: 0,
@@ -597,14 +605,15 @@ const classes = {
     checkBonuses: { mind: 2, body: 0, soul: 0 },
     hasSpells: false,
     skillIds: ["quickStab", "feint"],
-    playstyle: "Opportunist who spikes damage when fights are short and controlled.",
+    playstyle: "Patient hunter who spikes damage when fights are short and controlled.",
     roleTag: "Martial",
   },
   sorcerer: {
     id: "sorcerer",
-    name: "Sorcerer",
+    name: "Channeler",
     icon: "⚡",
-    shortDescription: "Explosive elemental caster.",
+    shortDescription: "Explosive conduit for unstable elemental power.",
+    creationTagline: "Power flows through you. Control is optional.",
     tooltipSummary: "+3 spell hit, +1 Soul checks, +1 spell damage, -1 Defense",
     weaponHitBonus: 0,
     spellHitBonus: 3,
@@ -615,14 +624,15 @@ const classes = {
     checkBonuses: { mind: 0, body: 0, soul: 1 },
     hasSpells: true,
     skillIds: ["sparkSurge", "frostMark"],
-    playstyle: "High-damage caster that trades safety for stronger spell bursts.",
+    playstyle: "High-damage caster that trades safety for stronger surges of power.",
     roleTag: "Caster",
   },
   paladin: {
     id: "paladin",
-    name: "Paladin",
+    name: "Justicar",
     icon: "✨",
-    shortDescription: "Holy knight with steady mixed offense.",
+    shortDescription: "Judgment-bound knight with steady mixed offense.",
+    creationTagline: "Judgment walks beside you.",
     tooltipSummary: "+1 weapon hit, +1 spell hit, +1 Defense, +1 Soul checks, +1 damage reduction",
     weaponHitBonus: 1,
     spellHitBonus: 1,
@@ -633,14 +643,15 @@ const classes = {
     checkBonuses: { mind: 0, body: 0, soul: 1 },
     hasSpells: true,
     skillIds: ["smite", "blessingStrike"],
-    playstyle: "Hybrid front-liner that blends durability, support, and burst turns.",
+    playstyle: "Hybrid front-liner that blends durability, support, and righteous burst turns.",
     roleTag: "Hybrid",
   },
   mystic: {
     id: "mystic",
-    name: "Mystic",
+    name: "Psion",
     icon: "🧠",
     shortDescription: "Psionic adept who fights with pure Mind.",
+    creationTagline: "Know the mind. Break the will.",
     tooltipSummary: "+2 spell hit, +2 Mind checks, +1 Defense, precise control skills",
     weaponHitBonus: 0,
     spellHitBonus: 2,
@@ -786,11 +797,27 @@ const weapons = {
     damageDice: { count: 1, sides: 4 },
     damageBonus: 0,
     damageType: "physical",
-    special: "Monk gets +2 hit bonus",
+    special: "Ascendant gets +2 hit bonus",
     critMin: 20,
     monkHitBonus: 2,
     initiativeBonus: 0,
     status: null,
+  },
+  wand: {
+    id: "wand",
+    name: "Wand",
+    attackKind: "spell",
+    stat: "soul",
+    attackBonus: 1,
+    damageDice: { count: 1, sides: 4 },
+    damageBonus: 0,
+    damageType: "lightning",
+    special: "+1 spell attack; basic arcane focus",
+    critMin: 20,
+    initiativeBonus: 0,
+    status: null,
+    spellAttackBonus: 1,
+    sellValue: { copper: 5, silver: 0, gold: 0 },
   },
   flameWand: {
     id: "flameWand",
@@ -905,10 +932,29 @@ const classWeaponIds = {
   guardian: ["sword", "axe", "staff", "unarmed"],
   rogue: ["sword", "bow", "dagger", "unarmed"],
   monk: ["staff", "dagger", "unarmed"],
-  magician: ["staff", "dagger", "unarmed"],
-  sorcerer: ["staff", "dagger", "unarmed"],
+  magician: ["staff", "wand", "dagger", "unarmed"],
+  sorcerer: ["staff", "wand", "dagger", "unarmed"],
   paladin: ["sword", "axe", "staff", "unarmed"],
   mystic: ["staff", "dagger", "unarmed"],
+};
+
+const playableClassIds = ["guardian", "warrior", "rogue", "magician", "sorcerer", "monk", "paladin", "mystic"];
+
+const legacyClassAliases = {
+  guardian: "guardian",
+  warrior: "warrior",
+  rogue: "rogue",
+  stalker: "rogue",
+  mage: "magician",
+  magician: "magician",
+  sorcerer: "sorcerer",
+  channeler: "sorcerer",
+  monk: "monk",
+  ascendant: "monk",
+  paladin: "paladin",
+  justicar: "paladin",
+  mystic: "mystic",
+  psion: "mystic",
 };
 
 const spells = {
@@ -1720,12 +1766,12 @@ const skillUpgrades = {
 const classSkillTrees = {
   warrior: { id: "warrior", name: "Warrior", levels: { 1: { skills: ["powerStrike", "guardStance"] }, 2: { skills: ["hamstring"] }, 3: { subclass: true }, 4: { upgrades: ["powerStrikeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["crushingBlow"], upgrades: ["guardStanceMastery"] } } } },
   magician: { id: "magician", name: "Magician", levels: { 1: { skills: ["fireBolt", "arcaneShield"] }, 2: { skills: ["iceShard"] }, 3: { subclass: true }, 4: { upgrades: ["fireBoltMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["arcanePulse"], upgrades: ["arcaneShieldMastery"] } } } },
-  monk: { id: "monk", name: "Monk", levels: { 1: { skills: ["flurry", "innerFocus"] }, 2: { skills: ["risingPalm"] }, 3: { subclass: true }, 4: { upgrades: ["flurryMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["spiritStep"], upgrades: ["innerFocusMastery"] } } } },
+  monk: { id: "monk", name: "Ascendant", levels: { 1: { skills: ["flurry", "innerFocus"] }, 2: { skills: ["risingPalm"] }, 3: { subclass: true }, 4: { upgrades: ["flurryMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["spiritStep"], upgrades: ["innerFocusMastery"] } } } },
   guardian: { id: "guardian", name: "Guardian", levels: { 1: { skills: ["brace", "shieldSlam"] }, 2: { skills: ["ironBash"] }, 3: { subclass: true }, 4: { upgrades: ["braceMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["bulwarkRush"], upgrades: ["shieldSlamMastery"] } } } },
-  rogue: { id: "rogue", name: "Rogue", levels: { 1: { skills: ["quickStab", "feint"] }, 2: { skills: ["poisonEdge"] }, 3: { subclass: true }, 4: { upgrades: ["quickStabMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["shadowThrow"], upgrades: ["feintMastery"] } } } },
-  sorcerer: { id: "sorcerer", name: "Sorcerer", levels: { 1: { skills: ["sparkSurge", "frostMark"] }, 2: { skills: ["arcSurge"] }, 3: { subclass: true }, 4: { upgrades: ["sparkSurgeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["cinderBurst"], upgrades: ["frostMarkMastery"] } } } },
-  paladin: { id: "paladin", name: "Paladin", levels: { 1: { skills: ["smite", "blessingStrike"] }, 2: { skills: ["radiantWard"] }, 3: { subclass: true }, 4: { upgrades: ["smiteMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["sanctifiedBlade"], upgrades: ["blessingStrikeMastery"] } } } },
-  mystic: { id: "mystic", name: "Mystic", levels: { 1: { skills: ["mindSpike", "thoughtLock"] }, 2: { skills: ["psychicVeil"] }, 3: { subclass: true }, 4: { upgrades: ["mindSpikeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["mindLance"], upgrades: ["thoughtLockMastery"] } } } },
+  rogue: { id: "rogue", name: "Stalker", levels: { 1: { skills: ["quickStab", "feint"] }, 2: { skills: ["poisonEdge"] }, 3: { subclass: true }, 4: { upgrades: ["quickStabMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["shadowThrow"], upgrades: ["feintMastery"] } } } },
+  sorcerer: { id: "sorcerer", name: "Channeler", levels: { 1: { skills: ["sparkSurge", "frostMark"] }, 2: { skills: ["arcSurge"] }, 3: { subclass: true }, 4: { upgrades: ["sparkSurgeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["cinderBurst"], upgrades: ["frostMarkMastery"] } } } },
+  paladin: { id: "paladin", name: "Justicar", levels: { 1: { skills: ["smite", "blessingStrike"] }, 2: { skills: ["radiantWard"] }, 3: { subclass: true }, 4: { upgrades: ["smiteMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["sanctifiedBlade"], upgrades: ["blessingStrikeMastery"] } } } },
+  mystic: { id: "mystic", name: "Psion", levels: { 1: { skills: ["mindSpike", "thoughtLock"] }, 2: { skills: ["psychicVeil"] }, 3: { subclass: true }, 4: { upgrades: ["mindSpikeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["mindLance"], upgrades: ["thoughtLockMastery"] } } } },
 };
 
 const enemyTemplates = {
@@ -1880,6 +1926,7 @@ const elements = {
   playerDamage: document.querySelector("#playerDamage"),
   playerCooldowns: document.querySelector("#playerCooldowns"),
   playerDerived: document.querySelector("#playerDerived"),
+  detailsTab: document.querySelector("#detailsTab"),
   enemyNameHeading: document.querySelector("#enemyNameHeading"),
   enemyPortrait: document.querySelector("#enemyPortrait"),
   enemyHpBar: document.querySelector("#enemyHpBar"),
@@ -1927,6 +1974,10 @@ const elements = {
   codexButton: document.querySelector("#codexButton"),
   codexModal: document.querySelector("#codexModal"),
   codexCloseButton: document.querySelector("#codexCloseButton"),
+  characterButton: document.querySelector("#characterButton"),
+  deleteAdventureModal: document.querySelector("#deleteAdventureModal"),
+  cancelDeleteAdventureButton: document.querySelector("#cancelDeleteAdventureButton"),
+  confirmDeleteAdventureButton: document.querySelector("#confirmDeleteAdventureButton"),
   resetButton: document.querySelector("#resetButton"),
   diceLog: document.querySelector("#diceLog"),
 };
@@ -2141,6 +2192,7 @@ const state = {
   currentBattleTrack: "",
   activeMusicKey: null,
   musicSuppressedByFocus: false,
+  pendingDeleteAdventureId: null,
 };
 
 function roll(sides) {
@@ -2216,19 +2268,20 @@ function getEnemyPortrait(templateId) {
 
 function getClassPortraitPath(classId, genderId) {
   const normalizedGender = normalizeGender(genderId);
+  const normalizedClassId = normalizeClassId(classId);
   return (
-    CLASS_PORTRAITS[classId]?.[normalizedGender] ??
-    CLASS_PORTRAITS[classId]?.undisclosed ??
+    CLASS_PORTRAITS[normalizedClassId]?.[normalizedGender] ??
+    CLASS_PORTRAITS[normalizedClassId]?.undisclosed ??
     CLASS_PORTRAITS.warrior.undisclosed
   );
 }
 
 function getClassArmorId(classId) {
-  return classArmorIds[classId] ?? "none";
+  return classArmorIds[normalizeClassId(classId, "")] ?? "none";
 }
 
 function getValidWeaponIdsForClass(classId) {
-  return classWeaponIds[classId] ?? classWeaponIds.warrior;
+  return classWeaponIds[normalizeClassId(classId, "")] ?? classWeaponIds.warrior;
 }
 
 function getBuilderWeaponId(classId = state.builderSelectedClassId) {
@@ -2252,8 +2305,9 @@ function syncBuilderWeaponOptions(classId = state.builderSelectedClassId) {
 }
 
 function renderCharacterAvatar(classId, genderId, label, options = {}) {
-  const classDef = classes[classId];
-  const portraitPath = getClassPortraitPath(classId, genderId);
+  const normalizedClassId = normalizeClassId(classId);
+  const classDef = classes[normalizedClassId];
+  const portraitPath = getClassPortraitPath(normalizedClassId, genderId);
   const sizeClass = options.large ? " character-avatar-large" : options.small ? " character-avatar-small" : "";
   const alt = label ? `${label} portrait` : `${classDef?.name ?? "Character"} portrait`;
   return `<span class="character-avatar${sizeClass}"><img src="${portraitPath}" alt="${escapeAttribute(alt)}" loading="${
@@ -2695,11 +2749,36 @@ function activeScreen(screenName) {
     element.hidden = name !== screenName;
   });
   document.body.classList.toggle("auth-mode", screenName === "auth");
-  if (elements.codexButton) {
-    elements.codexButton.hidden = true;
-  }
+  updateTopNavigation(screenName);
   applySceneBackground(screenName);
   syncScreenMusic(screenName);
+}
+
+function currentScreenName() {
+  if (!elements.authScreen.hidden) return "auth";
+  if (!elements.hubScreen.hidden) return "hub";
+  if (!elements.graveyardScreen.hidden) return "graveyard";
+  if (!elements.builderScreen.hidden) return "builder";
+  if (!elements.combatScreen.hidden) return "combat";
+  return "auth";
+}
+
+function updateTopNavigation(screenName = currentScreenName()) {
+  const showNavigation = screenName !== "auth";
+  if (elements.resetButton) {
+    elements.resetButton.hidden = !showNavigation;
+    elements.resetButton.textContent = "Adventure Hub";
+    elements.resetButton.classList.toggle("active", screenName === "hub");
+  }
+  if (elements.codexButton) {
+    elements.codexButton.hidden = !showNavigation;
+    elements.codexButton.classList.toggle("active", !elements.codexModal?.hidden);
+  }
+  if (elements.characterButton) {
+    const showCharacter = showNavigation && screenName === "combat" && !!state.player;
+    elements.characterButton.hidden = !showCharacter;
+    elements.characterButton.classList.toggle("active", showCharacter && !elements.detailsTab?.hidden);
+  }
 }
 
 function getInitiativeSnapshot() {
@@ -2748,12 +2827,25 @@ function hydrateInitiative(snapshot) {
   }));
 }
 
+function normalizeClassId(value, fallback = "warrior") {
+  const raw = typeof value === "string" ? value : value?.id ?? value?.name ?? "";
+  const key = raw.trim().toLowerCase().replace(/[\s_-]+/g, "");
+  return legacyClassAliases[key] ?? (classes[raw]?.id ?? fallback);
+}
+
+function normalizePlayerClass(player) {
+  if (!player) return;
+  const classId = normalizeClassId(player.classDef ?? player.classId ?? player.class);
+  player.classDef = classes[classId] ?? classes.warrior;
+}
+
 function loadSnapshot(snapshot) {
   state.gameState = snapshot.gameState ?? GAME_STATES.betweenBattles;
-  state.builderSelectedClassId = snapshot.builderSelectedClassId ?? snapshot.player?.classDef?.id ?? "warrior";
+  state.builderSelectedClassId = normalizeClassId(snapshot.builderSelectedClassId ?? snapshot.player?.classDef ?? snapshot.player?.classId);
   state.builderGender = normalizeGender(snapshot.builderGender ?? snapshot.player?.gender ?? "undisclosed");
   state.player = snapshot.player;
   normalizePlayerIdentity(state.player);
+  normalizePlayerClass(state.player);
   normalizePlayerProgression(state.player);
   normalizePlayerInventory(state.player);
   if (state.player.inventory?.consumables?.healthPotion) {
@@ -2827,7 +2919,8 @@ async function createAdventureSave() {
 }
 
 function classNameFromId(classId) {
-  return classes[classId]?.name ?? classId;
+  const normalizedClassId = normalizeClassId(classId, classId);
+  return classes[normalizedClassId]?.name ?? classId;
 }
 
 function renderHub(adventures = state.activeAdventures, graveyardEntries = state.graveyardEntries) {
@@ -2840,25 +2933,29 @@ function renderHub(adventures = state.activeAdventures, graveyardEntries = state
     card.className = "panel soul-frame soul-metal-border soul-glass-bg hub-card";
     if (adventure) {
       card.innerHTML = `
-        <div class="hub-card-profile">
-          ${renderCharacterAvatar(adventure.classId, adventure.gender, adventure.name)}
-          <div class="hub-card-info">
-            <h3>${adventure.name}</h3>
-            <p class="stat">Class: ${classNameFromId(adventure.classId)}</p>
-            ${adventure.gender ? `<p class="stat">Gender: ${formatGenderLabel(adventure.gender)}</p>` : ""}
-            <p class="stat">Level: ${adventure.level}</p>
-          </div>
+        <div class="hub-card-portrait">
+          ${renderCharacterAvatar(adventure.classId, adventure.gender, adventure.name, { large: true })}
         </div>
-        <div class="action-buttons hub-card-actions">
-          <button type="button" data-continue="${adventure.id}">Continue</button>
-          <button type="button" data-delete="${adventure.id}">Delete</button>
+        <div class="hub-card-info">
+          <h3>${escapeAttribute(adventure.name)}</h3>
+          <p class="hub-card-class">${classNameFromId(adventure.classId)}</p>
+        </div>
+        <div class="hub-card-actions">
+          <button class="hub-continue-button" type="button" data-continue="${adventure.id}">Continue</button>
+          <button class="hub-delete-button" type="button" data-delete="${adventure.id}" aria-label="Delete ${escapeAttribute(
+            adventure.name
+          )}" title="Delete character">
+            <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+              <path d="M8 7h8m-7 0V5h6v2m-8 3 1 9h8l1-9M10 11v6m4-6v6" />
+            </svg>
+          </button>
         </div>
       `;
     } else {
       card.innerHTML = `
         <h3>Empty Slot</h3>
         <p class="stat">Create a new adventure.</p>
-        <div class="action-buttons hub-card-actions">
+        <div class="hub-card-actions empty-slot-actions">
           <button type="button" data-new-slot="${index}">Create New Adventure</button>
         </div>
       `;
@@ -2902,11 +2999,11 @@ async function refreshHub() {
         const snapshot = full.adventure?.snapshot;
         return {
           ...adventure,
-          classId: snapshot?.player?.classDef?.id ?? adventure.classId,
+          classId: normalizeClassId(snapshot?.player?.classDef ?? adventure.classId),
           gender: getSnapshotGender(snapshot),
         };
       } catch {
-        return { ...adventure, gender: normalizeGender(adventure.gender) };
+        return { ...adventure, classId: normalizeClassId(adventure.classId), gender: normalizeGender(adventure.gender) };
       }
     })
   );
@@ -2916,7 +3013,6 @@ async function refreshHub() {
   renderHub(adventures, data.graveyard);
   renderGraveyard(data.graveyard);
   activeScreen("hub");
-  elements.resetButton.hidden = true;
 }
 
 async function bootSession() {
@@ -2929,7 +3025,6 @@ async function bootSession() {
     }
   } catch {}
   activeScreen("auth");
-  elements.resetButton.hidden = true;
 }
 
 async function loginOrSignup(mode) {
@@ -3486,6 +3581,7 @@ function validateCharacter() {
 function formatClassTooltip(classDef) {
   const startingSkills = getClassStartingSkillIds(classDef.id);
   const lines = [
+    classDef.creationTagline,
     classDef.shortDescription,
     classDef.roleTag ? `Role ${classDef.roleTag}` : null,
     classDef.playstyle ? `Playstyle ${classDef.playstyle}` : null,
@@ -3539,7 +3635,7 @@ function formatStatsMarkup(stats) {
 
 function renderClassPills() {
   elements.classPills.innerHTML = "";
-  Object.values(classes).forEach((classDef) => {
+  playableClassIds.map((id) => classes[id]).filter(Boolean).forEach((classDef) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `class-pill${state.builderSelectedClassId === classDef.id ? " active" : ""}`;
@@ -3575,9 +3671,10 @@ function renderClassInfoPanel(classDef) {
     return;
   }
   const startingSkills = getClassStartingSkillIds(classDef.id);
-  elements.classInfoPanel.innerHTML = `<strong>${classDef.name}</strong>${classDef.shortDescription} ${classDef.roleTag ? `[${classDef.roleTag}] ` : ""}${
-    classDef.playstyle
-  } Bonuses: ${classDef.tooltipSummary}. Skills: ${startingSkills.map((id) => getSkillById(id)?.name ?? id).join(", ")}.`;
+  const tagline = classDef.creationTagline ? `<em>${classDef.creationTagline}</em> ` : "";
+  elements.classInfoPanel.innerHTML = `<strong>${classDef.name}</strong> ${tagline}${classDef.shortDescription} ${
+    classDef.roleTag ? `[${classDef.roleTag}] ` : ""
+  }${classDef.playstyle} Bonuses: ${classDef.tooltipSummary}. Skills: ${startingSkills.map((id) => getSkillById(id)?.name ?? id).join(", ")}.`;
 }
 
 function renderBuilder() {
@@ -4135,10 +4232,37 @@ function hideInfoModal() {
 function showCodexModal() {
   renderCodex();
   elements.codexModal.hidden = false;
+  updateTopNavigation();
 }
 
 function hideCodexModal() {
   elements.codexModal.hidden = true;
+  updateTopNavigation();
+}
+
+function showDeleteAdventureModal(adventureId) {
+  state.pendingDeleteAdventureId = adventureId;
+  elements.deleteAdventureModal.hidden = false;
+}
+
+function hideDeleteAdventureModal() {
+  state.pendingDeleteAdventureId = null;
+  elements.deleteAdventureModal.hidden = true;
+  elements.confirmDeleteAdventureButton.disabled = false;
+}
+
+async function confirmDeleteAdventure() {
+  const adventureId = state.pendingDeleteAdventureId;
+  if (!adventureId) return;
+  elements.confirmDeleteAdventureButton.disabled = true;
+  try {
+    await apiRequest(`/api/adventures/${adventureId}`, { method: "DELETE" });
+    hideDeleteAdventureModal();
+    await refreshHub();
+  } catch (error) {
+    elements.confirmDeleteAdventureButton.disabled = false;
+    elements.hubValidationText.textContent = error.message;
+  }
 }
 
 function hideRewardModal() {
@@ -4166,10 +4290,6 @@ function hideProgressionModal() {
 }
 
 function switchPlayerTab(tabName) {
-  if (tabName === "codex") {
-    showCodexModal();
-    return;
-  }
   document.querySelectorAll(".tab-button").forEach((button) => {
     button.classList.toggle("active", button.dataset.tab === tabName);
   });
@@ -4177,6 +4297,16 @@ function switchPlayerTab(tabName) {
     const panel = document.querySelector(`#${name}Tab`);
     panel.hidden = name !== tabName;
   });
+  updateTopNavigation();
+}
+
+function showCharacterTab() {
+  if (!state.player) return;
+  if (elements.combatScreen.hidden) {
+    activeScreen("combat");
+    renderCombat();
+  }
+  switchPlayerTab("details");
 }
 
 function getPlayerSkills() {
@@ -4345,7 +4475,7 @@ function renderCodex() {
 
   let content;
   if (state.activeCodexSection === "classes") {
-    content = renderCodexCards(Object.values(classes), (classDef) =>
+    content = renderCodexCards(playableClassIds.map((id) => classes[id]).filter(Boolean), (classDef) =>
       createCodexCard(
         classDef.name,
         classDef.roleTag ?? "Class",
@@ -5564,6 +5694,7 @@ document.querySelectorAll(".tab-button").forEach((button) => {
   button.addEventListener("click", () => switchPlayerTab(button.dataset.tab));
 });
 elements.codexButton.addEventListener("click", showCodexModal);
+elements.characterButton.addEventListener("click", showCharacterTab);
 
 elements.weaponSelect.addEventListener("change", renderBuilder);
 elements.startButton.addEventListener("click", startCombat);
@@ -5582,6 +5713,11 @@ elements.rewardContinueButton.addEventListener("click", hideRewardModal);
 elements.progressionContinueButton.addEventListener("click", hideProgressionModal);
 elements.infoCloseButton.addEventListener("click", hideInfoModal);
 elements.codexCloseButton.addEventListener("click", hideCodexModal);
+elements.cancelDeleteAdventureButton.addEventListener("click", hideDeleteAdventureModal);
+elements.confirmDeleteAdventureButton.addEventListener("click", confirmDeleteAdventure);
+elements.deleteAdventureModal.addEventListener("click", (event) => {
+  if (event.target === elements.deleteAdventureModal) hideDeleteAdventureModal();
+});
 elements.innButton.addEventListener("click", stayAtInn);
 elements.inventoryList.addEventListener("click", (event) => {
   const equipWeaponButton = event.target.closest("[data-equip-weapon]");
@@ -5647,9 +5783,11 @@ elements.backToHubButton.addEventListener("click", () => {
 });
 elements.adventureSlots.addEventListener("click", async (event) => {
   const target = event.target;
-  if (!(target instanceof HTMLElement)) return;
-  const continueId = target.dataset.continue;
-  const deleteId = target.dataset.delete;
+  if (!(target instanceof Element)) return;
+  const actionTarget = target.closest("[data-continue], [data-delete], [data-new-slot]");
+  if (!(actionTarget instanceof HTMLElement)) return;
+  const continueId = actionTarget.dataset.continue;
+  const deleteId = actionTarget.dataset.delete;
   if (continueId) {
     try {
       await continueAdventure(continueId);
@@ -5659,17 +5797,10 @@ elements.adventureSlots.addEventListener("click", async (event) => {
     return;
   }
   if (deleteId) {
-    if (window.confirm("Delete this adventure permanently?")) {
-      try {
-        await apiRequest(`/api/adventures/${deleteId}`, { method: "DELETE" });
-        await refreshHub();
-      } catch (error) {
-        elements.hubValidationText.textContent = error.message;
-      }
-    }
+    showDeleteAdventureModal(deleteId);
     return;
   }
-  if (target.dataset.newSlot !== undefined) {
+  if (actionTarget.dataset.newSlot !== undefined) {
     prepareNewAdventure();
   }
 });
