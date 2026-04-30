@@ -381,15 +381,16 @@ label {
 
 .graveyard-epitaph {
   position: absolute;
-  inset: 22% 17% 16%;
+  inset: 31% 17% 13%;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  color: #ece7dc;
+  color: #d1c7b6;
   text-shadow:
-    0 2px 2px rgba(0, 0, 0, 0.9),
-    0 0 12px rgba(0, 0, 0, 0.8);
+    0 1px 0 rgba(255, 255, 255, 0.08),
+    0 -1px 0 rgba(0, 0, 0, 0.85),
+    1px 0 0 rgba(0, 0, 0, 0.45);
 }
 
 .graveyard-epitaph h3 {
@@ -398,6 +399,13 @@ label {
   font-size: clamp(18px, 3vw, 30px);
   line-height: 1;
   overflow-wrap: anywhere;
+  color: #8f877a;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.1),
+    0 -1px 0 rgba(0, 0, 0, 0.95),
+    1px 0 0 rgba(0, 0, 0, 0.35),
+    -1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
 .graveyard-date {
@@ -1474,13 +1482,45 @@ label {
   background: #1f4638;
 }
 
-#codexButton.active {
+#codexButton.active,
+#characterButton.active,
+#inventoryButton.active {
   border-color: #8fd9b6;
   background: #1f4638;
 }
 
 .tab-panel {
-  min-height: 220px;
+  min-height: 0;
+}
+
+.panel-subheading {
+  margin: 14px 0 8px;
+}
+
+.player-level-summary {
+  white-space: nowrap;
+}
+
+.player-tier-line {
+  margin: -4px 0 8px;
+  color: #d4c2ee;
+  font-size: 13px;
+}
+
+.xp-bar-wrap {
+  margin: 0 0 10px;
+}
+
+.resource-bar.xp {
+  border-color: #6d42a8;
+  background: rgba(13, 6, 24, 0.82);
+  box-shadow:
+    inset 0 0 8px rgba(87, 34, 148, 0.32),
+    0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.resource-bar.xp .resource-fill {
+  background: linear-gradient(90deg, #21103c, #4d1a7d, #7b35bd);
 }
 
 .subtabs {
@@ -1513,6 +1553,93 @@ label {
   border-radius: 8px;
   background: #121619;
   padding: 12px;
+}
+
+.codex-card-main {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.codex-card-icon {
+  min-width: 0;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+}
+
+.codex-card-content {
+  min-width: 0;
+}
+
+.codex-fallback-icon {
+  width: 46px;
+  height: 46px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(222, 178, 81, 0.76);
+  background: rgba(20, 16, 25, 0.72);
+  color: #efd08e;
+  font-family: var(--font-display);
+  font-weight: 900;
+  box-shadow: inset 0 0 0 1px rgba(118, 78, 176, 0.62);
+}
+
+.codex-class-icon-wrap .class-icon-image {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.codex-class-icon-wrap span:not(.sr-only) {
+  display: none;
+}
+
+.codex-enemy-icon {
+  width: 48px;
+  height: 48px;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--enemy-portrait-accent, #6f7772);
+  background: var(--enemy-portrait-bg, rgba(20, 24, 28, 0.74));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.codex-enemy-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.codex-card-icon .weapon-image,
+.codex-card-icon .armor-image,
+.codex-card-icon .item-icon,
+.codex-card-icon .item-icon svg,
+.codex-card-icon .item-icon img {
+  width: 44px;
+  height: 44px;
+}
+
+.codex-status-icon {
+  display: inline-flex;
+  width: 52px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.codex-status-icon .status-pill {
+  margin: 0;
+  max-width: 52px;
+  padding: 3px 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .codex-card-header {
@@ -2015,6 +2142,24 @@ label {
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
 }
 
+.item-icon-fallback {
+  display: inline-grid;
+  place-items: center;
+}
+
+.item-info-hero {
+  display: grid;
+  place-items: center;
+  margin: 0 0 10px;
+}
+
+.item-info-hero .item-icon,
+.item-info-hero .item-icon img,
+.item-info-hero .item-icon svg {
+  width: 64px;
+  height: 64px;
+}
+
 .item-icon-minor {
   filter: saturate(0.95);
 }
@@ -2127,6 +2272,87 @@ label {
   line-height: 1;
   display: inline-grid;
   place-items: center;
+}
+
+.character-modal,
+.inventory-modal {
+  width: min(1120px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  padding-top: 18px;
+}
+
+.character-modal .panel-heading,
+.inventory-modal .panel-heading {
+  position: sticky;
+  top: -18px;
+  z-index: 2;
+  align-items: center;
+  padding: 0 0 12px;
+  margin: -18px 0 12px;
+  background: linear-gradient(rgba(18, 22, 30, 0.9) 82%, rgba(18, 22, 30, 0));
+}
+
+#characterCloseButton,
+#inventoryCloseButton {
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 20px;
+  line-height: 1;
+  display: inline-grid;
+  place-items: center;
+}
+
+.character-modal-body {
+  display: grid;
+  gap: 14px;
+}
+
+.character-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.character-profile h3 {
+  margin-bottom: 4px;
+}
+
+.character-profile p {
+  margin-bottom: 2px;
+}
+
+.character-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.character-detail-card {
+  border: 1px solid rgba(90, 101, 108, 0.72);
+  background: rgba(13, 17, 20, 0.46);
+  padding: 10px;
+}
+
+.character-detail-card h3 {
+  margin-bottom: 8px;
+}
+
+.character-detail-card p {
+  margin-bottom: 6px;
+}
+
+.character-detail-wide {
+  grid-column: 1 / -1;
+}
+
+.inventory-modal .plain-list {
+  display: grid;
+  gap: 12px;
 }
 
 .codex-modal .subtabs {
@@ -2325,9 +2551,59 @@ label {
   max-width: calc(100vw - 24px);
 }
 
+.modal.character-modal,
+.modal.inventory-modal {
+  width: min(1120px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+}
+
+.modal.inventory-modal {
+  width: min(980px, calc(100vw - 24px));
+}
+
+@media (max-width: 760px) {
+  .character-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .character-profile {
+    align-items: flex-start;
+  }
+}
+
 .modal button {
   margin-top: 14px;
   width: 100%;
+}
+
+.character-modal .panel-heading button,
+.inventory-modal .panel-heading button,
+.inventory-modal .item-icon-button,
+.inventory-modal .item-info-badge,
+.inventory-modal .item-sell-button,
+.inventory-modal .inventory-card-actions button {
+  margin-top: 0;
+}
+
+.character-modal .panel-heading button,
+.inventory-modal .panel-heading button {
+  width: auto;
+}
+
+.inventory-modal .item-icon-button {
+  width: 56px;
+  height: 56px;
+}
+
+.inventory-modal .item-info-badge {
+  width: 18px;
+  height: 18px;
+}
+
+.inventory-modal .item-sell-button,
+.inventory-modal .inventory-card-actions button {
+  width: auto;
 }
 
 .levelup-modal {

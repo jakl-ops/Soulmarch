@@ -1,6 +1,8 @@
 const STAT_LIMIT = 10;
 const MIN_STAT = 1;
-const MAX_STAT = 10;
+const CREATION_MAX_STAT = 10;
+const MAX_STAT = 60;
+const MAX_LEVEL = 200;
 const BASE_AC = 10;
 const BANDAGE_PRICE = { copper: 5, silver: 0, gold: 0 };
 const WARMING_SALVE_PRICE = { copper: 8, silver: 0, gold: 0 };
@@ -8,7 +10,6 @@ const ANTITOXIN_PRICE = { copper: 0, silver: 1, gold: 0 };
 const SOOTHING_BALM_PRICE = { copper: 8, silver: 0, gold: 0 };
 const SMELLING_SALTS_PRICE = { copper: 0, silver: 1, gold: 0 };
 const INN_PRICE = { copper: 0, silver: 3, gold: 0 };
-const XP_THRESHOLDS = [0, 150, 400, 900, 1800, 3200, 5000, 7500, 10500, 14000];
 // The run now moves through explicit phases so combat, rewards, item use, and defeat do not fight each other.
 const GAME_STATES = {
   characterCreation: "character_creation",
@@ -115,6 +116,26 @@ const armorImages = {
   hide: "assets/armor/light-armor.png",
   bone: "assets/armor/heavy-armor.png",
   robe: "assets/armor/no-armor.png",
+};
+
+const itemImages = {
+  antitoxin: "assets/items/antitoxin.png",
+  bandage: "assets/items/bandage.png",
+  minorHealthPotion: "assets/items/Health Potion - Minor.png",
+  majorHealthPotion: "assets/items/Health Potion - Major.png",
+  advancedHealthPotion: "assets/items/Health Potion - Advanced.png",
+  magicalHealthPotion: "assets/items/Health Potion - Magical.png",
+  minorManaPotion: "assets/items/Mana Potion - Minor.png",
+  majorManaPotion: "assets/items/Mana Potion - Major.png",
+  advancedManaPotion: "assets/items/Mana Potion - Advanced.png",
+  magicalManaPotion: "assets/items/Mana Potion - Magical.png",
+  smellingSalts: "assets/items/smelling salts.png",
+  soothingBalm: "assets/items/soothing balm.png",
+  minorStaminaPotion: "assets/items/Stamina Potion - Minor.png",
+  majorStaminaPotion: "assets/items/Stamina Potion - Major.png",
+  advancedStaminaPotion: "assets/items/Stamina Potion - Advanced.png",
+  magicalStaminaPotion: "assets/items/Stamina Potion - Magical.png",
+  warmingSalve: "assets/items/warming salve.png",
 };
 
 const weaponSellValues = {
@@ -232,38 +253,38 @@ const consumableItems = {
     type: "potion",
     cost: { copper: 0, silver: 1, gold: 0 },
     restoreType: "hp",
-    restoreRange: [8, 15],
-    description: "Restore 8-15 HP.",
+    restorePercent: 0.05,
+    description: "Restore 5% of max HP.",
   },
   majorHealthPotion: {
     id: "majorHealthPotion",
     name: "Major Health Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 5, gold: 0 },
+    cost: { copper: 0, silver: 0, gold: 1 },
     restoreType: "hp",
-    restoreRange: [18, 30],
-    description: "Restore 18-30 HP.",
+    restorePercent: 0.25,
+    description: "Restore 25% of max HP.",
   },
   advancedHealthPotion: {
     id: "advancedHealthPotion",
     name: "Advanced Health Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 0, gold: 1 },
+    cost: { copper: 0, silver: 0, gold: 10 },
     restoreType: "hp",
-    restoreRange: [35, 55],
-    description: "Restore 35-55 HP.",
+    restorePercent: 0.4,
+    description: "Restore 40% of max HP.",
   },
   magicalHealthPotion: {
     id: "magicalHealthPotion",
     name: "Magical Health Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 0, gold: 10 },
+    cost: { copper: 0, silver: 0, gold: 100 },
     restoreType: "hp",
-    restoreRange: [80, 120],
-    description: "Restore 80-120 HP.",
+    restorePercent: 0.8,
+    description: "Restore 80% of max HP.",
   },
   minorManaPotion: {
     id: "minorManaPotion",
@@ -272,38 +293,38 @@ const consumableItems = {
     type: "potion",
     cost: { copper: 0, silver: 1, gold: 0 },
     restoreType: "mana",
-    restoreRange: [2, 4],
-    description: "Restore 2-4 Mana.",
+    restorePercent: 0.05,
+    description: "Restore 5% of max Mana.",
   },
   majorManaPotion: {
     id: "majorManaPotion",
     name: "Major Mana Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 5, gold: 0 },
+    cost: { copper: 0, silver: 0, gold: 1 },
     restoreType: "mana",
-    restoreRange: [5, 8],
-    description: "Restore 5-8 Mana.",
+    restorePercent: 0.25,
+    description: "Restore 25% of max Mana.",
   },
   advancedManaPotion: {
     id: "advancedManaPotion",
     name: "Advanced Mana Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 0, gold: 1 },
+    cost: { copper: 0, silver: 0, gold: 10 },
     restoreType: "mana",
-    restoreRange: [9, 14],
-    description: "Restore 9-14 Mana.",
+    restorePercent: 0.4,
+    description: "Restore 40% of max Mana.",
   },
   magicalManaPotion: {
     id: "magicalManaPotion",
     name: "Magical Mana Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 0, gold: 10 },
+    cost: { copper: 0, silver: 0, gold: 100 },
     restoreType: "mana",
-    restoreRange: [18, 25],
-    description: "Restore 18-25 Mana.",
+    restorePercent: 0.8,
+    description: "Restore 80% of max Mana.",
   },
   minorStaminaPotion: {
     id: "minorStaminaPotion",
@@ -312,38 +333,38 @@ const consumableItems = {
     type: "potion",
     cost: { copper: 0, silver: 1, gold: 0 },
     restoreType: "stamina",
-    restoreRange: [2, 4],
-    description: "Restore 2-4 Stamina.",
+    restorePercent: 0.05,
+    description: "Restore 5% of max Stamina.",
   },
   majorStaminaPotion: {
     id: "majorStaminaPotion",
     name: "Major Stamina Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 5, gold: 0 },
+    cost: { copper: 0, silver: 0, gold: 1 },
     restoreType: "stamina",
-    restoreRange: [5, 8],
-    description: "Restore 5-8 Stamina.",
+    restorePercent: 0.25,
+    description: "Restore 25% of max Stamina.",
   },
   advancedStaminaPotion: {
     id: "advancedStaminaPotion",
     name: "Advanced Stamina Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 0, gold: 1 },
+    cost: { copper: 0, silver: 0, gold: 10 },
     restoreType: "stamina",
-    restoreRange: [9, 14],
-    description: "Restore 9-14 Stamina.",
+    restorePercent: 0.4,
+    description: "Restore 40% of max Stamina.",
   },
   magicalStaminaPotion: {
     id: "magicalStaminaPotion",
     name: "Magical Stamina Potion",
     actionType: "minor",
     type: "potion",
-    cost: { copper: 0, silver: 0, gold: 10 },
+    cost: { copper: 0, silver: 0, gold: 100 },
     restoreType: "stamina",
-    restoreRange: [18, 25],
-    description: "Restore 18-25 Stamina.",
+    restorePercent: 0.8,
+    description: "Restore 80% of max Stamina.",
   },
   bandage: {
     id: "bandage",
@@ -1907,6 +1928,8 @@ const elements = {
   playerManaBar: document.querySelector("#playerManaBar"),
   playerStaminaBar: document.querySelector("#playerStaminaBar"),
   playerLevelXp: document.querySelector("#playerLevelXp"),
+  playerLevelTier: document.querySelector("#playerLevelTier"),
+  playerXpBar: document.querySelector("#playerXpBar"),
   playerAvatar: document.querySelector("#playerAvatar"),
   saveStatus: document.querySelector("#saveStatus"),
   playerGenderLine: document.querySelector("#playerGenderLine"),
@@ -1975,6 +1998,12 @@ const elements = {
   codexModal: document.querySelector("#codexModal"),
   codexCloseButton: document.querySelector("#codexCloseButton"),
   characterButton: document.querySelector("#characterButton"),
+  characterModal: document.querySelector("#characterModal"),
+  characterModalBody: document.querySelector("#characterModalBody"),
+  characterCloseButton: document.querySelector("#characterCloseButton"),
+  inventoryButton: document.querySelector("#inventoryButton"),
+  inventoryModal: document.querySelector("#inventoryModal"),
+  inventoryCloseButton: document.querySelector("#inventoryCloseButton"),
   deleteAdventureModal: document.querySelector("#deleteAdventureModal"),
   cancelDeleteAdventureButton: document.querySelector("#cancelDeleteAdventureButton"),
   confirmDeleteAdventureButton: document.querySelector("#confirmDeleteAdventureButton"),
@@ -2197,6 +2226,58 @@ const state = {
 
 function roll(sides) {
   return Math.floor(Math.random() * sides) + 1;
+}
+
+function getStatModifier(statValue) {
+  return Math.floor(((Number.isInteger(statValue) ? statValue : MIN_STAT) - 1) / 2);
+}
+
+function getXpRequiredForNextLevel(level) {
+  if (level >= MAX_LEVEL) return 0;
+  return Math.floor(100 * Math.pow(Math.max(1, level), 1.55));
+}
+
+function getTotalXpForLevel(level) {
+  const targetLevel = clamp(level, 1, MAX_LEVEL);
+  let total = 0;
+  for (let currentLevel = 1; currentLevel < targetLevel; currentLevel += 1) {
+    total += getXpRequiredForNextLevel(currentLevel);
+  }
+  return total;
+}
+
+function getPowerTier(level) {
+  const safeLevel = clamp(level ?? 1, 1, MAX_LEVEL);
+  if (safeLevel <= 20) return { tier: 1, name: "Initiate" };
+  if (safeLevel <= 50) return { tier: 2, name: "Veteran" };
+  if (safeLevel <= 100) return { tier: 3, name: "Elite" };
+  if (safeLevel <= 150) return { tier: 4, name: "Mythic" };
+  return { tier: 5, name: "Legendary" };
+}
+
+function formatPowerTier(level) {
+  const tier = getPowerTier(level);
+  return `Tier ${tier.tier} — ${tier.name}`;
+}
+
+function formatPowerTierName(level) {
+  return getPowerTier(level).name;
+}
+
+function doesLevelGrantStatIncrease(level) {
+  if (level < 2 || level > MAX_LEVEL) return false;
+  if (level <= 20) return true;
+  if (level <= 60) return (level - 20) % 2 === 0;
+  if (level <= 120) return (level - 60) % 3 === 0;
+  return (level - 120) % 4 === 0;
+}
+
+function getLevelDamageBonus(combatant) {
+  return Math.floor((combatant?.level ?? 1) / 4);
+}
+
+function getLevelDefenseBonus(combatant) {
+  return Math.floor((combatant?.level ?? 1) / 3);
 }
 
 function normalizePlayerIdentity(player) {
@@ -2657,15 +2738,37 @@ function renderUtilityItemIcon(itemDef) {
   return templates[itemDef.id] ?? renderPotionIcon(itemDef);
 }
 
+function getItemImagePath(itemId) {
+  return itemImages[itemId] ?? "";
+}
+
 function renderItemIcon(itemDef) {
-  const iconMarkup = itemDef.restoreType ? renderPotionIcon(itemDef) : renderUtilityItemIcon(itemDef);
-  return `<span class="item-icon item-icon-${getItemTierLabel(itemDef.id)}">${iconMarkup}</span>`;
+  const fallbackMarkup = itemDef.restoreType ? renderPotionIcon(itemDef) : renderUtilityItemIcon(itemDef);
+  const imagePath = getItemImagePath(itemDef.id);
+  if (!imagePath) {
+    return `<span class="item-icon item-icon-${getItemTierLabel(itemDef.id)}">${fallbackMarkup}</span>`;
+  }
+  return `
+    <span class="item-icon item-icon-${getItemTierLabel(itemDef.id)}">
+      <img
+        src="${imagePath}"
+        alt=""
+        aria-hidden="true"
+        onerror="this.hidden=true;this.nextElementSibling.hidden=false"
+      >
+      <span class="item-icon-fallback" hidden>${fallbackMarkup}</span>
+    </span>
+  `;
+}
+
+function formatPercent(value) {
+  return `${Math.round((value ?? 0) * 100)}%`;
 }
 
 function formatItemDetails(itemDef) {
   const parts = [itemDef.description];
   if (itemDef.restoreType) {
-    parts.push(`Use: Restores ${titleCase(itemDef.restoreType)}.`);
+    parts.push(`Use: Restores ${formatPercent(itemDef.restorePercent)} of max ${titleCase(itemDef.restoreType)}.`);
   }
   if (itemDef.removesStatuses?.length) {
     parts.push(`Removes ${itemDef.removesStatuses.map((statusId) => statusDefinitions[statusId]?.name ?? statusId).join(" or ")}.`);
@@ -2679,7 +2782,7 @@ function formatItemInfoBody(itemDef) {
   const lines = [];
   lines.push(itemDef.description);
   if (itemDef.restoreType) {
-    lines.push(`Effect: Restores ${titleCase(itemDef.restoreType)}.`);
+    lines.push(`Effect: Restores ${formatPercent(itemDef.restorePercent)} of max ${titleCase(itemDef.restoreType)}.`);
   }
   if (itemDef.removesStatuses?.length) {
     lines.push(`Effect: Removes ${itemDef.removesStatuses.map((statusId) => statusDefinitions[statusId]?.name ?? statusId).join(" or ")}.`);
@@ -2775,9 +2878,14 @@ function updateTopNavigation(screenName = currentScreenName()) {
     elements.codexButton.classList.toggle("active", !elements.codexModal?.hidden);
   }
   if (elements.characterButton) {
-    const showCharacter = showNavigation && screenName === "combat" && !!state.player;
+    const showCharacter = showNavigation && !!state.player;
     elements.characterButton.hidden = !showCharacter;
-    elements.characterButton.classList.toggle("active", showCharacter && !elements.detailsTab?.hidden);
+    elements.characterButton.classList.toggle("active", showCharacter && !elements.characterModal?.hidden);
+  }
+  if (elements.inventoryButton) {
+    const showInventory = showNavigation && !!state.player;
+    elements.inventoryButton.hidden = !showInventory;
+    elements.inventoryButton.classList.toggle("active", showInventory && !elements.inventoryModal?.hidden);
   }
 }
 
@@ -2848,12 +2956,14 @@ function loadSnapshot(snapshot) {
   normalizePlayerClass(state.player);
   normalizePlayerProgression(state.player);
   normalizePlayerInventory(state.player);
+  normalizePlayerScaling(state.player);
   if (state.player.inventory?.consumables?.healthPotion) {
     state.player.inventory.consumables.minorHealthPotion =
       (state.player.inventory.consumables.minorHealthPotion ?? 0) + state.player.inventory.consumables.healthPotion;
     delete state.player.inventory.consumables.healthPotion;
   }
   state.enemy = snapshot.enemy;
+  normalizeCombatantStats(state.enemy);
   state.turnIndex = snapshot.turnIndex ?? 0;
   state.actionUsed = snapshot.actionUsed ?? false;
   state.majorActionUsed = snapshot.majorActionUsed ?? (snapshot.actionUsed ?? false);
@@ -3106,6 +3216,24 @@ function normalizePlayerInventory(player) {
   player.inventory.armor = Array.isArray(player.inventory.armor) ? player.inventory.armor.filter(Boolean) : [];
 }
 
+function normalizeCombatantStats(combatant) {
+  if (!combatant?.stats) return;
+  ["mind", "body", "soul"].forEach((stat) => {
+    combatant.stats[stat] = clamp(Number.parseInt(combatant.stats[stat], 10) || MIN_STAT, MIN_STAT, MAX_STAT);
+  });
+  combatant.level = clamp(Number.parseInt(combatant.level, 10) || 1, 1, MAX_LEVEL);
+}
+
+function normalizePlayerScaling(player) {
+  if (!player) return;
+  normalizeCombatantStats(player);
+  const oldMaxHp = player.maxHp ?? calculateMaxHp(player.stats, player.level);
+  const oldMaxMana = player.maxMana ?? calculateMaxMana(player.stats, player.level);
+  const oldMaxStamina = player.maxStamina ?? calculateMaxStamina(player.stats, player.level);
+  recalculateHp(player, oldMaxHp);
+  recalculateResources(player, oldMaxMana, oldMaxStamina);
+}
+
 function safeEntityName(recordMap, id, fallback = "Unknown") {
   if (!id) return fallback;
   return recordMap[id]?.name ?? (titleCase(String(id).replace(/([A-Z])/g, " $1").trim()) || fallback);
@@ -3179,15 +3307,15 @@ function formatDice(dice) {
 }
 
 function calculateMaxHp(stats, level) {
-  return 18 + stats.body * 2 + (level - 1) * 4;
+  return 20 + stats.body * 3 + level * 3 + Math.floor(level / 5);
 }
 
 function calculateMaxMana(stats, level) {
-  return 5 + stats.soul + Math.floor(level / 2);
+  return 5 + stats.soul + Math.floor(level / 3);
 }
 
 function calculateMaxStamina(stats, level) {
-  return 5 + stats.body + Math.floor(level / 2);
+  return 5 + stats.body + Math.floor(level / 3);
 }
 
 function recalculateHp(combatant, previousMaxHp = combatant.maxHp) {
@@ -3244,36 +3372,35 @@ function enforceStatBudget(changedInput) {
   if (!Number.isInteger(changedValue)) {
     changedValue = MIN_STAT;
   }
-  changedValue = clamp(changedValue, MIN_STAT, MAX_STAT);
+  changedValue = clamp(changedValue, MIN_STAT, CREATION_MAX_STAT);
 
   const otherTotal = [elements.mindInput, elements.bodyInput, elements.soulInput]
     .filter((input) => input !== changedInput)
-    .reduce((total, input) => total + clamp(readStat(input) || MIN_STAT, MIN_STAT, MAX_STAT), 0);
+    .reduce((total, input) => total + clamp(readStat(input) || MIN_STAT, MIN_STAT, CREATION_MAX_STAT), 0);
   changedInput.value = Math.min(changedValue, Math.max(MIN_STAT, STAT_LIMIT - otherTotal));
 
   Object.entries(stats).forEach(([stat, value]) => {
     const input = elements[`${stat}Input`];
     if (!Number.isInteger(value) || value < MIN_STAT) {
       input.value = MIN_STAT;
-    } else if (value > MAX_STAT) {
-      input.value = MAX_STAT;
+    } else if (value > CREATION_MAX_STAT) {
+      input.value = CREATION_MAX_STAT;
     }
   });
 }
 
 function getLevelForXp(xp) {
+  const totalXp = Math.max(0, xp ?? 0);
   let level = 1;
-  XP_THRESHOLDS.forEach((threshold, index) => {
-    if (xp >= threshold) {
-      level = index + 1;
-    }
-  });
-  return Math.min(level, XP_THRESHOLDS.length);
+  while (level < MAX_LEVEL && totalXp >= getTotalXpForLevel(level + 1)) {
+    level += 1;
+  }
+  return level;
 }
 
 function getNextLevelText(player) {
-  const nextThreshold = XP_THRESHOLDS[player.level];
-  return nextThreshold === undefined ? "max" : `${nextThreshold} XP`;
+  if ((player?.level ?? 1) >= MAX_LEVEL) return "max";
+  return `${getTotalXpForLevel(player.level + 1)} XP`;
 }
 
 function getSubclassDef(combatant) {
@@ -3288,7 +3415,7 @@ function getArmorBonus(combatant) {
 }
 
 function getClassAcBonus(combatant) {
-  return combatant.classDef?.acBonus ?? 0;
+  return getClassDefenseBonus(combatant);
 }
 
 function getSubclassAcBonus(combatant) {
@@ -3301,6 +3428,7 @@ function getAc(combatant) {
     getArmorBonus(combatant) +
     getClassAcBonus(combatant) +
     getSubclassAcBonus(combatant) +
+    getLevelDefenseBonus(combatant) +
     (combatant.acBonus ?? 0)
   );
 }
@@ -3316,6 +3444,10 @@ function getAcFormula(combatant) {
   if (getSubclassAcBonus(combatant) !== 0) {
     parts.push(`${getSubclassDef(combatant).name} ${signed(getSubclassAcBonus(combatant))}`);
   }
+  const levelDefenseBonus = getLevelDefenseBonus(combatant);
+  if (levelDefenseBonus !== 0) {
+    parts.push(`Level ${signed(levelDefenseBonus)}`);
+  }
   if ((combatant.acBonus ?? 0) !== 0) {
     parts.push(`Other ${signed(combatant.acBonus)}`);
   }
@@ -3323,10 +3455,26 @@ function getAcFormula(combatant) {
 }
 
 function getClassAttackBonus(combatant, attackKind) {
-  if (!combatant.classDef) {
-    return 0;
-  }
-  return attackKind === "spell" ? combatant.classDef.spellHitBonus : combatant.classDef.weaponHitBonus;
+  if (!combatant.classDef) return 0;
+  return attackKind === "spell" ? getClassSpellHitBonus(combatant) : getClassWeaponHitBonus(combatant);
+}
+
+function getClassWeaponHitBonus(combatant) {
+  return (combatant.classDef?.weaponHitBonus ?? 0) + Math.floor((combatant?.level ?? 1) / 20);
+}
+
+function getClassSpellHitBonus(combatant) {
+  return (combatant.classDef?.spellHitBonus ?? 0) + Math.floor((combatant?.level ?? 1) / 20);
+}
+
+function getClassDamageReduction(combatant) {
+  if (!combatant.classDef) return 0;
+  return (combatant.classDef?.damageReduction ?? 0) + Math.floor((combatant?.level ?? 1) / 25);
+}
+
+function getClassDefenseBonus(combatant) {
+  if (!combatant.classDef) return 0;
+  return (combatant.classDef?.acBonus ?? 0) + Math.floor((combatant?.level ?? 1) / 30);
 }
 
 function getClassCheckBonus(combatant, stat) {
@@ -3364,10 +3512,10 @@ function getFirstAttackBonus(combatant) {
   return combatant.hasAttacked ? 0 : combatant.classDef?.firstAttackHitBonus ?? 0;
 }
 
-// Custom system core: actual Mind/Body/Soul scores are direct d20 modifiers.
+// Custom system core: Mind/Body/Soul scores produce bounded d20 modifiers.
 function buildD20Parts(combatant, stat, options = {}) {
   const statValue = Number.isInteger(combatant.stats[stat]) ? combatant.stats[stat] : 0;
-  const parts = [{ label: titleCase(stat), value: statValue }];
+  const parts = [{ label: `${titleCase(stat)} mod`, value: getStatModifier(statValue) }];
   const classBonus = options.classBonus ?? getClassCheckBonus(combatant, stat);
   const subclassBonus = options.subclassBonus ?? getSubclassCheckBonus(combatant, stat);
   const armorPenalty = options.armorBonus ?? getArmorCheckBonus(combatant, stat);
@@ -3520,19 +3668,19 @@ function prepareNewAdventure() {
   renderBuilder();
 }
 
-// Enemy scaling is intentionally simple: each level adds HP, small stat pressure,
-// Defense at even levels, damage via level bonus, and larger rewards.
+// Enemy scaling is formula-driven for the 200-level cap without hand-authored tiers.
 function createScaledEnemy(playerLevel) {
   const templateList = Object.values(enemyTemplates);
   const template = templateList[Math.floor(Math.random() * templateList.length)];
-  const level = Math.max(1, playerLevel);
+  const level = clamp(Math.max(1, playerLevel), 1, MAX_LEVEL);
   const scale = level - 1;
+  const tier = getPowerTier(level);
   const stats = {
-    mind: clamp(template.stats.mind + Math.floor(scale / 3), 1, 10),
-    body: clamp(template.stats.body + Math.floor(scale / 2), 1, 10),
-    soul: clamp(template.stats.soul + Math.floor(scale / 3), 1, 10),
+    mind: clamp(template.stats.mind + Math.floor(scale / 6), MIN_STAT, MAX_STAT),
+    body: clamp(template.stats.body + Math.floor(scale / 5), MIN_STAT, MAX_STAT),
+    soul: clamp(template.stats.soul + Math.floor(scale / 6), MIN_STAT, MAX_STAT),
   };
-  const maxHp = template.baseHp + stats.body * 2 + scale * 4;
+  const maxHp = template.baseHp + stats.body * 3 + level * 3 + Math.floor(level / 5) + (tier.tier - 1) * 10;
 
   return {
     id: "enemy",
@@ -3548,8 +3696,7 @@ function createScaledEnemy(playerLevel) {
     weapon: weapons[template.weaponId],
     spell: weapons[template.weaponId].attackKind === "spell" ? weapons[template.weaponId] : null,
     armor: armors[template.armorId],
-    acBonus: template.acBonus + Math.floor(scale / 2),
-    damageLevelBonus: Math.floor(scale / 2),
+    acBonus: template.acBonus + Math.floor(level / 20),
     resistances: [...template.resistances],
     weaknesses: [...template.weaknesses],
     statuses: [],
@@ -3568,7 +3715,7 @@ function validateCharacter() {
 
   if (!elements.nameInput.value.trim()) messages.push("Enter a character name.");
   if (values.some((value) => !Number.isInteger(value))) messages.push("All stats must be whole numbers.");
-  if (values.some((value) => value < MIN_STAT || value > MAX_STAT)) messages.push("Each stat must be between 1 and 10.");
+  if (values.some((value) => value < MIN_STAT || value > CREATION_MAX_STAT)) messages.push("Each stat must be between 1 and 10.");
   if (total > STAT_LIMIT) messages.push("Total stats cannot exceed 10.");
   if (!selectedClass) messages.push("Choose a class.");
   if (!selectedWeaponId || !getValidWeaponIdsForClass(selectedClass?.id).includes(selectedWeaponId) || !weapons[selectedWeaponId]) {
@@ -3870,6 +4017,98 @@ function renderResourceBar(container, label, value, maxValue, theme) {
   container.append(bar);
 }
 
+function renderXpBar(container, player) {
+  if (!container || !player) return;
+  const maxLevel = (player.level ?? 1) >= MAX_LEVEL;
+  const currentLevelTotal = getTotalXpForLevel(player.level);
+  const nextLevelTotal = getTotalXpForLevel(Math.min(MAX_LEVEL, player.level + 1));
+  const levelSpan = Math.max(1, nextLevelTotal - currentLevelTotal);
+  const levelProgress = Math.max(0, (player.xp ?? 0) - currentLevelTotal);
+  const percent = maxLevel ? 100 : clamp((levelProgress / levelSpan) * 100, 0, 100);
+  container.innerHTML = "";
+  const bar = document.createElement("div");
+  bar.className = "resource-bar xp";
+  const fill = document.createElement("div");
+  fill.className = "resource-fill";
+  fill.style.width = `${percent}%`;
+  const text = document.createElement("div");
+  text.className = "resource-text";
+  text.textContent = maxLevel ? "XP MAX" : `XP ${player.xp ?? 0} / ${nextLevelTotal}`;
+  bar.append(fill, text);
+  container.append(bar);
+}
+
+function renderCharacterModal() {
+  if (!state.player || !elements.characterModalBody) return;
+  const player = state.player;
+  const attackParts = getAttackParts(player);
+  const attackTotal = sumParts(attackParts);
+  const subclassDef = getSubclassDef(player);
+  const magicalSkills = getPlayerSkills().filter((skill) => skill.attackKind === "spell" || skill.statUsed === "Soul");
+  const cooldownSummary = formatCooldownSummary(player);
+  const statusSummary = formatStatuses(player);
+  const resourceSummary = `HP ${player.hp}/${player.maxHp}; Mana ${player.mana}/${player.maxMana}; Stamina ${player.stamina}/${player.maxStamina}`;
+  elements.characterModalBody.innerHTML = `
+    <section class="character-profile">
+      ${renderCharacterAvatar(player.classDef?.id, player.gender, player.name, { large: true })}
+      <div>
+        <h3>${player.name}</h3>
+        <p class="muted">${formatGenderLabel(player.gender)} ${player.classDef?.name ?? "Adventurer"}</p>
+        <p>${formatPowerTierName(player.level)}</p>
+      </div>
+    </section>
+    <section class="character-detail-grid">
+      <div class="character-detail-card">
+        <h3>Progress</h3>
+        <p>Level ${player.level}</p>
+        <p>${(player.level ?? 1) >= MAX_LEVEL ? "XP MAX" : `XP ${player.xp ?? 0} / ${getTotalXpForLevel(player.level + 1)}`}</p>
+        <p>${resourceSummary}</p>
+      </div>
+      <div class="character-detail-card">
+        <h3>Identity</h3>
+        <p>Class: ${formatClassDisplay(player.classDef)}</p>
+        <p>Subclass: ${formatSubclassDisplay(subclassDef)}</p>
+        <p>Stats: ${formatStatsMarkup(player.stats)}</p>
+      </div>
+      <div class="character-detail-card">
+        <h3>Defense</h3>
+        <p>${formatInfoTooltip(`${getAc(player)}`, getAcFormula(player), { title: `Defense ${getAc(player)}` })}</p>
+        <p>${getAcFormula(player)}</p>
+      </div>
+      <div class="character-detail-card">
+        <h3>Attack</h3>
+        <p>${formatInfoTooltip(`${signed(attackTotal)}`, attackParts.map((part) => `${part.label} ${signed(part.value)}`).join(" | "), {
+          title: `Attack ${signed(attackTotal)}`,
+        })}</p>
+        <p>d20 + ${attackParts.map((part) => `${part.label} ${part.value}`).join(" + ")}</p>
+      </div>
+      <div class="character-detail-card">
+        <h3>Equipment</h3>
+        <p>Weapon: ${renderWeaponImage(player.weapon.id, player.weapon.name, { compact: true, size: "lg" })}</p>
+        <p>Armor: ${renderArmorImage(player.armor.id, player.armor.name, { compact: true, size: "lg" })}</p>
+      </div>
+      <div class="character-detail-card">
+        <h3>Traits</h3>
+        <p>${formatTraits(player)}</p>
+        <p>Status: ${statusSummary}</p>
+        <p>Cooldowns: ${cooldownSummary}</p>
+      </div>
+      <div class="character-detail-card character-detail-wide">
+        <h3>Magic</h3>
+        <p>${
+          magicalSkills.length
+            ? magicalSkills.map((skill) => `${skill.name}: ${skill.statUsed}-based ${skill.mode}`).join(", ")
+            : "No spell-focused skills unlocked."
+        }</p>
+      </div>
+      <div class="character-detail-card character-detail-wide">
+        <h3>Derived</h3>
+        <p>Max HP ${player.maxHp}; Max Mana ${player.maxMana}; Max Stamina ${player.maxStamina}; ${getAcFormula(player)}</p>
+      </div>
+    </section>
+  `;
+}
+
 async function startCombat() {
   const validation = validateCharacter();
   if (!validation.valid) {
@@ -4005,38 +4244,59 @@ function renderCombatant(prefix, combatant) {
   const attackParts = getAttackParts(combatant);
   const attackTotal = sumParts(attackParts);
   renderHpBar(elements[`${prefix}HpBar`], combatant);
-  elements[`${prefix}Stats`].innerHTML = formatStatsMarkup(combatant.stats);
-    elements[`${prefix}Weapon`].innerHTML = `${renderWeaponImage(combatant.weapon.id, combatant.weapon.name)}<span class="weapon-special-copy">${combatant.weapon.special}</span>`;
-  elements[`${prefix}Traits`].textContent = formatTraits(combatant);
-  elements[`${prefix}Statuses`].innerHTML = formatStatuses(combatant);
-  elements[`${prefix}Ac`].innerHTML = formatInfoTooltip(`${getAc(combatant)}`, getAcFormula(combatant), { title: `Defense ${getAc(combatant)}` });
-  elements[`${prefix}Attack`].innerHTML = formatInfoTooltip(`${signed(attackTotal)}`, attackParts.map((part) => `${part.label} ${signed(part.value)}`).join(" | "), {
-    title: `Attack ${signed(attackTotal)}`,
-  });
-  elements[`${prefix}Damage`].textContent = `${formatDice(combatant.weapon.damageDice)} ${combatant.weapon.damageType}`;
+  const statsElement = elements[`${prefix}Stats`];
+  const weaponElement = elements[`${prefix}Weapon`];
+  const traitsElement = elements[`${prefix}Traits`];
+  const statusesElement = elements[`${prefix}Statuses`];
+  const defenseElement = elements[`${prefix}Ac`];
+  const attackElement = elements[`${prefix}Attack`];
+  const damageElement = elements[`${prefix}Damage`];
+  if (statsElement) statsElement.innerHTML = formatStatsMarkup(combatant.stats);
+  if (weaponElement) {
+    weaponElement.innerHTML = `${renderWeaponImage(combatant.weapon.id, combatant.weapon.name)}<span class="weapon-special-copy">${combatant.weapon.special}</span>`;
+  }
+  if (traitsElement) traitsElement.textContent = formatTraits(combatant);
+  if (statusesElement) statusesElement.innerHTML = formatStatuses(combatant);
+  if (defenseElement) {
+    defenseElement.innerHTML = formatInfoTooltip(`${getAc(combatant)}`, getAcFormula(combatant), { title: `Defense ${getAc(combatant)}` });
+  }
+  if (attackElement) {
+    attackElement.innerHTML = formatInfoTooltip(`${signed(attackTotal)}`, attackParts.map((part) => `${part.label} ${signed(part.value)}`).join(" | "), {
+      title: `Attack ${signed(attackTotal)}`,
+    });
+  }
+  if (damageElement) damageElement.textContent = `${formatDice(combatant.weapon.damageDice)} ${combatant.weapon.damageType}`;
 
     if (prefix === "player") {
-    elements.playerNameHeading.textContent = combatant.name;
+    if (elements.playerNameHeading) elements.playerNameHeading.textContent = combatant.name;
     setCharacterAvatar(elements.playerAvatar, combatant.classDef?.id, combatant.gender, combatant.name, { eager: true });
-    elements.playerLevelXp.textContent = `Level ${combatant.level}, ${combatant.xp} XP, next ${getNextLevelText(combatant)}`;
-    elements.saveStatus.textContent = state.savePending
+    if (elements.playerLevelXp) elements.playerLevelXp.textContent = `Level ${combatant.level}`;
+    if (elements.playerLevelTier) elements.playerLevelTier.textContent = formatPowerTierName(combatant.level);
+    renderXpBar(elements.playerXpBar, combatant);
+    if (elements.saveStatus) elements.saveStatus.textContent = state.savePending
       ? "Saving..."
       : state.saveMessage || (state.user ? "" : "Not logged in — progress will not be saved.");
-    elements.playerGenderLine.textContent = `Gender: ${formatGenderLabel(combatant.gender)}`;
+    if (elements.playerGenderLine) elements.playerGenderLine.textContent = `Gender: ${formatGenderLabel(combatant.gender)}`;
     renderResourceBar(elements.playerManaBar, "Mana", combatant.mana, combatant.maxMana, "mana");
     renderResourceBar(elements.playerStaminaBar, "Stamina", combatant.stamina, combatant.maxStamina, "stamina");
-    elements.playerGender.textContent = formatGenderLabel(combatant.gender);
-    elements.playerClass.innerHTML = formatClassDisplay(combatant.classDef);
-    elements.playerSubclass.innerHTML = formatSubclassDisplay(getSubclassDef(combatant));
-    elements.playerWealth.textContent = formatCurrencyCompact(combatant.inventory.currency);
-    elements.playerArmor.innerHTML = renderArmorImage(combatant.armor.id, combatant.armor.name);
-    elements.playerAttackFormula.textContent = `d20 + ${attackParts.map((part) => `${part.label} ${part.value}`).join(" + ")}`;
-    elements.playerCooldowns.textContent = formatCooldownSummary(combatant);
-    elements.playerDerived.textContent = `Max HP ${combatant.maxHp}; Max Mana ${combatant.maxMana}; Max Stamina ${combatant.maxStamina}; ${getAcFormula(combatant)}`;
+    if (elements.playerGender) elements.playerGender.textContent = formatGenderLabel(combatant.gender);
+    if (elements.playerClass) elements.playerClass.innerHTML = formatClassDisplay(combatant.classDef);
+    if (elements.playerSubclass) elements.playerSubclass.innerHTML = formatSubclassDisplay(getSubclassDef(combatant));
+    if (elements.playerWealth) elements.playerWealth.textContent = formatCurrencyCompact(combatant.inventory.currency);
+    if (elements.playerArmor) elements.playerArmor.innerHTML = renderArmorImage(combatant.armor.id, combatant.armor.name);
+    if (elements.playerAttackFormula) elements.playerAttackFormula.textContent = `d20 + ${attackParts.map((part) => `${part.label} ${part.value}`).join(" + ")}`;
+    if (elements.playerCooldowns) elements.playerCooldowns.textContent = formatCooldownSummary(combatant);
+    if (elements.playerDerived) {
+      elements.playerDerived.textContent = `${formatPowerTierName(combatant.level)}; Max HP ${combatant.maxHp}; Max Mana ${combatant.maxMana}; Max Stamina ${combatant.maxStamina}; ${getAcFormula(combatant)}`;
+    }
     const magicalSkills = getPlayerSkills().filter((skill) => skill.attackKind === "spell" || skill.statUsed === "Soul");
-    elements.playerSpell.textContent = magicalSkills.length
-      ? magicalSkills.map((skill) => `${skill.name}: ${skill.statUsed}-based ${skill.mode}`).join(", ")
-      : "None";
+    if (elements.playerSpell) {
+      elements.playerSpell.textContent = magicalSkills.length
+        ? magicalSkills.map((skill) => `${skill.name}: ${skill.statUsed}-based ${skill.mode}`).join(", ")
+        : "None";
+    }
+    if (elements.characterModal && !elements.characterModal.hidden) renderCharacterModal();
+    if (elements.inventoryModal && !elements.inventoryModal.hidden) renderInventory();
     } else {
       elements.enemyNameHeading.textContent = combatant.name;
       renderEnemyPortrait(combatant);
@@ -4225,6 +4485,25 @@ function showInfoModal(title, body) {
   elements.infoModal.hidden = false;
 }
 
+function showItemInfoModal(itemDef) {
+  if (!itemDef) return;
+  elements.infoTitle.textContent = itemDef.name;
+  elements.infoBody.innerHTML = `
+    <div class="item-info-hero" aria-hidden="true">
+      ${renderItemIcon(itemDef)}
+    </div>
+  `;
+  String(formatItemInfoBody(itemDef))
+    .split(/\s*\|\s*|\n/)
+    .filter(Boolean)
+    .forEach((line) => {
+      const p = document.createElement("p");
+      p.textContent = line.trim();
+      elements.infoBody.append(p);
+    });
+  elements.infoModal.hidden = false;
+}
+
 function hideInfoModal() {
   elements.infoModal.hidden = true;
 }
@@ -4237,6 +4516,32 @@ function showCodexModal() {
 
 function hideCodexModal() {
   elements.codexModal.hidden = true;
+  updateTopNavigation();
+}
+
+function showCharacterModal() {
+  if (!state.player || !elements.characterModal) return;
+  renderCharacterModal();
+  elements.characterModal.hidden = false;
+  updateTopNavigation();
+}
+
+function hideCharacterModal() {
+  if (!elements.characterModal) return;
+  elements.characterModal.hidden = true;
+  updateTopNavigation();
+}
+
+function showInventoryModal() {
+  if (!state.player || !elements.inventoryModal) return;
+  renderInventory();
+  elements.inventoryModal.hidden = false;
+  updateTopNavigation();
+}
+
+function hideInventoryModal() {
+  if (!elements.inventoryModal) return;
+  elements.inventoryModal.hidden = true;
   updateTopNavigation();
 }
 
@@ -4295,18 +4600,13 @@ function switchPlayerTab(tabName) {
   });
   ["overview", "details", "inventory"].forEach((name) => {
     const panel = document.querySelector(`#${name}Tab`);
-    panel.hidden = name !== tabName;
+    if (panel) panel.hidden = name !== tabName;
   });
   updateTopNavigation();
 }
 
 function showCharacterTab() {
-  if (!state.player) return;
-  if (elements.combatScreen.hidden) {
-    activeScreen("combat");
-    renderCombat();
-  }
-  switchPlayerTab("details");
+  showCharacterModal();
 }
 
 function getPlayerSkills() {
@@ -4437,19 +4737,57 @@ function renderCodexCards(entries, renderCard) {
   return grid;
 }
 
-function createCodexCard(title, subtitle, description, chips = [], bullets = []) {
+function stripMarkup(value) {
+  return String(value ?? "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+}
+
+function getCodexFallbackIcon(title) {
+  const label = stripMarkup(title);
+  return `<span class="codex-fallback-icon">${escapeAttribute((label.charAt(0) || "?").toUpperCase())}</span>`;
+}
+
+function renderCodexClassIcon(classId, label) {
+  return `<span class="codex-class-icon-wrap">${renderClassIcon(classId, label)}</span>`;
+}
+
+function renderCodexEnemyIcon(templateId, enemyName) {
+  const portrait = getEnemyPortrait(templateId);
+  return `
+    <span class="codex-enemy-icon" style="--enemy-portrait-accent:${portrait.accent}; --enemy-portrait-bg:${portrait.bg};">
+      ${
+        portrait.src
+          ? `<img src="${portrait.src}" alt="" aria-hidden="true" loading="lazy" decoding="async">`
+          : `<span class="enemy-portrait-glyph">${portrait.icon}</span>`
+      }
+      <span class="sr-only">${escapeAttribute(enemyName ?? "Enemy")}</span>
+    </span>
+  `;
+}
+
+function renderCodexStatusIcon(statusId, status) {
+  return `<span class="codex-status-icon"><span class="status-pill status-${status.color ?? "default"}">${status.name ?? titleCase(statusId)}</span></span>`;
+}
+
+function createCodexCard(title, subtitle, description, chips = [], bullets = [], iconMarkup = "") {
   const card = document.createElement("section");
   card.className = "codex-card";
   const chipMarkup = chips.map((chip) => `<span class="codex-chip">${chip}</span>`).join("");
   const bulletMarkup = bullets.map((bullet) => `<li>${bullet}</li>`).join("");
   card.innerHTML = `
-    <div class="codex-card-header">
-      <h3>${title}</h3>
-      ${subtitle ? `<span class="muted">${subtitle}</span>` : ""}
+    <div class="codex-card-main">
+      <div class="codex-card-icon">${iconMarkup || getCodexFallbackIcon(title)}</div>
+      <div class="codex-card-content">
+        <div class="codex-card-header">
+          <h3>${title}</h3>
+          ${subtitle ? `<span class="muted">${subtitle}</span>` : ""}
+        </div>
+        ${description ? `<p>${description}</p>` : ""}
+        ${chipMarkup ? `<div class="codex-chip-row">${chipMarkup}</div>` : ""}
+        ${bulletMarkup ? `<ul class="codex-list">${bulletMarkup}</ul>` : ""}
+      </div>
     </div>
-    ${description ? `<p>${description}</p>` : ""}
-    ${chipMarkup ? `<div class="codex-chip-row">${chipMarkup}</div>` : ""}
-    ${bulletMarkup ? `<ul class="codex-list">${bulletMarkup}</ul>` : ""}
   `;
   return card;
 }
@@ -4459,7 +4797,7 @@ function renderCodex() {
   elements.codexList.innerHTML = "";
   const nav = document.createElement("div");
   nav.className = "subtabs";
-  const sections = ["classes", "subclasses", "weapons", "enemies", "items", "status"];
+  const sections = ["classes", "subclasses", "weapons", "armor", "enemies", "items", "status"];
   sections.forEach((section) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -4480,8 +4818,13 @@ function renderCodex() {
         classDef.name,
         classDef.roleTag ?? "Class",
         classDef.shortDescription,
-        [`Weapon hit ${signed(classDef.weaponHitBonus)}`, `Spell hit ${signed(classDef.spellHitBonus)}`, `Defense ${signed(classDef.acBonus)}`],
-        [classDef.playstyle, classDef.tooltipSummary]
+        [
+          `Weapon hit ${signed(classDef.weaponHitBonus)} base`,
+          `Spell hit ${signed(classDef.spellHitBonus)} base`,
+          `Defense ${signed(classDef.acBonus)} base`,
+        ],
+        [classDef.playstyle, classDef.tooltipSummary],
+        renderCodexClassIcon(classDef.id, classDef.name)
       )
     );
   } else if (state.activeCodexSection === "subclasses") {
@@ -4489,7 +4832,14 @@ function renderCodex() {
       Object.entries(subclasses).flatMap(([classId, group]) => Object.values(group).map((subclass) => ({ classId, subclass }))),
       ({ classId, subclass }) => {
         const info = getSubclassPresentation(classId, subclass.id);
-        return createCodexCard(subclass.name, `Class: ${classes[classId]?.name ?? classId}`, info.summary, [], info.features);
+        return createCodexCard(
+          subclass.name,
+          `Class: ${classes[classId]?.name ?? classId}`,
+          info.summary,
+          [],
+          info.features,
+          renderCodexClassIcon(classId, classes[classId]?.name ?? classId)
+        );
       }
     );
   } else if (state.activeCodexSection === "weapons") {
@@ -4497,44 +4847,60 @@ function renderCodex() {
         Object.values(weapons).filter((weapon) => !["crudeBlade", "bite", "boneClaw", "emberBolt", "rustySword"].includes(weapon.id)),
         (weapon) =>
           createCodexCard(
-            renderWeaponImage(weapon.id, weapon.name, { size: "sm" }),
+            weapon.name,
             `${formatDice(weapon.damageDice)} ${weapon.damageType}`,
             weapon.special,
-            [`Stat: ${titleCase(weapon.stat)}`, `Type: ${weapon.attackKind}`]
+            [`Stat: ${titleCase(weapon.stat)}`, `Type: ${weapon.attackKind}`],
+            [],
+            renderWeaponImage(weapon.id, weapon.name, { compact: true, showName: false, size: "lg" })
           )
     );
+  } else if (state.activeCodexSection === "armor") {
+    content = renderCodexCards(Object.values(armors), (armor) =>
+      createCodexCard(
+        armor.name,
+        `Defense ${signed(armor.acBonus)}`,
+        Object.keys(armor.checkBonuses).length ? "Protective gear with check modifiers." : "Protective gear with no check modifier.",
+        Object.entries(armor.checkBonuses).map(([stat, value]) => `${titleCase(stat)} ${signed(value)}`),
+        [],
+        renderArmorImage(armor.id, armor.name, { compact: true, showName: false, size: "lg" })
+      )
+    );
   } else if (state.activeCodexSection === "enemies") {
-    content = renderCodexCards(Object.values(enemyTemplates), (enemy) =>
+    content = renderCodexCards(Object.entries(enemyTemplates), ([templateId, enemy]) =>
       createCodexCard(
         enemy.name,
         `Stats ${enemy.stats.mind}/${enemy.stats.body}/${enemy.stats.soul}`,
         `Typical foe with ${armors[enemy.armorId].name} and ${weapons[enemy.weaponId].name}.`,
         [`Resist: ${enemy.resistances.join(", ") || "None"}`, `Weak: ${enemy.weaknesses.join(", ") || "None"}`],
-        [`Loot: ${enemy.loot.xp} base XP`, `Weapon drop chance: ${Math.round(enemy.loot.weaponChance * 100)}%`]
+        [`Loot: ${enemy.loot.xp} base XP`, `Weapon drop chance: ${Math.round(enemy.loot.weaponChance * 100)}%`],
+        renderCodexEnemyIcon(templateId, enemy.name)
       )
     );
   } else if (state.activeCodexSection === "items") {
     content = renderCodexCards(
       [
         ...Object.values(consumableItems).map((item) => ({
+          id: item.id,
           name: item.name,
           use: item.description,
           cost: formatCurrencyCompact(item.cost),
           type: "Consumable",
+          icon: renderItemIcon(item),
         })),
-        ...["none", "light", "medium", "heavy"].map((armorId) => ({
-          name: renderArmorImage(armorId, armors[armorId].name, { size: "sm" }),
-          use: `Armor. Defense bonus ${signed(armors[armorId].acBonus)}${Object.keys(armors[armorId].checkBonuses).length ? "; affects checks." : "."}`,
-          cost: "Class assigned",
-          type: "Armor",
-        })),
-        { name: "Inn Stay", use: "Restore HP, Mana, and Stamina, clear cooldowns, and remove temporary negative effects.", cost: formatCurrencyCompact(INN_PRICE), type: "Service" },
+        {
+          name: "Inn Stay",
+          use: "Restore HP, Mana, and Stamina, clear cooldowns, and remove temporary negative effects.",
+          cost: formatCurrencyCompact(INN_PRICE),
+          type: "Service",
+          icon: getCodexFallbackIcon("Inn Stay"),
+        },
       ],
-      (item) => createCodexCard(item.name, item.type === "Consumable" || item.type === "Service" ? `Cost: ${item.cost}` : item.cost, item.use, [item.type])
+      (item) => createCodexCard(item.name, `Cost: ${item.cost}`, item.use, [item.type], [], item.icon)
     );
   } else {
     content = renderCodexCards(Object.entries(statusDefinitions), ([statusId, status]) =>
-      createCodexCard(status.name, "", describeStatus(status), [], [`Removal: ${formatStatusRemoval(statusId)}`])
+      createCodexCard(status.name, "", describeStatus(status), [], [`Removal: ${formatStatusRemoval(statusId)}`], renderCodexStatusIcon(statusId, status))
     );
   }
   elements.codexList.append(content);
@@ -4902,13 +5268,13 @@ function getDamageBonusParts(attacker, defender, attack) {
     subclass?.damageBonusTypes && !subclass.damageBonusTypes.includes(attack.damageType)
       ? 0
       : subclass?.damageBonus ?? 0;
-  const levelBonus = attacker.damageLevelBonus ?? 0;
+  const levelBonus = getLevelDamageBonus(attacker);
 
   if ((attack.damageBonus ?? 0) !== 0) parts.push({ label: attack.name, value: attack.damageBonus });
   if (classBonus !== 0) parts.push({ label: attacker.classDef.name, value: classBonus });
   if (subclassDamageBonus !== 0) parts.push({ label: subclass.name, value: subclassDamageBonus });
   if (attack.id === "sword" && isArmored(defender)) parts.push({ label: "Armored target", value: 1 });
-  if (levelBonus !== 0) parts.push({ label: "Scaling", value: levelBonus });
+  if (levelBonus !== 0) parts.push({ label: "Level", value: levelBonus });
   return parts;
 }
 
@@ -4923,7 +5289,7 @@ function applyDamageTraits(defender, damage, damageType) {
     finalDamage += 2;
     notes.push(`${defender.name} is weak to ${damageType} +2`);
   }
-  const reduction = (defender.classDef?.damageReduction ?? 0) + getStatusDamageReduction(defender);
+  const reduction = getClassDamageReduction(defender) + getStatusDamageReduction(defender);
   if (reduction > 0) {
     finalDamage = Math.max(0, finalDamage - reduction);
     notes.push(`${defender.name} reduces damage by ${reduction}`);
@@ -4931,13 +5297,14 @@ function applyDamageTraits(defender, damage, damageType) {
   return { finalDamage, notes };
 }
 
-function applyStatus(target, statusId, sourceName) {
+function applyStatus(target, statusId, sourceName, sourceLevel = 1) {
   const def = statusDefinitions[statusId];
   const existing = target.statuses.find((status) => status.id === statusId);
   if (existing) {
     existing.duration = Math.max(existing.duration, def.duration);
+    existing.sourceLevel = Math.max(existing.sourceLevel ?? 1, sourceLevel);
   } else {
-    target.statuses.push({ id: statusId, duration: def.duration });
+    target.statuses.push({ id: statusId, duration: def.duration, sourceLevel });
   }
   addLog(`${sourceName} applies ${def.name} to ${target.name}.`);
 }
@@ -4955,18 +5322,27 @@ function maybeApplyStatus(source, target, status, sourceName, effectSource = nul
   }
   if (rollValue <= chance.chancePercent) {
     addLog(`Rolled ${rollValue} -> ${statusName} applied.`);
-    applyStatus(target, status.id, sourceName);
+    applyStatus(target, status.id, sourceName, source?.level ?? 1);
   } else {
     addLog(`Rolled ${rollValue} -> No ${statusName.toLowerCase()}.`);
   }
+}
+
+function getStatusTickDamage(status, def, combatant) {
+  const sourceLevel = status.sourceLevel ?? combatant?.level ?? 1;
+  if (status.id === "burn") return def.damage + Math.floor(sourceLevel / 25);
+  if (status.id === "bleed") return def.damage + Math.floor(sourceLevel / 30);
+  if (status.id === "poison") return def.damage + Math.floor(sourceLevel / 35);
+  return def.damage;
 }
 
 function tickStatuses(combatant, timing) {
   combatant.statuses = combatant.statuses.filter((status) => {
     const def = statusDefinitions[status.id];
     if (def.tick === timing && def.damage) {
-      combatant.hp = Math.max(0, combatant.hp - def.damage);
-      addLog(`${combatant.name} suffers ${def.damage} ${def.damageType} from ${def.name}.`);
+      const tickDamage = getStatusTickDamage(status, def, combatant);
+      combatant.hp = Math.max(0, combatant.hp - tickDamage);
+      addLog(`${combatant.name} suffers ${tickDamage} ${def.damageType} from ${def.name}.`);
     }
     if (timing === "end") {
       status.duration -= 1;
@@ -5055,6 +5431,20 @@ function removeStatusesBySource(combatant, statusIds, sourceName, limit = Infini
   return removed;
 }
 
+function getRestoredResourceKeys(itemDef) {
+  const resourceKey = itemDef.restoreType === "hp" ? "hp" : itemDef.restoreType;
+  const maxKey = resourceKey === "hp" ? "maxHp" : `max${titleCase(resourceKey)}`;
+  return { resourceKey, maxKey };
+}
+
+function calculateConsumableRestoreAmount(target, itemDef) {
+  const { maxKey } = getRestoredResourceKeys(itemDef);
+  if (Number.isFinite(itemDef.restorePercent)) {
+    return Math.ceil((target[maxKey] ?? 0) * itemDef.restorePercent);
+  }
+  return itemDef.restoreRange ? rollRange(itemDef.restoreRange) : 0;
+}
+
 function getConsumableUseState(player, itemDef) {
   const quantity = player.inventory.consumables[itemDef.id] ?? 0;
   if (quantity <= 0) return { usable: false, reason: "Out of stock" };
@@ -5100,11 +5490,10 @@ function useConsumableItem(itemId) {
   if (usingInCombat) markMinorActionUsed(itemDef.name);
   state.player.inventory.consumables[itemId] -= 1;
   if (itemDef.restoreType) {
-    const restoreRoll = rollRange(itemDef.restoreRange);
-    const resourceKey = itemDef.restoreType === "hp" ? "hp" : itemDef.restoreType;
-    const maxKey = resourceKey === "hp" ? "maxHp" : `max${titleCase(resourceKey)}`;
+    const restoreAmount = calculateConsumableRestoreAmount(state.player, itemDef);
+    const { resourceKey, maxKey } = getRestoredResourceKeys(itemDef);
     const oldValue = state.player[resourceKey];
-    state.player[resourceKey] = Math.min(state.player[maxKey], state.player[resourceKey] + restoreRoll);
+    state.player[resourceKey] = Math.min(state.player[maxKey], state.player[resourceKey] + restoreAmount);
     const restored = state.player[resourceKey] - oldValue;
     addLog(`${state.player.name} uses ${itemDef.name} and restores ${restored} ${titleCase(resourceKey)}.`);
   } else {
@@ -5435,6 +5824,14 @@ function getSubclassPresentation(classId, subclassId) {
 
 function renderLevelUpStatPills() {
   elements.levelStatPills.innerHTML = "";
+  const level = getCurrentLevelUpLevel();
+  if (!doesLevelGrantStatIncrease(level)) {
+    const note = document.createElement("p");
+    note.className = "muted";
+    note.textContent = "No stat increase this level.";
+    elements.levelStatPills.append(note);
+    return;
+  }
   ["mind", "body", "soul"].forEach((stat) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -5494,18 +5891,21 @@ function renderSubclassPills() {
 function showLevelUp() {
   const level = getCurrentLevelUpLevel();
   const progression = getCurrentLevelProgression();
+  const grantsStat = doesLevelGrantStatIncrease(level);
   state.levelUpDraft = { stat: null, subclass: shouldChooseSubclassForLevelUp(level) ? null : state.player.subclassId, progressionChoice: null };
   elements.levelUpScreen.hidden = false;
   elements.levelUpText.textContent =
     state.pendingLevelUps > 1
-      ? `${state.player.name} is resolving level ${level}. Choose one improvement now. ${state.pendingLevelUps} level-ups remain.`
-      : `${state.player.name} reached level ${level}. Choose one improvement to continue the journey.`;
+      ? `${state.player.name} is resolving level ${level}. ${grantsStat ? "Choose one improvement now." : "Resolve this level to continue."} ${state.pendingLevelUps} level-ups remain.`
+      : `${state.player.name} reached level ${level}. ${grantsStat ? "Choose one improvement to continue the journey." : "No stat increase is granted this level."}`;
   const levelNotes = [];
+  levelNotes.push(formatPowerTier(level));
   if ((progression.skills ?? []).length) levelNotes.push(`Unlocks: ${(progression.skills ?? []).map((skillId) => getSkillById(skillId, state.player)?.name ?? skillId).join(", ")}`);
   if ((progression.upgrades ?? []).length) levelNotes.push(`Major upgrade: ${(progression.upgrades ?? []).map((upgradeId) => skillUpgrades[upgradeId]?.name ?? upgradeId).join(", ")}`);
   if (progression.choice) levelNotes.push("Choice: unlock a new skill or upgrade an existing one.");
   if (progression.subclass) levelNotes.push("Subclass selection unlocks at this level.");
-  elements.levelProgressionInfo.textContent = levelNotes.length ? levelNotes.join(" ") : "This level grants your stat increase.";
+  if (!grantsStat) levelNotes.push("No stat increase this level.");
+  elements.levelProgressionInfo.textContent = levelNotes.join(" ");
   elements.subclassSection.hidden = !shouldChooseSubclassForLevelUp(level);
   elements.progressionChoiceSection.hidden = !progression.choice;
   renderLevelUpStatPills();
@@ -5515,13 +5915,15 @@ function showLevelUp() {
 }
 
 function renderLevelUpValidation() {
+  const level = getCurrentLevelUpLevel();
+  const needsStat = doesLevelGrantStatIncrease(level);
   const stat = state.levelUpDraft.stat;
-  if (!stat) {
+  if (needsStat && !stat) {
     elements.levelValidationText.textContent = "Choose one stat to increase.";
     elements.applyLevelButton.disabled = true;
     return;
   }
-  if (state.player.stats[stat] >= MAX_STAT) {
+  if (needsStat && state.player.stats[stat] >= MAX_STAT) {
     elements.levelValidationText.textContent = `${titleCase(stat)} is already ${MAX_STAT}.`;
     elements.applyLevelButton.disabled = true;
     return;
@@ -5543,8 +5945,9 @@ function renderLevelUpValidation() {
 function applyLevelUp() {
   if (state.pendingLevelUps <= 0) return;
   const level = getCurrentLevelUpLevel();
+  const needsStat = doesLevelGrantStatIncrease(level);
   const stat = state.levelUpDraft.stat;
-  if (!stat || state.player.stats[stat] >= MAX_STAT) {
+  if (needsStat && (!stat || state.player.stats[stat] >= MAX_STAT)) {
     renderLevelUpValidation();
     return;
   }
@@ -5553,7 +5956,9 @@ function applyLevelUp() {
   const oldMaxMana = state.player.maxMana;
   const oldMaxStamina = state.player.maxStamina;
   const shouldChooseSubclass = shouldChooseSubclassForLevelUp(level);
-  state.player.stats[stat] = clamp(state.player.stats[stat] + 1, MIN_STAT, MAX_STAT);
+  if (needsStat) {
+    state.player.stats[stat] = clamp(state.player.stats[stat] + 1, MIN_STAT, MAX_STAT);
+  }
   recalculateHp(state.player, oldMaxHp);
   recalculateResources(state.player, oldMaxMana, oldMaxStamina);
   if (shouldChooseSubclass) {
@@ -5567,7 +5972,9 @@ function applyLevelUp() {
   state.pendingLevelQueue.shift();
   state.pendingLevelUps -= 1;
   addLog(
-    `${state.player.name} gains +1 ${titleCase(stat)}. Max HP is now ${state.player.maxHp}, Mana ${state.player.maxMana}, Stamina ${state.player.maxStamina}.`
+    needsStat
+      ? `${state.player.name} gains +1 ${titleCase(stat)}. Max HP is now ${state.player.maxHp}, Mana ${state.player.maxMana}, Stamina ${state.player.maxStamina}.`
+      : `${state.player.name} reaches ${formatPowerTier(level)}. Max HP is now ${state.player.maxHp}, Mana ${state.player.maxMana}, Stamina ${state.player.maxStamina}.`
   );
   state.levelUpDraft = { stat: null, subclass: null, progressionChoice: null };
   elements.levelUpScreen.hidden = true;
@@ -5694,7 +6101,8 @@ document.querySelectorAll(".tab-button").forEach((button) => {
   button.addEventListener("click", () => switchPlayerTab(button.dataset.tab));
 });
 elements.codexButton.addEventListener("click", showCodexModal);
-elements.characterButton.addEventListener("click", showCharacterTab);
+elements.characterButton.addEventListener("click", showCharacterModal);
+elements.inventoryButton.addEventListener("click", showInventoryModal);
 
 elements.weaponSelect.addEventListener("change", renderBuilder);
 elements.startButton.addEventListener("click", startCombat);
@@ -5713,10 +6121,18 @@ elements.rewardContinueButton.addEventListener("click", hideRewardModal);
 elements.progressionContinueButton.addEventListener("click", hideProgressionModal);
 elements.infoCloseButton.addEventListener("click", hideInfoModal);
 elements.codexCloseButton.addEventListener("click", hideCodexModal);
+elements.characterCloseButton.addEventListener("click", hideCharacterModal);
+elements.inventoryCloseButton.addEventListener("click", hideInventoryModal);
 elements.cancelDeleteAdventureButton.addEventListener("click", hideDeleteAdventureModal);
 elements.confirmDeleteAdventureButton.addEventListener("click", confirmDeleteAdventure);
 elements.deleteAdventureModal.addEventListener("click", (event) => {
   if (event.target === elements.deleteAdventureModal) hideDeleteAdventureModal();
+});
+elements.characterModal.addEventListener("click", (event) => {
+  if (event.target === elements.characterModal) hideCharacterModal();
+});
+elements.inventoryModal.addEventListener("click", (event) => {
+  if (event.target === elements.inventoryModal) hideInventoryModal();
 });
 elements.innButton.addEventListener("click", stayAtInn);
 elements.inventoryList.addEventListener("click", (event) => {
@@ -5738,7 +6154,7 @@ elements.inventoryList.addEventListener("click", (event) => {
   const infoItemButton = event.target.closest("[data-info-item]");
   if (infoItemButton) {
     const item = consumableItems[infoItemButton.dataset.infoItem];
-    if (item) showInfoModal(item.name, formatItemInfoBody(item));
+    if (item) showItemInfoModal(item);
     return;
   }
   const button = event.target.closest("[data-use-item]");

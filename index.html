@@ -10,8 +10,8 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Playfair+Display:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="icon" type="image/jpeg" href="assets/icons/soulmarch-icon.jpg" />
-    <link rel="apple-touch-icon" href="assets/icons/soulmarch-icon.jpg" />
+    <link rel="icon" type="image/png" href="assets/icons/soulmarch-icon.png" />
+    <link rel="apple-touch-icon" href="assets/icons/soulmarch-icon.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -29,6 +29,7 @@
           <button id="resetButton" type="button" hidden>New Character</button>
           <button id="codexButton" type="button" hidden>Codex</button>
           <button id="characterButton" type="button" hidden>Character</button>
+          <button id="inventoryButton" type="button" hidden>Inventory</button>
         </div>
       </header>
 
@@ -209,32 +210,21 @@
                   <p id="playerGenderLine" class="muted player-identity-meta"></p>
                 </div>
               </div>
-              <span id="playerLevelXp" class="muted"></span>
+              <span id="playerLevelXp" class="muted player-level-summary"></span>
             </div>
             <div id="playerHpBar"></div>
             <div class="resource-bars">
               <div id="playerManaBar"></div>
               <div id="playerStaminaBar"></div>
             </div>
-
-            <nav class="tabs" aria-label="Player panel tabs">
-              <button class="tab-button active" type="button" data-tab="overview">Overview</button>
-              <button class="tab-button" type="button" data-tab="inventory">Inventory</button>
-            </nav>
+            <div id="playerLevelTier" class="player-tier-line"></div>
+            <div id="playerXpBar" class="xp-bar-wrap"></div>
 
             <section id="overviewTab" class="tab-panel">
               <div class="compact-grid">
-                <p class="stat">Class: <span id="playerClass"></span></p>
-                <p class="stat">Gender: <span id="playerGender"></span></p>
-                <p class="stat">Subclass: <span id="playerSubclass"></span></p>
-                <p class="stat">Stats: <span id="playerStats"></span></p>
-                <p class="stat">Wealth: <span id="playerWealth"></span></p>
                 <p class="stat">Defense: <span id="playerAc"></span></p>
-                <p class="stat">Weapon: <span id="playerWeapon"></span></p>
-                <p class="stat">Armor: <span id="playerArmor"></span></p>
-                <p class="stat">Status: <span id="playerStatuses"></span></p>
-                <p class="stat">Attack: <span id="playerAttack"></span></p>
               </div>
+              <h3 class="panel-subheading">Skills</h3>
               <div id="skillsList" class="skill-pills"></div>
               <div id="skillInfoPanel" class="mobile-info-panel"></div>
               <p class="stat selected-skill">
@@ -243,18 +233,6 @@
               </p>
             </section>
 
-            <section id="detailsTab" class="tab-panel" hidden>
-              <p class="stat">Attack formula: <span id="playerAttackFormula"></span></p>
-              <p class="stat">Magic: <span id="playerSpell"></span></p>
-              <p class="stat">Damage: <span id="playerDamage"></span></p>
-              <p class="stat">Resist / Weak: <span id="playerTraits"></span></p>
-              <p class="stat">Cooldowns: <span id="playerCooldowns"></span></p>
-              <p class="stat">Derived: <span id="playerDerived"></span></p>
-            </section>
-
-            <section id="inventoryTab" class="tab-panel" hidden>
-              <div id="inventoryList" class="plain-list"></div>
-            </section>
           </article>
 
           <section class="center-column">
@@ -306,7 +284,7 @@
                   <div class="action-buttons">
                     <button id="minorSkillButton" type="button" hidden>Use Selected Skill</button>
                   </div>
-                  <p class="action-help inventory-hint">Use potions and remedies from the Inventory tab.</p>
+                  <p class="action-help inventory-hint">Use potions and remedies from Inventory.</p>
                 </div>
                 <div class="action-group">
                   <div class="action-buttons">
@@ -377,6 +355,24 @@
             <button id="codexCloseButton" type="button" aria-label="Close Codex">×</button>
           </div>
           <div id="codexList"></div>
+        </section>
+      </div>
+      <div id="characterModal" class="modal-backdrop" hidden>
+        <section class="modal panel soul-frame soul-metal-border soul-glass-bg character-modal" role="dialog" aria-modal="true" aria-labelledby="characterModalTitle">
+          <div class="panel-heading">
+            <h2 id="characterModalTitle">Character</h2>
+            <button id="characterCloseButton" type="button" aria-label="Close Character">X</button>
+          </div>
+          <div id="characterModalBody" class="character-modal-body"></div>
+        </section>
+      </div>
+      <div id="inventoryModal" class="modal-backdrop" hidden>
+        <section class="modal panel soul-frame soul-metal-border soul-glass-bg inventory-modal" role="dialog" aria-modal="true" aria-labelledby="inventoryModalTitle">
+          <div class="panel-heading">
+            <h2 id="inventoryModalTitle">Inventory</h2>
+            <button id="inventoryCloseButton" type="button" aria-label="Close Inventory">X</button>
+          </div>
+          <div id="inventoryList" class="plain-list"></div>
         </section>
       </div>
       <div id="deleteAdventureModal" class="modal-backdrop" hidden>
