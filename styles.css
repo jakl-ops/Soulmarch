@@ -95,16 +95,16 @@ body.auth-mode .app > *:not(#authScreen) {
 }
 
 header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
-  padding-top: 8px;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding-top: 6px;
 }
 
 .header-spacer {
-  min-width: 0;
+  display: none;
 }
 
 .app-title {
@@ -123,19 +123,27 @@ header {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-  justify-self: end;
+  align-self: flex-end;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .header-actions button {
   width: auto;
-  min-height: 36px;
-  padding: 0 12px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(18, 23, 27, 0.74);
+  border-color: rgba(199, 163, 84, 0.76);
+  box-shadow: inset 0 0 0 1px rgba(101, 66, 140, 0.72), 0 8px 18px rgba(0, 0, 0, 0.22);
 }
 
 .header-actions button.active {
-  border-color: #8fd9b6;
-  background: rgba(31, 70, 56, 0.88);
+  border-color: rgba(235, 198, 109, 0.96);
+  background: rgba(49, 32, 70, 0.82);
+  color: #fff3d2;
 }
 
 body.auth-mode header {
@@ -2249,16 +2257,16 @@ label {
   height: calc(100vh - 24px);
   max-height: calc(100vh - 24px);
   overflow: auto;
-  padding-top: 18px;
+  padding: 28px 28px 22px;
 }
 
 .codex-modal .panel-heading {
   position: sticky;
-  top: -18px;
+  top: 0;
   z-index: 2;
   align-items: center;
-  padding: 0 0 12px;
-  margin: -18px 0 12px;
+  padding: 0 0 14px;
+  margin: 0 0 14px;
   background: linear-gradient(rgba(18, 22, 30, 0.92) 82%, rgba(18, 22, 30, 0));
 }
 
@@ -2279,17 +2287,17 @@ label {
   width: min(1120px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
   overflow: auto;
-  padding-top: 18px;
+  padding: 28px 28px 22px;
 }
 
 .character-modal .panel-heading,
 .inventory-modal .panel-heading {
   position: sticky;
-  top: -18px;
+  top: 0;
   z-index: 2;
   align-items: center;
-  padding: 0 0 12px;
-  margin: -18px 0 12px;
+  padding: 0 0 14px;
+  margin: 0 0 14px;
   background: linear-gradient(rgba(18, 22, 30, 0.9) 82%, rgba(18, 22, 30, 0));
 }
 
@@ -2309,6 +2317,11 @@ label {
 .character-modal-body {
   display: grid;
   gap: 14px;
+}
+
+.player-tier-line:empty,
+.player-identity-meta:empty {
+  display: none;
 }
 
 .character-profile {
@@ -2344,6 +2357,29 @@ label {
 
 .character-detail-card p {
   margin-bottom: 6px;
+}
+
+.character-skill-list {
+  display: grid;
+  gap: 10px;
+}
+
+.character-skill-card {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(226, 189, 102, 0.34);
+  background: rgba(8, 11, 13, 0.34);
+}
+
+.character-skill-card h4,
+.character-skill-card p {
+  margin: 0;
+}
+
+.character-skill-card h4 {
+  font-family: var(--font-ui);
+  font-size: 18px;
 }
 
 .character-detail-wide {
@@ -2494,6 +2530,10 @@ label {
   padding: 20px;
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.62);
+}
+
+#infoModal {
+  z-index: 70;
 }
 
 .modal-backdrop[hidden] {
@@ -2725,8 +2765,8 @@ label {
   }
 
   header {
-    grid-template-columns: 1fr;
-    justify-items: center;
+    align-items: center;
+    gap: 8px;
   }
 
   .header-spacer {
@@ -2734,7 +2774,7 @@ label {
   }
 
   .header-actions {
-    justify-self: center;
+    align-self: center;
     flex-wrap: wrap;
     justify-content: center;
   }

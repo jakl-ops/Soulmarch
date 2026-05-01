@@ -2,8 +2,30 @@ const STAT_LIMIT = 10;
 const MIN_STAT = 1;
 const CREATION_MAX_STAT = 10;
 const MAX_STAT = 60;
-const MAX_LEVEL = 200;
+const MAX_LEVEL = 20;
 const BASE_AC = 10;
+const XP_THRESHOLDS = [
+  0,
+  120,
+  360,
+  1100,
+  2800,
+  6200,
+  12500,
+  21000,
+  33000,
+  49000,
+  70000,
+  94000,
+  122000,
+  155000,
+  192000,
+  234000,
+  282000,
+  336000,
+  396000,
+  465000,
+];
 const BANDAGE_PRICE = { copper: 5, silver: 0, gold: 0 };
 const WARMING_SALVE_PRICE = { copper: 8, silver: 0, gold: 0 };
 const ANTITOXIN_PRICE = { copper: 0, silver: 1, gold: 0 };
@@ -1795,6 +1817,134 @@ const classSkillTrees = {
   mystic: { id: "mystic", name: "Psion", levels: { 1: { skills: ["mindSpike", "thoughtLock"] }, 2: { skills: ["psychicVeil"] }, 3: { subclass: true }, 4: { upgrades: ["mindSpikeMastery"] }, 5: { choice: { type: "skill_or_upgrade", skills: ["mindLance"], upgrades: ["thoughtLockMastery"] } } } },
 };
 
+const CLASS_FEATURE_LEVELS = [7, 10, 15, 20];
+const CLASS_CHOICE_LEVELS = [5, 9, 13, 17];
+const CLASS_PASSIVE_FEATURES = {
+  warrior: {
+    id: "warriorDamageScaling",
+    name: "Battle-Hardened Strikes",
+    description: "+1 weapon and martial skill damage every 5 levels.",
+    interval: 5,
+  },
+  magician: {
+    id: "magicianManaEfficiency",
+    name: "Efficient Spellcraft",
+    description: "Soul-based mana skill costs are reduced by 1 every 5 levels, to a minimum of 1.",
+    interval: 5,
+  },
+  rogue: {
+    id: "rogueCritScaling",
+    name: "Predator's Eye",
+    description: "+5% critical threat chance every 4 levels.",
+    interval: 4,
+  },
+  guardian: {
+    id: "guardianReductionScaling",
+    name: "Iron Bulwark",
+    description: "+1 damage reduction every 5 levels.",
+    interval: 5,
+  },
+  sorcerer: {
+    id: "sorcererSpellDamageScaling",
+    name: "Overflowing Channel",
+    description: "+1 spell damage every 4 levels.",
+    interval: 4,
+  },
+  paladin: {
+    id: "paladinShieldScaling",
+    name: "Consecrated Protection",
+    description: "+1 healing and shield effectiveness every 5 levels.",
+    interval: 5,
+  },
+  mystic: {
+    id: "mysticMindScaling",
+    name: "Deepened Thoughtform",
+    description: "+1 effective Mind scaling for psionic status chances every 4 levels.",
+    interval: 4,
+  },
+  monk: {
+    id: "monkStaminaRecovery",
+    name: "Inner Wellspring",
+    description: "+1 stamina recovered when using Recover every 5 levels.",
+    interval: 5,
+  },
+};
+
+function getClassPassiveFeature(classId) {
+  return CLASS_PASSIVE_FEATURES[classId] ?? null;
+}
+
+function getClassPassiveFeatureById(featureId) {
+  return Object.values(CLASS_PASSIVE_FEATURES).find((feature) => feature.id === featureId) ?? null;
+}
+
+function getClassPassiveRank(combatantOrLevel, classId = null) {
+  const level = typeof combatantOrLevel === "number" ? combatantOrLevel : combatantOrLevel?.level ?? 1;
+  const feature = getClassPassiveFeature(classId ?? combatantOrLevel?.classDef?.id);
+  if (!feature) return 0;
+  return Math.floor(Math.max(1, level) / feature.interval);
+}
+
+function getClassFeatureLines(classId, level = MAX_LEVEL) {
+  const feature = getClassPassiveFeature(classId);
+  if (!feature) return [];
+  const className = classes[classId]?.name ?? classSkillTrees[classId]?.name ?? titleCase(classId);
+  return CLASS_FEATURE_LEVELS.map((featureLevel) => {
+    const rank = getClassPassiveRank(featureLevel, classId);
+    const active = level >= featureLevel;
+    return {
+      level: featureLevel,
+      name: feature.name,
+      description: `${className}: ${feature.description}${rank > 0 ? ` Current rank at level ${featureLevel}: ${rank}.` : ""}`,
+      active,
+    };
+  });
+}
+
+function mergeProgressionLevel(...levels) {
+  const merged = {};
+  levels.filter(Boolean).forEach((level) => {
+    if (level.skills) merged.skills = [...(merged.skills ?? []), ...level.skills];
+    if (level.upgrades) merged.upgrades = [...(merged.upgrades ?? []), ...level.upgrades];
+    if (level.features) merged.features = [...(merged.features ?? []), ...level.features];
+    if (level.subclass) merged.subclass = true;
+    if (level.choice) {
+      merged.choice = {
+        type: "skill_or_upgrade",
+        skills: [...(merged.choice?.skills ?? []), ...(level.choice.skills ?? [])],
+        upgrades: [...(merged.choice?.upgrades ?? []), ...(level.choice.upgrades ?? [])],
+      };
+    }
+  });
+  if (merged.skills) merged.skills = Array.from(new Set(merged.skills));
+  if (merged.upgrades) merged.upgrades = Array.from(new Set(merged.upgrades));
+  if (merged.features) merged.features = Array.from(new Set(merged.features));
+  if (merged.choice) {
+    merged.choice.skills = Array.from(new Set(merged.choice.skills));
+    merged.choice.upgrades = Array.from(new Set(merged.choice.upgrades));
+  }
+  return merged;
+}
+
+function getGeneratedProgressionLevel(classId, level) {
+  const baseTree = classSkillTrees[classId];
+  const levelFiveChoice = baseTree?.levels?.[5]?.choice;
+  const generated = {};
+  if (level === 6 && levelFiveChoice?.skills?.length) {
+    generated.skills = levelFiveChoice.skills;
+  }
+  if (CLASS_CHOICE_LEVELS.includes(level) && levelFiveChoice) {
+    generated.choice = level === 9
+      ? { type: "skill_or_upgrade", upgrades: levelFiveChoice.upgrades ?? [] }
+      : levelFiveChoice;
+  }
+  if (CLASS_FEATURE_LEVELS.includes(level)) {
+    const feature = getClassPassiveFeature(classId);
+    if (feature) generated.features = [feature.id];
+  }
+  return generated;
+}
+
 const enemyTemplates = {
   goblin: {
     id: "goblin",
@@ -1841,6 +1991,7 @@ const enemyTemplates = {
     weaponId: "boneClaw",
     acBonus: 1,
     resistances: ["ice", "poison"],
+    statusImmunities: ["bleed"],
     weaknesses: ["lightning"],
     loot: { xp: 110, copper: [2, 8], silver: [2, 4], gold: [0, 1], weaponChance: 0.18, weaponIds: ["axe"] },
   },
@@ -1972,6 +2123,9 @@ const elements = {
   attackButton: document.querySelector("#attackButton"),
   majorSkillButton: document.querySelector("#majorSkillButton"),
   minorSkillButton: document.querySelector("#minorSkillButton"),
+  recoverButton: document.querySelector("#recoverButton"),
+  focusButton: document.querySelector("#focusButton"),
+  shakeOffButton: document.querySelector("#shakeOffButton"),
   clearSkillButton: document.querySelector("#clearSkillButton"),
   endTurnButton: document.querySelector("#endTurnButton"),
   nextEncounterButton: document.querySelector("#nextEncounterButton"),
@@ -2234,16 +2388,12 @@ function getStatModifier(statValue) {
 
 function getXpRequiredForNextLevel(level) {
   if (level >= MAX_LEVEL) return 0;
-  return Math.floor(100 * Math.pow(Math.max(1, level), 1.55));
+  return getTotalXpForLevel(level + 1) - getTotalXpForLevel(level);
 }
 
 function getTotalXpForLevel(level) {
   const targetLevel = clamp(level, 1, MAX_LEVEL);
-  let total = 0;
-  for (let currentLevel = 1; currentLevel < targetLevel; currentLevel += 1) {
-    total += getXpRequiredForNextLevel(currentLevel);
-  }
-  return total;
+  return XP_THRESHOLDS[targetLevel - 1] ?? XP_THRESHOLDS[XP_THRESHOLDS.length - 1];
 }
 
 function getPowerTier(level) {
@@ -2265,11 +2415,7 @@ function formatPowerTierName(level) {
 }
 
 function doesLevelGrantStatIncrease(level) {
-  if (level < 2 || level > MAX_LEVEL) return false;
-  if (level <= 20) return true;
-  if (level <= 60) return (level - 20) % 2 === 0;
-  if (level <= 120) return (level - 60) % 3 === 0;
-  return (level - 120) % 4 === 0;
+  return [4, 8, 12, 16, 20].includes(level);
 }
 
 function getLevelDamageBonus(combatant) {
@@ -3190,7 +3336,8 @@ function getClassSkillTree(classId) {
 }
 
 function getClassProgressionLevel(classId, level) {
-  return getClassSkillTree(classId)?.levels?.[level] ?? {};
+  const tree = getClassSkillTree(classId);
+  return mergeProgressionLevel(tree?.levels?.[level], getGeneratedProgressionLevel(classId, level));
 }
 
 function getClassStartingSkillIds(classId) {
@@ -3201,6 +3348,8 @@ function normalizePlayerProgression(player) {
   if (!player?.classDef) return;
   player.unlockedSkills = Array.from(new Set(player.unlockedSkills?.length ? player.unlockedSkills : getClassStartingSkillIds(player.classDef.id)));
   player.upgradedSkills = Array.from(new Set(player.upgradedSkills ?? []));
+  player.unlockedFeatures = Array.from(new Set(player.unlockedFeatures ?? []));
+  player.nextRollBonus = Math.max(0, Number.parseInt(player.nextRollBonus, 10) || 0);
 }
 
 function normalizePlayerInventory(player) {
@@ -3260,7 +3409,8 @@ function calculateEffectChance(actor, source) {
   if (!source?.status?.id) return null;
   if (source.baseEffectChance !== undefined && source.effectScalingStat && source.effectChancePerStat !== undefined) {
     const scalingStatId = String(source.effectScalingStat).toLowerCase();
-    const statValue = actor?.stats?.[scalingStatId] ?? 0;
+    const passiveMindBonus = actor?.classDef?.id === "mystic" && scalingStatId === "mind" ? getClassPassiveRank(actor) : 0;
+    const statValue = (actor?.stats?.[scalingStatId] ?? 0) + passiveMindBonus;
     const rawChance = source.baseEffectChance + statValue * source.effectChancePerStat;
     const maxChance = source.maxEffectChance ?? 100;
     return {
@@ -3399,7 +3549,7 @@ function getLevelForXp(xp) {
 }
 
 function getNextLevelText(player) {
-  if ((player?.level ?? 1) >= MAX_LEVEL) return "max";
+  if ((player?.level ?? 1) >= MAX_LEVEL) return "MAX";
   return `${getTotalXpForLevel(player.level + 1)} XP`;
 }
 
@@ -3460,21 +3610,22 @@ function getClassAttackBonus(combatant, attackKind) {
 }
 
 function getClassWeaponHitBonus(combatant) {
-  return (combatant.classDef?.weaponHitBonus ?? 0) + Math.floor((combatant?.level ?? 1) / 20);
+  return combatant.classDef?.weaponHitBonus ?? 0;
 }
 
 function getClassSpellHitBonus(combatant) {
-  return (combatant.classDef?.spellHitBonus ?? 0) + Math.floor((combatant?.level ?? 1) / 20);
+  return combatant.classDef?.spellHitBonus ?? 0;
 }
 
 function getClassDamageReduction(combatant) {
   if (!combatant.classDef) return 0;
-  return (combatant.classDef?.damageReduction ?? 0) + Math.floor((combatant?.level ?? 1) / 25);
+  const guardianBonus = combatant.classDef.id === "guardian" ? getClassPassiveRank(combatant) : 0;
+  return (combatant.classDef?.damageReduction ?? 0) + guardianBonus;
 }
 
 function getClassDefenseBonus(combatant) {
   if (!combatant.classDef) return 0;
-  return (combatant.classDef?.acBonus ?? 0) + Math.floor((combatant?.level ?? 1) / 30);
+  return combatant.classDef?.acBonus ?? 0;
 }
 
 function getClassCheckBonus(combatant, stat) {
@@ -3494,7 +3645,9 @@ function getStatusHitPenalty(combatant) {
 }
 
 function getStatusDamageReduction(combatant) {
-  return combatant.statuses.reduce((total, status) => total + (statusDefinitions[status.id].damageReduction ?? 0), 0);
+  const statusReduction = combatant.statuses.reduce((total, status) => total + (statusDefinitions[status.id].damageReduction ?? 0), 0);
+  const paladinBonus = statusReduction > 0 && combatant.classDef?.id === "paladin" ? getClassPassiveRank(combatant) : 0;
+  return statusReduction + paladinBonus;
 }
 
 function getWeaponSpecialAttackBonus(combatant, attack) {
@@ -3609,6 +3762,7 @@ function createPlayer() {
     statuses: [],
     inventory: createInventory(weapon.id, armor.id),
     hasAttacked: false,
+    nextRollBonus: 0,
     selectedSkillId: null,
     skillCooldowns: {},
   };
@@ -3668,7 +3822,7 @@ function prepareNewAdventure() {
   renderBuilder();
 }
 
-// Enemy scaling is formula-driven for the 200-level cap without hand-authored tiers.
+// Enemy scaling is formula-driven for the 20-level cap without hand-authored tiers.
 function createScaledEnemy(playerLevel) {
   const templateList = Object.values(enemyTemplates);
   const template = templateList[Math.floor(Math.random() * templateList.length)];
@@ -3699,6 +3853,7 @@ function createScaledEnemy(playerLevel) {
     acBonus: template.acBonus + Math.floor(level / 20),
     resistances: [...template.resistances],
     weaknesses: [...template.weaknesses],
+    statusImmunities: [...(template.statusImmunities ?? [])],
     statuses: [],
     loot: template.loot,
     hasAttacked: false,
@@ -3949,6 +4104,102 @@ function finishPlayerAction() {
   }
 }
 
+function getNegativeStatuses(combatant) {
+  return (combatant?.statuses ?? []).filter((status) => statusDefinitions[status.id]?.negative);
+}
+
+function canUseUniversalMinorAction() {
+  return state.gameState === GAME_STATES.inCombat && currentCombatant()?.id === "player" && !state.isResolvingEnemyTurn && !state.winner && canUseMinorAction();
+}
+
+function getRecoverTarget(player) {
+  if (!player) return null;
+  const recoverOptions = [
+    { key: "hp", maxKey: "maxHp", label: "HP", amount: Math.ceil((player.maxHp ?? 0) * 0.05) },
+    { key: "mana", maxKey: "maxMana", label: "Mana", amount: 2 },
+    {
+      key: "stamina",
+      maxKey: "maxStamina",
+      label: "Stamina",
+      amount: 2 + (player.classDef?.id === "monk" ? getClassPassiveRank(player) : 0),
+    },
+  ].filter((option) => (player[option.key] ?? 0) < (player[option.maxKey] ?? 0));
+  if (!recoverOptions.length) return null;
+  recoverOptions.sort((a, b) => (player[a.key] ?? 0) / Math.max(1, player[a.maxKey] ?? 1) - (player[b.key] ?? 0) / Math.max(1, player[b.maxKey] ?? 1));
+  return recoverOptions[0];
+}
+
+function useRecoverAction() {
+  if (!canUseUniversalMinorAction()) return;
+  if (!startTurn(state.player)) {
+    renderCombat();
+    window.setTimeout(advanceTurn, 450);
+    return;
+  }
+  const target = getRecoverTarget(state.player);
+  if (!target) {
+    addLog(`${state.player.name} has no depleted resource to recover.`);
+    renderCombat();
+    return;
+  }
+  markMinorActionUsed("Recover");
+  const before = state.player[target.key] ?? 0;
+  state.player[target.key] = Math.min(state.player[target.maxKey] ?? before, before + target.amount);
+  const restored = state.player[target.key] - before;
+  addLog(`${state.player.name} recovers ${restored} ${target.label}.`);
+  if (!state.winner) tickStatuses(state.player, "afterAct");
+  finishPlayerAction();
+}
+
+function useFocusAction() {
+  if (!canUseUniversalMinorAction()) return;
+  if (!startTurn(state.player)) {
+    renderCombat();
+    window.setTimeout(advanceTurn, 450);
+    return;
+  }
+  markMinorActionUsed("Focus");
+  state.player.nextRollBonus = Math.max(state.player.nextRollBonus ?? 0, 1);
+  addLog(`${state.player.name} focuses. The next roll gains +1.`);
+  if (!state.winner) tickStatuses(state.player, "afterAct");
+  finishPlayerAction();
+}
+
+function useShakeItOffAction() {
+  if (!canUseUniversalMinorAction()) return;
+  if (!startTurn(state.player)) {
+    renderCombat();
+    window.setTimeout(advanceTurn, 450);
+    return;
+  }
+  const negativeStatuses = getNegativeStatuses(state.player);
+  if (!negativeStatuses.length) {
+    addLog(`${state.player.name} has no negative status to shake off.`);
+    renderCombat();
+    return;
+  }
+  markMinorActionUsed("Shake It Off");
+  const chance = clamp(50 + (state.player.stats?.mind ?? 0) * 2, 0, 100);
+  const rollValue = roll(100);
+  const status = negativeStatuses[0];
+  const statusName = statusDefinitions[status.id]?.name ?? status.id;
+  addLog(`Shake It Off chance: ${chance}% (50% base + Mind scaling).`);
+  if (rollValue <= chance) {
+    removeStatus(state.player, status.id);
+    addLog(`Rolled ${rollValue} -> ${statusName} removed.`);
+  } else {
+    addLog(`Rolled ${rollValue} -> ${statusName} remains.`);
+  }
+  if (!state.winner) tickStatuses(state.player, "afterAct");
+  finishPlayerAction();
+}
+
+function consumeNextRollBonus(combatant) {
+  const bonus = combatant?.nextRollBonus ?? 0;
+  if (bonus > 0) combatant.nextRollBonus = 0;
+  return bonus;
+}
+
 function skillHasDirectOffense(skill) {
   return Boolean(skill?.damageDice || skill?.damageBonus || skill?.attackKind === "weapon" || skill?.attackKind === "spell");
 }
@@ -4044,10 +4295,38 @@ function renderCharacterModal() {
   const attackParts = getAttackParts(player);
   const attackTotal = sumParts(attackParts);
   const subclassDef = getSubclassDef(player);
-  const magicalSkills = getPlayerSkills().filter((skill) => skill.attackKind === "spell" || skill.statUsed === "Soul");
+  const playerSkills = getPlayerSkills();
   const cooldownSummary = formatCooldownSummary(player);
   const statusSummary = formatStatuses(player);
   const resourceSummary = `HP ${player.hp}/${player.maxHp}; Mana ${player.mana}/${player.maxMana}; Stamina ${player.stamina}/${player.maxStamina}`;
+  const classFeatureSummary = getClassFeatureLines(player.classDef?.id, player.level);
+  const classFeatureMarkup = classFeatureSummary.length
+    ? classFeatureSummary
+        .map(
+          (feature) => `
+            <article class="character-skill-card">
+              <div>
+                <h4>Level ${feature.level}: ${escapeAttribute(feature.name)}</h4>
+                <p>${escapeAttribute(feature.description)}</p>
+              </div>
+            </article>`
+        )
+        .join("")
+    : `<p>No class features.</p>`;
+  const skillSummary = playerSkills.length
+    ? playerSkills
+        .map(
+          (skill) => `
+            <article class="character-skill-card">
+              <div>
+                <h4>${escapeAttribute(skill.name)}</h4>
+                <p>${escapeAttribute(skill.description)}</p>
+              </div>
+              <p class="muted">${escapeAttribute(formatSkillEffect(skill, player))}</p>
+            </article>`
+        )
+        .join("")
+    : `<p>No class skills unlocked.</p>`;
   elements.characterModalBody.innerHTML = `
     <section class="character-profile">
       ${renderCharacterAvatar(player.classDef?.id, player.gender, player.name, { large: true })}
@@ -4094,12 +4373,12 @@ function renderCharacterModal() {
         <p>Cooldowns: ${cooldownSummary}</p>
       </div>
       <div class="character-detail-card character-detail-wide">
-        <h3>Magic</h3>
-        <p>${
-          magicalSkills.length
-            ? magicalSkills.map((skill) => `${skill.name}: ${skill.statUsed}-based ${skill.mode}`).join(", ")
-            : "No spell-focused skills unlocked."
-        }</p>
+        <h3>Class Features</h3>
+        <div class="character-skill-list">${classFeatureMarkup}</div>
+      </div>
+      <div class="character-detail-card character-detail-wide">
+        <h3>Skills</h3>
+        <div class="character-skill-list">${skillSummary}</div>
       </div>
       <div class="character-detail-card character-detail-wide">
         <h3>Derived</h3>
@@ -4271,12 +4550,12 @@ function renderCombatant(prefix, combatant) {
     if (elements.playerNameHeading) elements.playerNameHeading.textContent = combatant.name;
     setCharacterAvatar(elements.playerAvatar, combatant.classDef?.id, combatant.gender, combatant.name, { eager: true });
     if (elements.playerLevelXp) elements.playerLevelXp.textContent = `Level ${combatant.level}`;
-    if (elements.playerLevelTier) elements.playerLevelTier.textContent = formatPowerTierName(combatant.level);
+    if (elements.playerLevelTier) elements.playerLevelTier.textContent = "";
     renderXpBar(elements.playerXpBar, combatant);
     if (elements.saveStatus) elements.saveStatus.textContent = state.savePending
       ? "Saving..."
       : state.saveMessage || (state.user ? "" : "Not logged in — progress will not be saved.");
-    if (elements.playerGenderLine) elements.playerGenderLine.textContent = `Gender: ${formatGenderLabel(combatant.gender)}`;
+    if (elements.playerGenderLine) elements.playerGenderLine.textContent = "";
     renderResourceBar(elements.playerManaBar, "Mana", combatant.mana, combatant.maxMana, "mana");
     renderResourceBar(elements.playerStaminaBar, "Stamina", combatant.stamina, combatant.maxStamina, "stamina");
     if (elements.playerGender) elements.playerGender.textContent = formatGenderLabel(combatant.gender);
@@ -4287,7 +4566,7 @@ function renderCombatant(prefix, combatant) {
     if (elements.playerAttackFormula) elements.playerAttackFormula.textContent = `d20 + ${attackParts.map((part) => `${part.label} ${part.value}`).join(" + ")}`;
     if (elements.playerCooldowns) elements.playerCooldowns.textContent = formatCooldownSummary(combatant);
     if (elements.playerDerived) {
-      elements.playerDerived.textContent = `${formatPowerTierName(combatant.level)}; Max HP ${combatant.maxHp}; Max Mana ${combatant.maxMana}; Max Stamina ${combatant.maxStamina}; ${getAcFormula(combatant)}`;
+      elements.playerDerived.textContent = `Max HP ${combatant.maxHp}; Max Mana ${combatant.maxMana}; Max Stamina ${combatant.maxStamina}; ${getAcFormula(combatant)}`;
     }
     const magicalSkills = getPlayerSkills().filter((skill) => skill.attackKind === "spell" || skill.statUsed === "Soul");
     if (elements.playerSpell) {
@@ -4630,7 +4909,7 @@ function canUseSkill(player, skill, cooldownState = player.skillCooldowns ?? {})
     };
   }
   const resourceType = skill.resourceType ?? null;
-  const resourceCost = skill.resourceCost ?? 0;
+  const resourceCost = getEffectiveSkillResourceCost(player, skill);
   if (!resourceType || resourceCost <= 0) {
     return { usable: true, reason: "", cooldownRemaining };
   }
@@ -4645,10 +4924,22 @@ function canUseSkill(player, skill, cooldownState = player.skillCooldowns ?? {})
   return { usable: true, reason: "", cooldownRemaining };
 }
 
+function getEffectiveSkillResourceCost(player, skill) {
+  const baseCost = skill?.resourceCost ?? 0;
+  if (!skill?.resourceType || baseCost <= 0) return baseCost;
+  const isMagicianManaSkill =
+    player?.classDef?.id === "magician" &&
+    skill.resourceType === "mana" &&
+    String(skill.statUsed ?? "").toLowerCase() === "soul";
+  if (!isMagicianManaSkill) return baseCost;
+  return Math.max(1, baseCost - getClassPassiveRank(player));
+}
+
 function spendSkillResource(player, skill) {
-  if (!skill.resourceType || !skill.resourceCost) return;
-  player[skill.resourceType] = Math.max(0, (player[skill.resourceType] ?? 0) - skill.resourceCost);
-  addLog(`${player.name} spends ${skill.resourceCost} ${resourceLabel(skill.resourceType)} to use ${skill.name}.`);
+  const resourceCost = getEffectiveSkillResourceCost(player, skill);
+  if (!skill.resourceType || !resourceCost) return;
+  player[skill.resourceType] = Math.max(0, (player[skill.resourceType] ?? 0) - resourceCost);
+  addLog(`${player.name} spends ${resourceCost} ${resourceLabel(skill.resourceType)} to use ${skill.name}.`);
 }
 
 function startSkillCooldown(player, skill) {
@@ -4679,10 +4970,11 @@ function formatCooldownSummary(player) {
     .join(", ");
 }
 
-function getSkillBadgeText(skill) {
+function getSkillBadgeText(skill, player = state.player) {
   const badges = [];
-  if (skill.resourceType && (skill.resourceCost ?? 0) > 0) {
-    badges.push(`${skill.resourceType === "mana" ? "M" : "S"}${skill.resourceCost}`);
+  const resourceCost = getEffectiveSkillResourceCost(player, skill);
+  if (skill.resourceType && resourceCost > 0) {
+    badges.push(`${skill.resourceType === "mana" ? "M" : "S"}${resourceCost}`);
   }
   if ((skill.cooldownTurns ?? 0) > 0) {
     badges.push(`CD${skill.cooldownTurns}`);
@@ -4702,18 +4994,20 @@ function renderSkills() {
   skillList.forEach((skill) => {
     const availability = canUseSkill(state.player, skill);
     const actionType = getSkillActionType(skill);
+    const badgeText = getSkillBadgeText(skill, state.player);
+    const resourceCost = getEffectiveSkillResourceCost(state.player, skill);
     const actionAvailable =
       skill.mode === "attack_modifier" ? canUseMajorAction() : actionType === "major" ? canUseMajorAction() : canUseMinorAction();
     const button = document.createElement("button");
     button.type = "button";
     button.className = `skill-pill${state.player.selectedSkillId === skill.id ? " active" : ""}${availability.usable ? "" : " unavailable"}`;
-    button.innerHTML = `<span>${skill.name}</span>${getSkillBadgeText(skill) ? `<span class="skill-badge">${getSkillBadgeText(skill)}</span>` : ""}${
+    button.innerHTML = `<span>${skill.name}</span>${badgeText ? `<span class="skill-badge">${badgeText}</span>` : ""}${
       availability.cooldownRemaining > 0 ? `<span class="cooldown-badge">${availability.cooldownRemaining}</span>` : ""
     }`;
     button.dataset.skillId = skill.id;
     const chanceLine = skill.status ? `\n${formatStatusChanceText(skill, state.player)}` : "";
     button.dataset.tooltip = `${skill.description}\nMode: ${skill.mode === "attack_modifier" ? "Modifier Skill" : "Standalone Skill"}\nStat: ${skill.statUsed}\nResource: ${
-      skill.resourceType ? `${skill.resourceCost} ${resourceLabel(skill.resourceType)}` : "None"
+      skill.resourceType ? `${resourceCost} ${resourceLabel(skill.resourceType)}` : "None"
     }\nCooldown: ${skill.cooldownTurns ?? 0}\nCurrent cooldown: ${availability.cooldownRemaining}${chanceLine}\nEffect: ${formatSkillEffect(skill, state.player)}${
       availability.reason ? `\nUnavailable: ${availability.reason}` : ""
     }`;
@@ -4725,7 +5019,7 @@ function renderSkills() {
     ? `<strong>${selected.name}</strong>${selected.description} Mode: ${
         selected.mode === "attack_modifier" ? "Modifier Skill" : "Standalone Skill"
       }. Stat: ${selected.statUsed}. Resource: ${
-        selected.resourceType ? `${selected.resourceCost} ${resourceLabel(selected.resourceType)}` : "None"
+        selected.resourceType ? `${getEffectiveSkillResourceCost(state.player, selected)} ${resourceLabel(selected.resourceType)}` : "None"
       }. Cooldown: ${selected.cooldownTurns ?? 0}. Action: ${selectedActionType ? titleCase(selectedActionType) : "Attack modifier"}. Effect: ${formatSkillEffect(selected, state.player)}.`
     : "Tap a skill to prepare it and read its details here.";
 }
@@ -4813,8 +5107,9 @@ function renderCodex() {
 
   let content;
   if (state.activeCodexSection === "classes") {
-    content = renderCodexCards(playableClassIds.map((id) => classes[id]).filter(Boolean), (classDef) =>
-      createCodexCard(
+    content = renderCodexCards(playableClassIds.map((id) => classes[id]).filter(Boolean), (classDef) => {
+      const featureBullets = getClassFeatureLines(classDef.id).map((feature) => `Level ${feature.level}: ${feature.name} - ${feature.description}`);
+      return createCodexCard(
         classDef.name,
         classDef.roleTag ?? "Class",
         classDef.shortDescription,
@@ -4823,10 +5118,10 @@ function renderCodex() {
           `Spell hit ${signed(classDef.spellHitBonus)} base`,
           `Defense ${signed(classDef.acBonus)} base`,
         ],
-        [classDef.playstyle, classDef.tooltipSummary],
+        [classDef.playstyle, classDef.tooltipSummary, ...featureBullets],
         renderCodexClassIcon(classDef.id, classDef.name)
-      )
-    );
+      );
+    });
   } else if (state.activeCodexSection === "subclasses") {
     content = renderCodexCards(
       Object.entries(subclasses).flatMap(([classId, group]) => Object.values(group).map((subclass) => ({ classId, subclass }))),
@@ -5192,6 +5487,15 @@ function renderCombat() {
   elements.minorSkillButton.hidden = !(selectedSkill && selectedSkill.mode === "standalone" && selectedSkillActionType === "minor");
   elements.minorSkillButton.disabled = !playerTurnActive || !canUseMinorAction() || !selectedSkillAvailability?.usable;
   elements.minorSkillButton.textContent = selectedSkill ? `Use ${selectedSkill.name}` : "Use Selected Skill";
+  const minorActionAvailable = playerTurnActive && canUseMinorAction();
+  const recoverTarget = getRecoverTarget(state.player);
+  const negativeStatuses = getNegativeStatuses(state.player);
+  elements.recoverButton.disabled = !minorActionAvailable || !recoverTarget;
+  elements.recoverButton.title = recoverTarget ? `Minor Action: restore ${recoverTarget.label}.` : "HP, Mana, and Stamina are full.";
+  elements.focusButton.disabled = !minorActionAvailable;
+  elements.focusButton.title = "Minor Action: gain +1 to the next roll.";
+  elements.shakeOffButton.disabled = !minorActionAvailable || !negativeStatuses.length;
+  elements.shakeOffButton.title = negativeStatuses.length ? "Minor Action: attempt to remove one negative status." : "No negative status effects to remove.";
   elements.endTurnButton.disabled = !playerTurnActive;
   elements.clearSkillButton.hidden = !selectedSkill || !playerTurnActive;
   elements.innButton.disabled = true;
@@ -5203,6 +5507,9 @@ function setActionButtons(disabled) {
   elements.attackButton.disabled = disabled;
   elements.majorSkillButton.disabled = disabled;
   elements.minorSkillButton.disabled = disabled;
+  elements.recoverButton.disabled = disabled;
+  elements.focusButton.disabled = disabled;
+  elements.shakeOffButton.disabled = disabled;
   elements.endTurnButton.disabled = disabled;
   elements.majorSkillButton.hidden = true;
   elements.minorSkillButton.hidden = true;
@@ -5256,6 +5563,20 @@ function getSkillParts(attacker, skill, extraHitBonus = 0) {
   });
 }
 
+function getEffectiveCritMin(attacker, attack) {
+  const baseCritMin = attack?.critMin ?? 20;
+  const rogueCritReduction = attacker?.classDef?.id === "rogue" ? getClassPassiveRank(attacker) : 0;
+  return clamp(baseCritMin - rogueCritReduction, 2, 20);
+}
+
+function getClassPassiveDamageBonus(attacker, attack) {
+  const rank = getClassPassiveRank(attacker);
+  if (rank <= 0) return 0;
+  if (attacker?.classDef?.id === "warrior" && attack?.attackKind !== "spell") return rank;
+  if (attacker?.classDef?.id === "sorcerer" && attack?.attackKind === "spell") return rank;
+  return 0;
+}
+
 function isArmored(combatant) {
   return getArmorBonus(combatant) > 0;
 }
@@ -5269,10 +5590,12 @@ function getDamageBonusParts(attacker, defender, attack) {
       ? 0
       : subclass?.damageBonus ?? 0;
   const levelBonus = getLevelDamageBonus(attacker);
+  const passiveDamageBonus = getClassPassiveDamageBonus(attacker, attack);
 
   if ((attack.damageBonus ?? 0) !== 0) parts.push({ label: attack.name, value: attack.damageBonus });
   if (classBonus !== 0) parts.push({ label: attacker.classDef.name, value: classBonus });
   if (subclassDamageBonus !== 0) parts.push({ label: subclass.name, value: subclassDamageBonus });
+  if (passiveDamageBonus !== 0) parts.push({ label: getClassPassiveFeature(attacker.classDef.id)?.name ?? "Class feature", value: passiveDamageBonus });
   if (attack.id === "sword" && isArmored(defender)) parts.push({ label: "Armored target", value: 1 });
   if (levelBonus !== 0) parts.push({ label: "Level", value: levelBonus });
   return parts;
@@ -5299,6 +5622,11 @@ function applyDamageTraits(defender, damage, damageType) {
 
 function applyStatus(target, statusId, sourceName, sourceLevel = 1) {
   const def = statusDefinitions[statusId];
+  if (!def) return false;
+  if (isStatusImmune(target, statusId)) {
+    addLog(`${target.name} is immune to ${def.name}.`);
+    return false;
+  }
   const existing = target.statuses.find((status) => status.id === statusId);
   if (existing) {
     existing.duration = Math.max(existing.duration, def.duration);
@@ -5307,13 +5635,22 @@ function applyStatus(target, statusId, sourceName, sourceLevel = 1) {
     target.statuses.push({ id: statusId, duration: def.duration, sourceLevel });
   }
   addLog(`${sourceName} applies ${def.name} to ${target.name}.`);
+  return true;
+}
+
+function isStatusImmune(target, statusId) {
+  return (target?.statusImmunities ?? []).includes(statusId);
 }
 
 function maybeApplyStatus(source, target, status, sourceName, effectSource = null) {
   if (!status) return;
+  const statusName = statusDefinitions[status.id]?.name ?? status.id;
+  if (isStatusImmune(target, status.id)) {
+    addLog(`${target.name} is immune to ${statusName}.`);
+    return;
+  }
   const chance = calculateEffectChance(source, effectSource ?? { status });
   if (!chance) return;
-  const statusName = statusDefinitions[status.id]?.name ?? status.id;
   const rollValue = roll(100);
   if (chance.usesScaling) {
     addLog(`${statusName} chance: ${chance.chancePercent}% (${chance.baseEffectChance}% base + ${chance.effectScalingStat} scaling, max ${chance.maxEffectChance}%).`);
@@ -5374,11 +5711,16 @@ function resolveAttack(attacker, attack = attacker.weapon, options = {}) {
   }
   const defender = targetFor(attacker);
   const attackDie = roll(20);
-  const parts = options.skill ? getSkillParts(attacker, options.skill, options.extraHitBonus ?? 0) : getAttackParts(attacker, attack, options.extraHitBonus ?? 0);
+  const focusBonus = consumeNextRollBonus(attacker);
+  if (focusBonus > 0) {
+    addLog(`${attacker.name}'s Focus adds +${focusBonus} to this roll.`);
+  }
+  const extraHitBonus = (options.extraHitBonus ?? 0) + focusBonus;
+  const parts = options.skill ? getSkillParts(attacker, options.skill, extraHitBonus) : getAttackParts(attacker, attack, extraHitBonus);
   const attackTotal = attackDie + sumParts(parts);
   const defenderAc = getAc(defender);
   const isNaturalTwenty = attackDie === 20;
-  const isCrit = isNaturalTwenty || attackDie >= (attack.critMin ?? 20);
+  const isCrit = isNaturalTwenty || attackDie >= getEffectiveCritMin(attacker, attack);
   const hit = isCrit || (attackDie !== 1 && attackTotal >= defenderAc);
   attacker.hasAttacked = true;
 
@@ -5439,10 +5781,14 @@ function getRestoredResourceKeys(itemDef) {
 
 function calculateConsumableRestoreAmount(target, itemDef) {
   const { maxKey } = getRestoredResourceKeys(itemDef);
+  let amount = 0;
   if (Number.isFinite(itemDef.restorePercent)) {
-    return Math.ceil((target[maxKey] ?? 0) * itemDef.restorePercent);
+    amount = Math.ceil((target[maxKey] ?? 0) * itemDef.restorePercent);
+  } else {
+    amount = itemDef.restoreRange ? rollRange(itemDef.restoreRange) : 0;
   }
-  return itemDef.restoreRange ? rollRange(itemDef.restoreRange) : 0;
+  const paladinBonus = target?.classDef?.id === "paladin" && itemDef.restoreType === "hp" ? getClassPassiveRank(target) : 0;
+  return amount + paladinBonus;
 }
 
 function getConsumableUseState(player, itemDef) {
@@ -5685,10 +6031,19 @@ function shouldChooseSubclassForLevelUp(level = getCurrentLevelUpLevel()) {
 function getProgressionChoiceOptions(level = getCurrentLevelUpLevel()) {
   const choice = getClassProgressionLevel(state.player.classDef.id, level).choice;
   if (!choice) return [];
-  return [
-    ...(choice.skills ?? []).map((skillId) => ({ type: "skill", id: skillId })),
-    ...(choice.upgrades ?? []).map((upgradeId) => ({ type: "upgrade", id: upgradeId })),
-  ];
+  normalizePlayerProgression(state.player);
+  const unlockedSkills = new Set(state.player.unlockedSkills ?? []);
+  const upgradedSkills = new Set(state.player.upgradedSkills ?? []);
+  const skillOptions = (choice.skills ?? [])
+    .filter((skillId) => skills[skillId] && !unlockedSkills.has(skillId))
+    .map((skillId) => ({ type: "skill", id: skillId }));
+  const upgradeOptions = (choice.upgrades ?? [])
+    .filter((upgradeId) => {
+      const upgrade = skillUpgrades[upgradeId];
+      return upgrade && unlockedSkills.has(upgrade.targetSkillId) && !upgradedSkills.has(upgradeId);
+    })
+    .map((upgradeId) => ({ type: "upgrade", id: upgradeId }));
+  return [...skillOptions, ...upgradeOptions];
 }
 
 function describeProgressionChoiceOption(option) {
@@ -5731,6 +6086,17 @@ function applySkillUpgrade(player, upgradeId) {
   return `Skill upgraded: ${skill.name} — ${upgrade.summary}`;
 }
 
+function unlockClassFeature(player, featureId) {
+  normalizePlayerProgression(player);
+  if (player.unlockedFeatures.includes(featureId)) {
+    return null;
+  }
+  const feature = getClassPassiveFeatureById(featureId);
+  if (!feature) return null;
+  player.unlockedFeatures.push(featureId);
+  return `Class feature unlocked: ${feature.name} - ${feature.description}`;
+}
+
 function applyProgressionForLevel(player, level) {
   const progression = getClassProgressionLevel(player.classDef.id, level);
   const results = [];
@@ -5740,6 +6106,10 @@ function applyProgressionForLevel(player, level) {
   });
   (progression.upgrades ?? []).forEach((upgradeId) => {
     const message = applySkillUpgrade(player, upgradeId);
+    if (message) results.push(message);
+  });
+  (progression.features ?? []).forEach((featureId) => {
+    const message = unlockClassFeature(player, featureId);
     if (message) results.push(message);
   });
   const choiceId = state.levelUpDraft.progressionChoice;
@@ -5791,11 +6161,13 @@ function awardXp(player, amount) {
   const oldMaxHp = player.maxHp;
   const oldMaxMana = player.maxMana;
   const oldMaxStamina = player.maxStamina;
-  player.xp += amount;
+  const previousXp = player.xp ?? 0;
+  player.xp = Math.min(getTotalXpForLevel(MAX_LEVEL), previousXp + amount);
+  const awardedXp = player.xp - previousXp;
   player.level = getLevelForXp(player.xp);
   recalculateHp(player, oldMaxHp);
   recalculateResources(player, oldMaxMana, oldMaxStamina);
-  addLog(`${player.name} gains ${amount} XP (${player.xp} total).`);
+  addLog(`${player.name} gains ${awardedXp} XP (${player.xp} total).`);
   if (player.level > oldLevel) {
     const gainedLevels = [];
     for (let level = oldLevel + 1; level <= player.level; level += 1) {
@@ -5892,6 +6264,7 @@ function showLevelUp() {
   const level = getCurrentLevelUpLevel();
   const progression = getCurrentLevelProgression();
   const grantsStat = doesLevelGrantStatIncrease(level);
+  const progressionChoiceOptions = getProgressionChoiceOptions(level);
   state.levelUpDraft = { stat: null, subclass: shouldChooseSubclassForLevelUp(level) ? null : state.player.subclassId, progressionChoice: null };
   elements.levelUpScreen.hidden = false;
   elements.levelUpText.textContent =
@@ -5902,15 +6275,18 @@ function showLevelUp() {
   levelNotes.push(formatPowerTier(level));
   if ((progression.skills ?? []).length) levelNotes.push(`Unlocks: ${(progression.skills ?? []).map((skillId) => getSkillById(skillId, state.player)?.name ?? skillId).join(", ")}`);
   if ((progression.upgrades ?? []).length) levelNotes.push(`Major upgrade: ${(progression.upgrades ?? []).map((upgradeId) => skillUpgrades[upgradeId]?.name ?? upgradeId).join(", ")}`);
-  if (progression.choice) levelNotes.push("Choice: unlock a new skill or upgrade an existing one.");
+  if ((progression.features ?? []).length) {
+    levelNotes.push(`Feature: ${(progression.features ?? []).map((featureId) => getClassPassiveFeatureById(featureId)?.name ?? featureId).join(", ")}`);
+  }
+  if (progressionChoiceOptions.length) levelNotes.push("Choice: unlock a new skill or upgrade an existing one.");
   if (progression.subclass) levelNotes.push("Subclass selection unlocks at this level.");
   if (!grantsStat) levelNotes.push("No stat increase this level.");
   elements.levelProgressionInfo.textContent = levelNotes.join(" ");
   elements.subclassSection.hidden = !shouldChooseSubclassForLevelUp(level);
-  elements.progressionChoiceSection.hidden = !progression.choice;
+  elements.progressionChoiceSection.hidden = !progressionChoiceOptions.length;
   renderLevelUpStatPills();
   if (shouldChooseSubclassForLevelUp(level)) renderSubclassPills();
-  if (progression.choice) renderProgressionChoicePills();
+  if (progressionChoiceOptions.length) renderProgressionChoicePills();
   renderLevelUpValidation();
 }
 
@@ -5933,7 +6309,7 @@ function renderLevelUpValidation() {
     elements.applyLevelButton.disabled = true;
     return;
   }
-  if (getCurrentLevelProgression().choice && !state.levelUpDraft.progressionChoice) {
+  if (getProgressionChoiceOptions(level).length && !state.levelUpDraft.progressionChoice) {
     elements.levelValidationText.textContent = "Choose a skill or upgrade before confirming.";
     elements.applyLevelButton.disabled = true;
     return;
@@ -6109,6 +6485,9 @@ elements.startButton.addEventListener("click", startCombat);
 elements.attackButton.addEventListener("click", performPrimaryAction);
 elements.majorSkillButton.addEventListener("click", useSelectedSkill);
 elements.minorSkillButton.addEventListener("click", useSelectedSkill);
+elements.recoverButton.addEventListener("click", useRecoverAction);
+elements.focusButton.addEventListener("click", useFocusAction);
+elements.shakeOffButton.addEventListener("click", useShakeItOffAction);
 elements.clearSkillButton.addEventListener("click", () => {
   if (state.gameState !== GAME_STATES.inCombat || currentCombatant()?.id !== "player" || state.isResolvingEnemyTurn) return;
   state.player.selectedSkillId = null;
