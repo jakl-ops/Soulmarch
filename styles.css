@@ -1971,6 +1971,67 @@ label {
   color: #c6ceca;
 }
 
+.encounter-choice-section {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+}
+
+.encounter-choice-section h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #f0d795;
+}
+
+.encounter-choice-list {
+  display: grid;
+  gap: 10px;
+}
+
+.encounter-choice-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(222, 194, 122, 0.28);
+  border-radius: 8px;
+  background: rgba(9, 13, 15, 0.58);
+}
+
+.encounter-choice-card h4,
+.encounter-choice-card p,
+.encounter-choice-card dl {
+  margin: 0;
+}
+
+.encounter-choice-card h4 {
+  font-size: 1rem;
+}
+
+.encounter-choice-flavor {
+  color: #c6ceca;
+  font-size: 0.92rem;
+}
+
+.encounter-choice-details {
+  display: grid;
+  gap: 5px;
+  font-size: 0.86rem;
+}
+
+.encounter-choice-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.encounter-choice-details dt {
+  color: #87928e;
+}
+
+.encounter-choice-details dd {
+  color: #f4ead0;
+}
+
 #clearSkillButton {
   min-height: 24px;
   width: 24px;

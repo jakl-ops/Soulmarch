@@ -3699,6 +3699,8 @@ const elements = {
   shopList: document.querySelector("#shopList"),
   innButton: document.querySelector("#innButton"),
   betweenBattleText: document.querySelector("#betweenBattleText"),
+  encounterChoiceSection: document.querySelector("#encounterChoiceSection"),
+  encounterChoiceList: document.querySelector("#encounterChoiceList"),
   tierTrialButton: document.querySelector("#tierTrialButton"),
   finalTrialButton: document.querySelector("#finalTrialButton"),
   adminQaPanel: document.querySelector("#adminQaPanel"),
@@ -4061,6 +4063,7 @@ const state = {
   bloodlustStacks: 0,
   deathRecordInFlight: false,
   lastRewards: [],
+  currentEncounter: null,
   lastProgressionResults: [],
   progress: null,
   levelUpDraft: { stat: null, subclass: null, progressionChoice: null },
@@ -4890,6 +4893,7 @@ function captureSnapshot() {
       godOfCarnageBonusAttackAvailable: state.godOfCarnageBonusAttackAvailable ?? false,
       bloodlustStacks: state.bloodlustStacks ?? 0,
       lastRewards: state.lastRewards,
+      currentEncounter: state.currentEncounter,
       lastProgressionResults: state.lastProgressionResults,
       progress: state.progress ?? createProgress(),
     })
@@ -5052,6 +5056,7 @@ function loadSnapshot(snapshot) {
   state.bloodlustStacks = clamp(snapshot.bloodlustStacks ?? 0, 0, 10);
   state.deathRecordInFlight = false;
   state.lastRewards = snapshot.lastRewards ?? [];
+  state.currentEncounter = snapshot.currentEncounter ?? null;
   state.lastProgressionResults = snapshot.lastProgressionResults ?? [];
   state.progress = snapshot.progress ?? createProgress();
   state.winner = snapshot.winnerId === "enemy" ? state.enemy : snapshot.winnerId === "player" ? state.player : null;
@@ -6061,6 +6066,63 @@ function getEnemyTemplatesForLevel(level, enemyType = "standard") {
   return Object.values(enemyTemplates).filter((template) => template.enemyType === enemyType && template.tier === tier);
 }
 
+const encounterChoiceDefinitions = [
+  {
+    id: "safeRoad",
+    name: "Safe Road",
+    difficulty: "Easier fight",
+    levelOffset: -1,
+    rewardModifier: 0.8,
+    flavor: "Lower risk. Lower reward.",
+  },
+  {
+    id: "dangerousRoad",
+    name: "Dangerous Road",
+    difficulty: "Standard fight",
+    levelOffset: 0,
+    rewardModifier: 1,
+    flavor: "A fair fight on the open road.",
+  },
+  {
+    id: "highRiskHunt",
+    name: "High-Risk Hunt",
+    difficulty: "Harder fight",
+    levelOffset: 1,
+    rewardModifier: 1.25,
+    flavor: "Greater danger. Greater spoils.",
+  },
+];
+
+function getCurrentTierCap(player) {
+  return getTierCap(getTierForLevel(player?.level ?? 1));
+}
+
+function getEncounterLevelCap(player) {
+  return Math.max(getCurrentTierCap(player), Math.min(getMaxUnlockedLevel(player), MAX_LEVEL));
+}
+
+function generateEncounterChoices(player) {
+  if (!player) return [];
+  const baseLevel = clamp(player.level ?? 1, 1, MAX_LEVEL);
+  const levelCap = getEncounterLevelCap(player);
+  return encounterChoiceDefinitions.map((choice) => ({
+    ...choice,
+    encounterLevel: clamp(baseLevel + choice.levelOffset, 1, levelCap),
+  }));
+}
+
+function getEncounterChoice(choiceId) {
+  return generateEncounterChoices(state.player).find((choice) => choice.id === choiceId) ?? null;
+}
+
+function applyRewardModifier(value, modifier) {
+  return Math.max(0, Math.round((value ?? 0) * (modifier ?? 1)));
+}
+
+function applyCurrencyRewardModifier(currency, modifier) {
+  return normalizeCurrency({ copper: applyRewardModifier(currencyToCopper(currency), modifier), silver: 0, gold: 0 });
+}
+
 function createScaledEnemy(playerLevel, templateId = null, options = {}) {
   const level = clamp(Math.max(1, playerLevel), 1, MAX_LEVEL);
   const enemyType = options.enemyType ?? "standard";
@@ -6107,6 +6169,9 @@ function createScaledEnemy(playerLevel, templateId = null, options = {}) {
     isTierTrial: Boolean(options.isTierTrial),
     isFinalTrial: Boolean(options.isFinalTrial),
     trialTier: options.trialTier ?? null,
+    rewardModifier: options.rewardModifier ?? 1,
+    encounterType: options.encounterType ?? null,
+    encounterName: options.encounterName ?? null,
     hasAttacked: false,
   };
 }
@@ -8170,6 +8235,7 @@ async function startCombat() {
   state.combatEnded = false;
   resetCombatFeatureFlags();
   state.lastRewards = [];
+  state.currentEncounter = null;
   state.lastProgressionResults = [];
   state.levelUpDraft = { stat: null, subclass: null, progressionChoice: null };
   elements.nextEncounterButton.hidden = true;
@@ -10602,6 +10668,45 @@ function renderInitiative() {
   });
 }
 
+function renderEncounterChoices() {
+  if (!elements.encounterChoiceSection || !elements.encounterChoiceList) return;
+  const visible = state.gameState === GAME_STATES.betweenBattles && !!state.player;
+  elements.encounterChoiceSection.hidden = !visible;
+  elements.encounterChoiceList.innerHTML = "";
+  if (!visible) return;
+
+  const choices = generateEncounterChoices(state.player);
+  const disabled = state.pendingLevelUps > 0;
+  choices.forEach((choice) => {
+    const card = document.createElement("article");
+    card.className = "encounter-choice-card";
+
+    const title = document.createElement("h4");
+    title.textContent = choice.name;
+
+    const flavor = document.createElement("p");
+    flavor.className = "encounter-choice-flavor";
+    flavor.textContent = choice.flavor;
+
+    const details = document.createElement("dl");
+    details.className = "encounter-choice-details";
+    details.innerHTML = `
+      <div><dt>Difficulty</dt><dd>${choice.difficulty}</dd></div>
+      <div><dt>Enemy Level</dt><dd>${choice.encounterLevel}</dd></div>
+      <div><dt>Rewards</dt><dd>${Math.round(choice.rewardModifier * 100)}%</dd></div>
+    `;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.encounterChoice = choice.id;
+    button.textContent = "Begin";
+    button.disabled = disabled;
+
+    card.append(title, flavor, details, button);
+    elements.encounterChoiceList.append(card);
+  });
+}
+
 function renderCombat() {
   const active = currentCombatant();
   const betweenBattlesView = state.gameState === GAME_STATES.betweenBattles;
@@ -10648,6 +10753,7 @@ function renderCombat() {
     }
   }
   renderAdminQaPanel();
+  renderEncounterChoices();
 
   elements.playerCard.classList.toggle("active", active?.id === "player" && !state.winner);
   elements.enemyCard.classList.toggle("active", active?.id === "enemy" && !state.winner);
@@ -10690,11 +10796,12 @@ function renderCombat() {
     elements.minorActionStatus.textContent = "-";
     setActionButtons(true);
     updateInnButtonState();
-    elements.nextEncounterButton.hidden = false;
-    elements.nextEncounterButton.disabled = state.pendingLevelUps > 0 || Boolean(trial);
+    elements.nextEncounterButton.hidden = true;
+    elements.nextEncounterButton.disabled = true;
     if (elements.tierTrialButton) {
       elements.tierTrialButton.hidden = !trial;
       elements.tierTrialButton.disabled = state.pendingLevelUps > 0 || !trial;
+      elements.tierTrialButton.textContent = trial ? `Begin Tier ${trial.tier} Trial` : "Begin Tier Trial";
     }
     if (elements.finalTrialButton) {
       elements.finalTrialButton.hidden = !finalTrialAvailable || Boolean(trial);
@@ -11050,9 +11157,30 @@ function setActionButtons(disabled) {
 }
 
 async function startNextEncounter() {
-  if (!state.player || state.gameState !== GAME_STATES.betweenBattles || state.pendingLevelUps > 0 || isTierTrialRequired(state.player)) return;
-  state.enemy = createScaledEnemy(state.player.level);
-  await startEncounterWithEnemy(`New encounter: ${state.enemy.name} level ${state.enemy.level}.`, "combat start");
+  const choice = getEncounterChoice("dangerousRoad");
+  if (choice) await startSelectedEncounter(choice);
+}
+
+async function startSelectedEncounter(choiceOrId) {
+  if (!state.player || state.gameState !== GAME_STATES.betweenBattles || state.pendingLevelUps > 0) return;
+  const choice = typeof choiceOrId === "string" ? getEncounterChoice(choiceOrId) : choiceOrId;
+  if (!choice) return;
+  state.currentEncounter = {
+    encounterType: choice.id,
+    encounterName: choice.name,
+    encounterLevel: choice.encounterLevel,
+    rewardModifier: choice.rewardModifier,
+  };
+  state.enemy = createScaledEnemy(choice.encounterLevel, null, {
+    enemyType: "standard",
+    encounterType: choice.id,
+    encounterName: choice.name,
+    rewardModifier: choice.rewardModifier,
+  });
+  await startEncounterWithEnemy(
+    `${choice.name}: ${state.enemy.name} level ${state.enemy.level}. Rewards ${Math.round(choice.rewardModifier * 100)}%.`,
+    "encounter choice start"
+  );
 }
 
 async function startTierTrial() {
@@ -11061,6 +11189,12 @@ async function startTierTrial() {
   if (!trial) return;
   const bosses = getBossEnemiesForTier(trial.tier);
   if (!bosses.length) return;
+  state.currentEncounter = {
+    encounterType: "tierTrial",
+    encounterName: `Tier ${trial.tier} Trial`,
+    encounterLevel: getTierCap(trial.tier),
+    rewardModifier: 1,
+  };
   const boss = bosses[Math.floor(Math.random() * bosses.length)];
   state.enemy = createScaledEnemy(getTierCap(trial.tier), boss.id, { enemyType: "boss", isTierTrial: true, trialTier: trial.tier });
   await startEncounterWithEnemy(`Tier ${trial.tier} Trial: ${state.enemy.name} level ${state.enemy.level}.`, "tier trial start");
@@ -11071,6 +11205,12 @@ async function startFinalTrial() {
   const bosses = getBossEnemiesForTier(5);
   if (!bosses.length) return;
   const boss = bosses[Math.floor(Math.random() * bosses.length)];
+  state.currentEncounter = {
+    encounterType: "finalTrial",
+    encounterName: "Final Trial",
+    encounterLevel: MAX_LEVEL,
+    rewardModifier: 1,
+  };
   state.enemy = createScaledEnemy(MAX_LEVEL, boss.id, { enemyType: "boss", isFinalTrial: true, trialTier: 5 });
   await startEncounterWithEnemy(`Final Trial: ${state.enemy.name} level ${state.enemy.level}.`, "final trial start");
 }
@@ -13236,12 +13376,14 @@ function awardLoot(player, enemy) {
   state.combatEnded = true;
   const scale = enemy.level - 1;
   const loot = enemy.loot;
-  const xp = getEnemyXpReward(enemy);
+  const rewardModifier = enemy.rewardModifier ?? state.currentEncounter?.rewardModifier ?? 1;
+  const xp = applyRewardModifier(getEnemyXpReward(enemy), rewardModifier);
   const copper = rollRange(loot.copper) + scale * 4;
   const silver = rollRange(loot.silver) + Math.floor(scale / 2);
   const gold = rollRange(loot.gold) + Math.floor(scale / 3);
-  const currencyReward = normalizeCurrency({ copper, silver, gold });
+  const currencyReward = applyCurrencyRewardModifier({ copper, silver, gold }, rewardModifier);
   const rewards = [`${xp} XP`, `Currency: ${formatCurrencyDetailed(currencyReward)}`];
+  if (rewardModifier !== 1) rewards.push(`Encounter rewards ${Math.round(rewardModifier * 100)}%`);
 
   addCurrency(player.inventory, currencyReward);
   state.progress.victories += 1;
@@ -13734,6 +13876,11 @@ elements.clearSkillButton.addEventListener("click", () => {
 });
 elements.endTurnButton.addEventListener("click", endPlayerTurnEarly);
 elements.nextEncounterButton.addEventListener("click", startNextEncounter);
+elements.encounterChoiceList?.addEventListener("click", (event) => {
+  const button = event.target instanceof Element ? event.target.closest("[data-encounter-choice]") : null;
+  if (!button) return;
+  void startSelectedEncounter(button.dataset.encounterChoice);
+});
 elements.tierTrialButton.addEventListener("click", startTierTrial);
 elements.finalTrialButton.addEventListener("click", startFinalTrial);
 elements.rewardContinueButton.addEventListener("click", hideRewardModal);

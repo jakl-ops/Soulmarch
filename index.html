@@ -351,7 +351,11 @@
             <section class="panel soul-frame soul-metal-border soul-glass-bg between-only between-controls" id="betweenControlsPanel" hidden>
               <h2>Between Battles</h2>
               <p id="betweenBattleText">Recover, shop, and prepare before the next encounter.</p>
-              <button id="nextEncounterButton" type="button">Next Battle</button>
+              <section id="encounterChoiceSection" class="encounter-choice-section" aria-labelledby="encounterChoiceTitle">
+                <h3 id="encounterChoiceTitle">Choose Your Next Encounter</h3>
+                <div id="encounterChoiceList" class="encounter-choice-list"></div>
+              </section>
+              <button id="nextEncounterButton" type="button" hidden>Next Battle</button>
               <button id="tierTrialButton" type="button" hidden>Begin Tier Trial</button>
               <button id="finalTrialButton" type="button" hidden>Begin Final Trial</button>
             </section>
