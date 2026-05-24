@@ -270,7 +270,9 @@
                 </div>
                 <p class="action-help">
                   Major actions include attacks and powerful skills. Minor actions include potions, bandages, and quick utility
-                  skills. You may take 1 Major + 1 Minor, or 2 Minor actions per turn.
+                  skills. You may take 1 Major + 1 Minor, or 2 Minor actions per turn. Cooldowns count down at the start of
+                  your turns. Guarded reduces incoming damage, Shielded adds protection, and once-per-combat powers return
+                  at the start of a new battle. Multi-hit attacks stop early if the enemy falls.
                 </p>
                 <div class="action-group">
                   <h4>Major Actions</h4>
@@ -285,7 +287,35 @@
                     <button id="recoverButton" type="button">Recover</button>
                     <button id="focusButton" type="button">Focus</button>
                     <button id="shakeOffButton" type="button">Shake It Off</button>
-                    <button id="minorSkillButton" type="button" hidden>Use Selected Skill</button>
+            <button id="deathmarkButton" type="button" hidden>Deathmark</button>
+            <button id="perfectExecutionButton" type="button" hidden>Perfect Execution</button>
+            <button id="arcaneSurgeButton" type="button" hidden>Arcane Surge</button>
+            <button id="dualElementsButton" type="button" hidden>Dual Elements</button>
+            <button id="overchannelButton" type="button" hidden>Overchannel</button>
+            <button id="cataclysmButton" type="button" hidden>Cataclysm</button>
+            <button id="masterOfMagicButton" type="button" hidden>Master of Magic</button>
+            <button id="firestormButton" type="button" hidden>Firestorm</button>
+            <button id="worldfireButton" type="button" hidden>Worldfire</button>
+            <button id="arcJumpButton" type="button" hidden>Arc Jump</button>
+            <button id="stormAvatarButton" type="button" hidden>Storm Avatar</button>
+            <button id="overloadButton" type="button" hidden>Overload</button>
+            <button id="arcaneCataclysmButton" type="button" hidden>Arcane Cataclysm</button>
+            <button id="perfectFocusButton" type="button" hidden>Perfect Focus</button>
+            <button id="innerReserveButton" type="button" hidden>Inner Reserve</button>
+            <button id="transcendenceButton" type="button" hidden>Transcendence</button>
+            <button id="enlightenmentButton" type="button" hidden>Enlightenment</button>
+            <button id="immovableBastionButton" type="button" hidden>Immovable Bastion</button>
+            <button id="eternalBastionButton" type="button" hidden>Eternal Bastion</button>
+            <button id="judgmentWallButton" type="button" hidden>Judgment Wall</button>
+            <button id="divineChampionButton" type="button" hidden>Divine Champion</button>
+            <button id="eternalOathButton" type="button" hidden>Eternal Oath</button>
+            <button id="wrathIncarnateButton" type="button" hidden>Wrath Incarnate</button>
+            <button id="psionicRecoveryButton" type="button" hidden>Psionic Recovery</button>
+            <button id="trueSightButton" type="button" hidden>True Sight</button>
+            <button id="perfectPredictionButton" type="button" hidden>Perfect Prediction</button>
+            <button id="gravityBreakButton" type="button" hidden>Gravity Break</button>
+            <button id="livingWallButton" type="button" hidden>Living Wall</button>
+            <button id="minorSkillButton" type="button" hidden>Use Selected Skill</button>
                   </div>
                   <p class="action-help inventory-hint">Use potions and remedies from Inventory.</p>
                 </div>
@@ -320,8 +350,109 @@
 
             <section class="panel soul-frame soul-metal-border soul-glass-bg between-only between-controls" id="betweenControlsPanel" hidden>
               <h2>Between Battles</h2>
-              <p>Recover, shop, and prepare before the next encounter.</p>
+              <p id="betweenBattleText">Recover, shop, and prepare before the next encounter.</p>
               <button id="nextEncounterButton" type="button">Next Battle</button>
+              <button id="tierTrialButton" type="button" hidden>Begin Tier Trial</button>
+              <button id="finalTrialButton" type="button" hidden>Begin Final Trial</button>
+            </section>
+
+            <section class="panel soul-frame soul-metal-border soul-glass-bg admin-qa-panel" id="adminQaPanel" hidden aria-label="Admin QA tools">
+              <h2>Admin QA</h2>
+              <div class="admin-qa-row">
+                <label for="adminQaLevelSelect">Level</label>
+                <select id="adminQaLevelSelect"></select>
+                <button id="adminQaSetLevelButton" type="button">Set Level</button>
+              </div>
+              <div class="admin-qa-row">
+                <label for="adminQaClassSelect">Class</label>
+                <select id="adminQaClassSelect"></select>
+              </div>
+              <div class="admin-qa-row">
+                <label for="adminQaSubclassSelect">Subclass</label>
+                <select id="adminQaSubclassSelect"></select>
+                <button id="adminQaRebuildButton" type="button">Rebuild Progression</button>
+              </div>
+              <div class="admin-qa-row admin-qa-buttons">
+                <button id="adminQaGold10Button" type="button">+10 Gold</button>
+                <button id="adminQaGold100Button" type="button">+100 Gold</button>
+              </div>
+              <button id="adminQaResetCombatButton" type="button">Reset Combat State</button>
+              <div class="admin-qa-row">
+                <label for="adminQaAddSelect">Add Test Item</label>
+                <select id="adminQaAddSelect"></select>
+                <button id="adminQaAddButton" type="button">Add</button>
+              </div>
+              <section class="admin-combat-qa" aria-label="Admin Combat QA">
+                <h3>Admin Combat QA</h3>
+                <div class="admin-qa-row">
+                  <label for="adminQaEnemySelect">Enemy</label>
+                  <select id="adminQaEnemySelect"></select>
+                </div>
+                <div class="admin-qa-row">
+                  <label for="adminQaEnemyLevelSelect">Enemy Level</label>
+                  <select id="adminQaEnemyLevelSelect"></select>
+                  <button id="adminQaStartCombatButton" type="button">Start Test Combat</button>
+                </div>
+                <div class="admin-qa-row">
+                  <label for="adminQaPlayerStatusSelect">Player Status</label>
+                  <select id="adminQaPlayerStatusSelect"></select>
+                  <button id="adminQaApplyPlayerStatusButton" type="button">Apply to Player</button>
+                </div>
+                <div class="admin-qa-row">
+                  <label for="adminQaEnemyStatusSelect">Enemy Status</label>
+                  <select id="adminQaEnemyStatusSelect"></select>
+                  <button id="adminQaApplyEnemyStatusButton" type="button">Apply to Enemy</button>
+                </div>
+                <div class="admin-qa-row admin-qa-buttons">
+                  <button id="adminQaPlayerHpFullButton" type="button">Player HP Full</button>
+                  <button id="adminQaPlayerHpOneButton" type="button">Player HP 1</button>
+                  <button id="adminQaPlayerManaFullButton" type="button">Mana Full</button>
+                  <button id="adminQaPlayerStaminaFullButton" type="button">Stamina Full</button>
+                  <button id="adminQaClearStatusesButton" type="button">Clear Statuses</button>
+                  <button id="adminQaClearCooldownsButton" type="button">Clear Cooldowns</button>
+                  <button id="adminQaResetFlagsButton" type="button">Reset Combat Flags</button>
+                </div>
+                <div class="admin-qa-row admin-qa-buttons">
+                  <button id="adminQaEnemyHpFullButton" type="button">Enemy HP Full</button>
+                  <button id="adminQaEnemyHpThirtyButton" type="button">Enemy HP 30%</button>
+                  <button id="adminQaEnemyHpOneButton" type="button">Enemy HP 1</button>
+                </div>
+              </section>
+              <details class="admin-dice-qa" id="adminDiceQaPanel">
+                <summary>Admin Dice QA</summary>
+                <div class="admin-qa-row admin-qa-buttons">
+                  <button id="adminQaD20OneButton" type="button">Next d20 = 1</button>
+                  <button id="adminQaD20TenButton" type="button">Next d20 = 10</button>
+                  <button id="adminQaD20FifteenButton" type="button">Next d20 = 15</button>
+                  <button id="adminQaD20TwentyButton" type="button">Next d20 = 20</button>
+                </div>
+                <div class="admin-qa-row">
+                  <label for="adminQaD20CustomInput">Custom d20</label>
+                  <input id="adminQaD20CustomInput" type="number" min="1" max="20" value="20">
+                  <button id="adminQaD20CustomButton" type="button">Force Custom d20</button>
+                </div>
+                <div class="admin-qa-row admin-qa-buttons">
+                  <button id="adminQaStatusSuccessButton" type="button">Force Status Success</button>
+                  <button id="adminQaStatusFailButton" type="button">Force Status Fail</button>
+                </div>
+                <div class="admin-qa-row">
+                  <label for="adminQaStatusCustomInput">Custom d100</label>
+                  <input id="adminQaStatusCustomInput" type="number" min="1" max="100" value="1">
+                  <button id="adminQaStatusCustomButton" type="button">Force Custom Status Roll</button>
+                </div>
+                <div class="admin-qa-row admin-qa-buttons">
+                  <button id="adminQaDamageMinButton" type="button">Min Next Damage</button>
+                  <button id="adminQaDamageMaxButton" type="button">Max Next Damage</button>
+                </div>
+                <button id="adminQaClearOverridesButton" type="button">Clear QA Overrides</button>
+                <p id="adminQaOverrideStatus" class="muted admin-copy-status"></p>
+              </details>
+              <details class="admin-feature-inspector" id="adminFeatureInspector">
+                <summary>Admin Feature Inspector</summary>
+                <div id="adminFeatureInspectorBody" class="admin-feature-inspector-body"></div>
+                <button id="adminCopyDebugButton" type="button">Copy Debug Summary</button>
+                <p id="adminCopyDebugStatus" class="muted admin-copy-status"></p>
+              </details>
             </section>
           </aside>
         </div>

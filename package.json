@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check app.js && node --check server.js && node --check storage.js"
+    "check": "node --check app.js && node --check server.js && node --check storage.js",
+    "seed:test-profile": "node scripts/seed-test-profile.js"
   },
   "engines": {
     "node": ">=22"
